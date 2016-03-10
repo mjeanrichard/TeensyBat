@@ -1,5 +1,6 @@
 #include "ILI9341_t3.h"
 #include "SPI.h"
+#include <ADC.h>
 
 const int LED3 = 4;
 const int LED2 = 5;
@@ -18,12 +19,20 @@ const int VBAT = 16;
 #define TFT_MISO     8
 ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC, TFT_RST, TFT_MOSI, TFT_SCLK, TFT_MISO);
 
+ADC *adc = new ADC();
+
 
 void setup() {
 
   Serial.begin(57600);
 
-  analogReference(DEFAULT);
+  pinMode(VBAT, INPUT);
+
+  adc->setReference(ADC_REF_3V3, ADC_1);
+  adc->setSamplingSpeed(ADC_MED_SPEED, ADC_1);
+  adc->setConversionSpeed(ADC_MED_SPEED, ADC_1);
+  adc->setAveraging(16, ADC_1);
+  adc->setResolution(12, ADC_1);
 
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
@@ -32,7 +41,6 @@ void setup() {
   pinMode(S1, INPUT_PULLUP);
   pinMode(S2, INPUT_PULLUP);
 
-  pinMode(VBAT, INPUT);
 
   tft.begin();
   tft.fillScreen(ILI9341_WHITE);
@@ -52,7 +60,8 @@ void loop() {
   tft.setRotation(3);
   tft.setTextSize(5);
   tft.println("TeensyBat");
-  
+
+  TestLeds();
   CheckVoltage();
 
 }
@@ -66,19 +75,36 @@ void CheckVoltage(){
 
   tft.setTextSize(4);
 
-  int fact = 3290;
+  //int fact = 950;
+  int fact = 2550;
   while(true){
-    unsigned int vin = analogRead(VBAT) * fact * 2;
-    vin = (vin / 1023);
-    
+    int raw = adc->analogRead(VBAT, ADC_1);
+    int vin = (raw * fact)/1000;
+
+    if (vin < 1900){
+      digitalWrite(LED2, HIGH);
+    } else {
+      digitalWrite(LED2, LOW);
+    }
+
     tft.setTextSize(4);
     tft.setCursor(10,50);
     tft.print(vin);
     tft.println(" mV");
 
+    tft.setCursor(10,100);
+    tft.println(raw);
+
     tft.setTextSize(2);
-    tft.setCursor(50,100);
+    tft.setCursor(50,200);
     tft.println(fact);
+    
+
+    Serial.print(vin);
+    Serial.print(" mV (");
+    Serial.print(raw);
+    Serial.print(") Fact: ");
+    Serial.println(fact);
     
     unsigned int t1 = millis();
     while(millis()-t1 < 200)
