@@ -5,8 +5,9 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:winRtLib="using:WinRtLib"
+    xmlns:controls="using:TeensyBatMap.Controls"
     mc:Ignorable="d"
-    d:DesignHeight="400" d:DataContext="{d:DesignInstance Type=local:HistogramFilter, IsDesignTimeCreatable=True }" 
+    d:DesignHeight="400" d:DataContext="{d:DesignInstance Type=controls:HistogramFilter, IsDesignTimeCreatable=True }" 
     d:DesignWidth="600">
 
     

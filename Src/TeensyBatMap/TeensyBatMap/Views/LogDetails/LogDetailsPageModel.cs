@@ -15,7 +15,7 @@ namespace TeensyBatMap.Views.LogDetails
 {
     public class LogDetailsPageModel : BaseViewModel
     {
-        private readonly DbManager _db;
+        private readonly BatContext _db;
         private readonly NavigationService _navigationService;
         private List<BatCall> _batCalls;
 
@@ -28,7 +28,7 @@ namespace TeensyBatMap.Views.LogDetails
             IntensityRange.Maximum = 800;
         }
 
-        public LogDetailsPageModel(NavigationEventArgs navigation, DbManager db, NavigationService navigationService)
+        public LogDetailsPageModel(NavigationEventArgs navigation, BatContext db, NavigationService navigationService)
             : this((BatNodeLog)navigation.Parameter)
         {
             _db = db;
@@ -105,7 +105,7 @@ namespace TeensyBatMap.Views.LogDetails
             {
                 using (MarkBusy())
                 {
-                    _batCalls = await _db.GetCalls(BatLog);
+                    //_batCalls = await _db.GetCalls(BatLog);
                     await Task.Run(() =>
                     {
                         FreqBins.LoadBins(_batCalls);

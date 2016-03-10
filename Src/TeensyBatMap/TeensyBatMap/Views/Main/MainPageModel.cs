@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.Data.Entity;
 using TeensyBatMap.Common;
 using TeensyBatMap.Database;
 using TeensyBatMap.Domain;
@@ -14,7 +15,7 @@ namespace TeensyBatMap.Views.Main
 {
     public class MainPageModel : BaseViewModel
     {
-        private readonly DbManager _db;
+        private readonly BatContext _db;
         private readonly ObservableCollection<BatNodeLog> _logFiles = new ObservableCollection<BatNodeLog>();
         private readonly BatNodeLogReader _logReader;
         private readonly NavigationService _navigationService;
@@ -28,7 +29,7 @@ namespace TeensyBatMap.Views.Main
             OnPropertyChanged("HasFiles");
         }
 
-        public MainPageModel(NavigationEventArgs navigation, DbManager db, NavigationService navigationService)
+        public MainPageModel(NavigationEventArgs navigation, BatContext db, NavigationService navigationService)
         {
             _logReader = new BatNodeLogReader();
             _db = db;
@@ -74,7 +75,7 @@ namespace TeensyBatMap.Views.Main
 
         private async Task RefreshLogFiles()
         {
-            List<BatNodeLog> batNodeLogs = await _db.LoadAllLogs();
+            List<BatNodeLog> batNodeLogs = await _db.Logs.ToListAsync();
             _logFiles.Clear();
             foreach (BatNodeLog log in batNodeLogs)
             {
@@ -107,7 +108,7 @@ namespace TeensyBatMap.Views.Main
         {
             BatNodeLog batNodeLog = await _logReader.Load(file);
             batNodeLog.Name = file.DisplayName;
-            await _db.InsertNewLog(batNodeLog);
+            _db.Logs.Add(batNodeLog);
             _logFiles.Add(batNodeLog);
             OnPropertyChanged("HasFiles");
         }

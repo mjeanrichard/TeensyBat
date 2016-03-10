@@ -19,7 +19,7 @@ namespace TeensyBatMap.Common
             }
             UnityContainer unityContainer = new UnityContainer();
 
-            unityContainer.RegisterType<DbManager>(new ContainerControlledLifetimeManager());
+            unityContainer.RegisterType<BatContext>(new ContainerControlledLifetimeManager());
             unityContainer.RegisterInstance(new NavigationService(app), new ContainerControlledLifetimeManager());
 
             _unityContainer = unityContainer;

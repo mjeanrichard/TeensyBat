@@ -4,6 +4,7 @@ using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.Data.Entity;
 using Microsoft.Practices.Unity;
 using TeensyBatMap.Common;
 using TeensyBatMap.Database;
@@ -27,8 +28,8 @@ namespace TeensyBatMap
             InitializeComponent();
             Suspending += OnSuspending;
 
-            DbManager dbManager = DependencyContainer.Current.Resolve<DbManager>();
-            dbManager.Initialize().GetAwaiter().GetResult();
+	        BatContext dbManager = DependencyContainer.Current.Resolve<BatContext>();
+			dbManager.Database.Migrate();
         }
 
         /// <summary>
@@ -98,9 +99,8 @@ namespace TeensyBatMap
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-            //TODO: Save application state and stop any background activity
-            SQLiteConnectionPool.Shared.Reset();
-            deferral.Complete();
+
+			deferral.Complete();
         }
     }
 }

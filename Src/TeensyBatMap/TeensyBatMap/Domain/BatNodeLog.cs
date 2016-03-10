@@ -5,7 +5,6 @@ using TeensyBatMap.Database;
 
 namespace TeensyBatMap.Domain
 {
-    [Table("BatNodeLog")]
     public class BatNodeLog
     {
         private List<BatCall> _calls;
@@ -19,12 +18,8 @@ namespace TeensyBatMap.Domain
         public double Longitude { get; set; }
         public double Latitude { get; set; }
 
-        [NotNull]
         public DateTime LogStart { get; set; }
 
-        [PrimaryKey]
-        [Unique]
-        [AutoIncrement]
         public int Id
         {
             get { return _id; }
@@ -38,7 +33,6 @@ namespace TeensyBatMap.Domain
             }
         }
 
-        [NotNull]
         public string Name { get; set; }
 
         public string Description { get; set; }
@@ -48,10 +42,8 @@ namespace TeensyBatMap.Domain
             get { return _calls; }
         }
 
-        [Ignore]
         public BatCall FirstCall { get; set; }
 
-        [Ignore]
         public BatCall LastCall { get; set; }
 
         public int CallCount { get; set; }

@@ -10,7 +10,7 @@ namespace TeensyBatMap.Views.EditLog
 {
     public class EditLogPageModel : BaseViewModel
     {
-        private readonly DbManager _db;
+        private readonly BatContext _db;
         private readonly NavigationHelper _navigationHelper;
         private string _description;
         private string _name;
@@ -21,7 +21,7 @@ namespace TeensyBatMap.Views.EditLog
             : this(DesignData.CreateBatLog())
         {}
 
-        public EditLogPageModel(NavigationEventArgs navigation, DbManager db, NavigationHelper navigationHelper)
+        public EditLogPageModel(NavigationEventArgs navigation, BatContext db, NavigationHelper navigationHelper)
             : this((BatNodeLog)navigation.Parameter)
         {
             _db = db;
@@ -96,7 +96,7 @@ namespace TeensyBatMap.Views.EditLog
                 BatLog.Name = Name;
                 BatLog.Description = Description;
                 BatLog.LogStart = StartDate.Add(StartTime).DateTime;
-                await _db.UpdateLog(BatLog);
+                await _db.SaveChangesAsync();
             }
             _navigationHelper.GoBack();
         }
