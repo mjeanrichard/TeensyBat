@@ -1,0 +1,59 @@
+﻿<logDetails:LogDetailsPageBase
+    x:Name="pageRoot"
+    x:Class="TeensyBatMap.Views.LogDetails.LogDetailsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:winRtLib="using:WinRtLib"
+	xmlns:logDetails="using:TeensyBatMap.Views.LogDetails"
+	xmlns:controls="using:TeensyBatMap.Controls"
+	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=logDetails:LogDetailsPageModel, IsDesignTimeCreatable=True }">
+
+    <winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <controls:HistogramFilter Titel="Frequenzen [kHz]" Margin="0,0,5,5"
+                                      BinsSource="{Binding FreqBins}"
+                                      FilterRange="{Binding FrequencyRange}" DisplayRange="{Binding FreqBins.Range}"
+                                      DrawPrimaryFirst="True" LabelSize="20,20" 
+                                      Grid.Row="0" Grid.Column="0" />
+
+            <controls:HistogramFilter Titel="Intensität" Margin="5,0,0,5"
+                                      BinsSource="{Binding IntensityBins}"
+                                      FilterRange="{Binding IntensityRange}"  DisplayRange="{Binding IntensityBins.Range}"
+                                      DrawPrimaryFirst="True" LabelSize="25,20" 
+                                      Grid.Row="0" Grid.Column="1" />
+
+            <controls:HistogramFilter Titel="Ruflänge [ms]" Margin="0,5,5,5"
+                                      BinsSource="{Binding CallDurationBins}" 
+                                      FilterRange="{Binding DurationRange}" DisplayRange="{Binding CallDurationBins.Range}"
+                                      DrawPrimaryFirst="True" LabelSize="20,20"
+                                      Grid.Row="1" Grid.Column="0" />
+
+            <controls:HistogramFilter Titel="{Binding FilterText}" Margin="0,5,0,0"
+                                      BinsSource="{Binding TimeBins}" 
+                                      FilterRange="{Binding TimeRange}"  DisplayRange="{Binding TimeBins.Range}"
+                                      BarColor="GreenYellow" SecondaryBarColor="#496405"
+                                      DrawPrimaryFirst="True" LabelSize="30,20" ShowTextBoxes="False" ShowSecondary="False"
+                                      Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" />
+
+        </Grid>
+    </winRtLib:PageGrid>
+    
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Label="Edit" Icon="Edit" Command="{Binding EditLogCommand}" />
+        </CommandBar>
+    </Page.BottomAppBar>
+
+</logDetails:LogDetailsPageBase>

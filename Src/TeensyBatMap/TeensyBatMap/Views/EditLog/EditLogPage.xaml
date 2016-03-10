@@ -1,0 +1,32 @@
+﻿<editLog:EditLogPageBase
+    x:Name="pageRoot"
+    x:Class="TeensyBatMap.Views.EditLog.EditLogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:winRtLib="using:WinRtLib"
+	xmlns:editLog="using:TeensyBatMap.Views.EditLog"
+	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=editLog:EditLogPageModel, IsDesignTimeCreatable=True }">
+
+    <winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
+        <StackPanel Orientation="Vertical">
+            <TextBox  Header="Name:" Text="{Binding Name, Mode=TwoWay}"/>
+            <TextBox  Header="Description:" Text="{Binding Description, Mode=TwoWay}"
+                      TextWrapping="Wrap" AcceptsReturn="True" Height="200" />
+            
+            <StackPanel Orientation="Horizontal">
+                <DatePicker Date="{Binding StartDate, Mode=TwoWay}" Header="Startdatum:" Margin="0,10,15,0" />
+                <TimePicker Time="{Binding StartTime, Mode=TwoWay}" Header="Startzeit:" Margin="15,10,0,0" ClockIdentifier="24HourClock" />
+            </StackPanel>
+        </StackPanel>
+    </winRtLib:PageGrid>
+    
+    <Page.BottomAppBar>
+        <CommandBar IsOpen="True" IsSticky="True">
+            <AppBarButton Label="Abbrechen" Icon="Cancel" Command="{Binding CancelCommand}" />
+            <AppBarButton Label="Speichern" Icon="Save" Command="{Binding SaveCommand}" />
+        </CommandBar>
+    </Page.BottomAppBar>
+
+</editLog:EditLogPageBase>
