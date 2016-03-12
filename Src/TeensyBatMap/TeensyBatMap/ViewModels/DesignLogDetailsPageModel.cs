@@ -6,23 +6,25 @@ namespace TeensyBatMap.ViewModels
 {
     public static class DesignData
     {
-        public static BatNodeLog CreateBatLog()
+		public static BatNodeLog CreateBatLog()
         {
-            Random rnd = new Random();
+			Random rnd = new Random();
 
-            int timeMs = 0;
+			byte[] data = new byte[512];
+			rnd.NextBytes(data);
+
+            uint timeMs = 0;
 
             BatNodeLog batNodeLog = new BatNodeLog();
             batNodeLog.Id = 10;
             batNodeLog.Name = "Log 01, Aarau";
             batNodeLog.LogStart = DateTime.Now;
-            List<BatCall> calls = new List<BatCall>(5000);
-            for (int i = 0; i < calls.Capacity; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                timeMs += rnd.Next(1000);
-                calls.Add(new BatCall(batNodeLog, timeMs, rnd.Next(100000), rnd.Next(50), rnd.Next(1024), rnd.Next(50), rnd.Next(1024)));
+                timeMs += (uint)rnd.Next(1000);
+				batNodeLog.Calls.Add(new BatCall(batNodeLog, timeMs, (uint)rnd.Next(100000), (uint)rnd.Next(50), (uint)rnd.Next(1024), (uint)rnd.Next(50), (uint)rnd.Next(1024), data));
             }
-            batNodeLog.SetCalls(calls);
+	        batNodeLog.CallCount = batNodeLog.Calls.Count;
             return batNodeLog;
         }
     }

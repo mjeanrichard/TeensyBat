@@ -1,70 +1,132 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 using Windows.Storage;
 
 namespace TeensyBatMap.Domain
 {
-    public class BatNodeLogReader
-    {
-        private static readonly Regex TimeMarkerRegex = new Regex(@"^#RTC:\s*(?<dt>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})\s*$");
+	public class BatNodeLogReader
+	{
+		public async Task<BatNodeLog> Load(IStorageFile file)
+		{
+			BatNodeLog log = new BatNodeLog();
+			log.LogStart = DateTime.UtcNow;
+			using (Stream logStream = await file.OpenStreamForReadAsync())
+			{
+				using (BinaryReader reader = new BinaryReader(logStream))
+				{
+					ReadData(log, reader);
+				}
+			}
+			log.CallCount = log.Calls.Count;
+			return log;
+		}
 
-        public async Task<BatNodeLog> Load(IStorageFile file)
-        {
-            BatNodeLog log = new BatNodeLog();
-            IList<string> lines = await FileIO.ReadLinesAsync(file);
-            List<BatCall> calls = new List<BatCall>(lines.Count);
-            foreach (string line in lines)
-            {
-                if (line.StartsWith("#"))
-                {
-                    ParseCommentLine(line, log);
-                }
-                else
-                {
-                    try {
-                        BatCall batCall = ParseCall(line, log);
-                        calls.Add(batCall);
-                    } catch (Exception e)
-                    {
+		private void ReadData(BatNodeLog log, BinaryReader reader)
+		{
+			while (reader.BaseStream.Position < reader.BaseStream.Length)
+			{
+				RecordTypes recordType = GetNextRecordType(reader);
+				switch (recordType)
+				{
+					case RecordTypes.None:
+						break;
+					case RecordTypes.Call:
+						ReadCallRecord(log, reader);
+						break;
+					case RecordTypes.Header:
+						ReadHeader(log, reader);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
 
-                    }
-                }
-            }
-            log.SetCalls(calls);
-            return log;
-        }
+		private void ReadCallRecord(BatNodeLog log, BinaryReader reader)
+		{
+			BatCall call = new BatCall();
 
-        private void ParseCommentLine(string commentLine, BatNodeLog log)
-        {
-            Match match = TimeMarkerRegex.Match(commentLine);
-            if (match.Success)
-            {
-                string dateTime = match.Groups["dt"].Value;
-                log.LogStart = DateTime.ParseExact(dateTime, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None);
-            }
-        }
+			call.Duration = reader.ReadUInt32();
+			call.StartTimeMs = reader.ReadUInt32();
+			call.ClippedSamples = reader.ReadUInt16();
+			call.MaxIntensity = reader.ReadUInt16();
+			call.MissedSamples = reader.ReadUInt16();
 
-        private BatCall ParseCall(string logLine, BatNodeLog log)
-        {
-            string[] parts = logLine.Split(';');
+			call.FftData = reader.ReadBytes(512);
+			AnalyzeFftData(call);
 
-            if (parts.Length != 6)
-            {
-                throw new InvalidOperationException("The specified Log Line could not be parsed (Invalid Length).");
-            }
+			log.Calls.Add(call);
+		}
 
-            int startTimeMs = int.Parse(parts[0], CultureInfo.InvariantCulture);
-            int duration = int.Parse(parts[1], CultureInfo.InvariantCulture);
-            int maxFrequency = int.Parse(parts[2], CultureInfo.InvariantCulture);
-            int avgFrequency = int.Parse(parts[3], CultureInfo.InvariantCulture);
-            int maxIntensity = int.Parse(parts[4], CultureInfo.InvariantCulture);
-            int avgIntensity = int.Parse(parts[5], CultureInfo.InvariantCulture);
-            return new BatCall(log, startTimeMs, duration, maxFrequency, maxIntensity, avgFrequency, avgIntensity);
-        }
+		private void AnalyzeFftData(BatCall call)
+		{
+		}
 
+		private RecordTypes GetNextRecordType(BinaryReader reader)
+		{
+			if (reader.BaseStream.Position + 2 >= reader.BaseStream.Length)
+			{
+				return RecordTypes.None;
+			}
+			byte[] recordMarker = reader.ReadBytes(2);
+			RecordTypes recordType = GetRecordType(recordMarker);
+			if (recordType == RecordTypes.None)
+			{
+				BatMapperEvents.Log.LogImportMissingStartRecordMarker(reader.BaseStream.Position);
+				//skip until next recognized marker
+				while (reader.BaseStream.Position < reader.BaseStream.Length)
+				{
+					recordMarker[0] = recordMarker[1];
+					recordMarker[1] = reader.ReadByte();
+					recordType = GetRecordType(recordMarker);
+					if (recordType != RecordTypes.None)
+					{
+						break;
+					}
+				}
+			}
+			return recordType;
+		}
 
-    }
+		private RecordTypes GetRecordType(byte[] marker)
+		{
+			if (marker.Length != 2)
+			{
+				return RecordTypes.None;
+			}
+			if (marker[0] == 255)
+			{
+				switch (marker[1])
+				{
+					case 255:
+						return RecordTypes.Call;
+					default:
+						return RecordTypes.None;
+				}
+			}
+			// TB in ASCII is 84, 66
+			if (marker[0] == 84 && marker[1] == 66)
+			{
+				return RecordTypes.Header;
+			}
+			return RecordTypes.None;
+		}
+
+		private void ReadHeader(BatNodeLog log, BinaryReader reader)
+		{
+			byte[] marker = reader.ReadBytes(2);
+			if (marker[0] != 76) //  76 -> L
+			{
+				throw new InvalidOperationException("Ungültiger Marker.");
+			}
+			int version = marker[1];
+			log.NodeId = reader.ReadByte();
+			uint seconds = reader.ReadUInt32();
+			DateTime startTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local).AddSeconds(seconds);
+			log.LogStart = startTime;
+		}
+	}
 }

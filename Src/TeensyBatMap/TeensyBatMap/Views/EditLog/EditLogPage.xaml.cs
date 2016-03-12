@@ -1,4 +1,6 @@
-﻿using TeensyBatMap.Common;
+﻿using Windows.UI.Xaml.Input;
+
+using TeensyBatMap.Common;
 
 namespace TeensyBatMap.Views.EditLog
 {
@@ -14,5 +16,14 @@ namespace TeensyBatMap.Views.EditLog
         {
             InitializeComponent();
         }
-    }
+
+	    private void ItemOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+	    {
+			if (ViewModel.ToggleEnabledCommand.CanExecute())
+			{
+				ViewModel.ToggleEnabledCommand.Execute();
+			}
+
+		}
+	}
 }

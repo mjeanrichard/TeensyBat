@@ -7,19 +7,95 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:winRtLib="using:WinRtLib"
 	xmlns:editLog="using:TeensyBatMap.Views.EditLog"
+	xmlns:domain="using:TeensyBatMap.Domain"
+	xmlns:converters="using:WinRTXamlToolkit.Converters"
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=editLog:EditLogPageModel, IsDesignTimeCreatable=True }">
+	
+	<Page.Resources>
+		<converters:BooleanToVisibilityConverter x:Key="boolToVis" IsInversed="False" />
+		<converters:BooleanToVisibilityConverter x:Key="invertedBoolToVis" IsInversed="True" />
+	</Page.Resources>
 
-    <winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
-        <StackPanel Orientation="Vertical">
-            <TextBox  Header="Name:" Text="{Binding Name, Mode=TwoWay}"/>
-            <TextBox  Header="Description:" Text="{Binding Description, Mode=TwoWay}"
-                      TextWrapping="Wrap" AcceptsReturn="True" Height="200" />
-            
-            <StackPanel Orientation="Horizontal">
-                <DatePicker Date="{Binding StartDate, Mode=TwoWay}" Header="Startdatum:" Margin="0,10,15,0" />
-                <TimePicker Time="{Binding StartTime, Mode=TwoWay}" Header="Startzeit:" Margin="15,10,0,0" ClockIdentifier="24HourClock" />
-            </StackPanel>
-        </StackPanel>
+	<winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="*" />
+			</Grid.RowDefinitions>
+			<Grid Height="Auto" Margin="10" Grid.Row="0" Grid.ColumnSpan="2">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+				<TextBox  Header="Name:" Text="{Binding Name, Mode=TwoWay}" Grid.Column="0" Margin="0,0,15,0" />
+				<DatePicker Date="{Binding StartDate, Mode=TwoWay}" Header="Startdatum:" Margin="0,0,15,0" Grid.Column="1" />
+				<TimePicker Time="{Binding StartTime, Mode=TwoWay}" Header="Startzeit:" Margin="0,0,0,0" ClockIdentifier="24HourClock" Grid.Column="2" />
+			</Grid>
+			<TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Header="Description:" Text="{Binding Description, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" Height="100" />
+			<ListView Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Calls}"
+					  SelectedItem="{Binding SelectedCall, Mode=TwoWay}" SelectionMode="Single"
+					  DoubleTapped="ItemOnDoubleTapped">
+				<ListView.Header>
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Text="Nr." Width="30px" TextAlignment="Left" Margin="15,0,38,0" />
+						<TextBlock Text="Zeit" Width="130px" Margin="5,0" />
+						<TextBlock Text="Dauer" Width="60px" TextAlignment="Left" Margin="5,0" />
+					</StackPanel>
+				</ListView.Header>
+				<ListView.ItemTemplate>
+					<DataTemplate x:DataType="domain:BatCall">
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="{Binding Index}" Width="30px" TextAlignment="Right" Margin="5,0" />
+							<SymbolIcon Symbol="Accept" Margin="5,0" Foreground="Green" Visibility="{Binding Enabled, Converter={StaticResource boolToVis}}" />
+							<SymbolIcon Symbol="Cancel" Margin="5,0" Foreground="Red" Visibility="{Binding Enabled, Converter={StaticResource invertedBoolToVis}}" />
+							<TextBlock Text="{Binding StartTime}" Width="130px" Margin="5,0" />
+							<TextBlock Text="{Binding Duration}" Width="60px" TextAlignment="Right" Margin="5,0" />
+						</StackPanel>
+					</DataTemplate>
+				</ListView.ItemTemplate>
+			</ListView>
+			<Grid Grid.Row="2" Grid.Column="1" DataContext="{Binding SelectedCall}" Margin="10,25,0,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Row="0" Grid.Column="0" Margin="5">Aktiv:</TextBlock>
+				<CheckBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" IsChecked="{Binding Enabled, Mode=TwoWay}" />
+
+				<TextBlock Grid.Row="0" Grid.Column="2" Margin="5">Clipped Samples:</TextBlock>
+				<TextBlock Grid.Row="0" Grid.Column="3" Margin="5" Text="{Binding BatCall.ClippedSamples}" />
+
+				<TextBlock Grid.Row="1" Grid.Column="0" Margin="5">Zeitpunkt:</TextBlock>
+				<TextBlock Grid.Row="1" Grid.Column="1" Margin="5" Text="{Binding StartTimeFull}" />
+
+				<TextBlock Grid.Row="1" Grid.Column="2" Margin="5">Verlorene Samples:</TextBlock>
+				<TextBlock Grid.Row="1" Grid.Column="3" Margin="5" Text="{Binding BatCall.MissedSamples}" />
+
+				<TextBlock Grid.Row="2" Grid.Column="0" Margin="5">Dauer:</TextBlock>
+				<TextBlock Grid.Row="2" Grid.Column="1" Margin="5" Text="{Binding Duration}" />
+				
+				<winRtLib:HistogramControl Grid.Row="3" Grid.ColumnSpan="4" Grid.Column="0" BinsSource="{Binding Frequencies}" 
+										   BarColor="DarkRed" BarPadding="0,0,0,0" ShowSecondary="False"
+										   LabelSize="30,20" />
+				<TextBlock Grid.Row="4" Grid.ColumnSpan="4" Grid.Column="0" Text="kHz" TextAlignment="Center" />
+
+			</Grid>
+        </Grid>
     </winRtLib:PageGrid>
     
     <Page.BottomAppBar>

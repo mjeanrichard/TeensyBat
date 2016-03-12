@@ -135,8 +135,9 @@ namespace WinRtLib
             if (newCollection != null)
             {
                 newCollection.CollectionChanged += BinSourceOnCollectionChanged;
-            }
-        }
+				_histogramCanvas.Invalidate();
+			}
+		}
 
         private void BinSourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {

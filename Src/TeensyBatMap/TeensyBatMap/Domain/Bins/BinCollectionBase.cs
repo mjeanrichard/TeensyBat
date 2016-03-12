@@ -35,29 +35,25 @@ namespace TeensyBatMap.Domain.Bins
         protected virtual void LoadBinsInternal(IEnumerable<TElement> elements)
         {
             _bins = new TBin[ActualBinCount];
-            for (int i = 0; i < _bins.Length; i++)
+            for (uint i = 0; i < _bins.Length; i++)
             {
                 _bins[i] = CreateBin(i);
             }
 
             foreach (TElement element in elements)
             {
-                int bin = GetBinNumber(element);
+                uint bin = GetBinNumber(element);
                 if (bin >= _bins.Length)
                 {
                     throw new InvalidOperationException("Bin number must not be greater or equal than the bin size.");
-                }
-                if (bin < 0)
-                {
-                    throw new InvalidOperationException("Bin number must be greater or equal to 0.");
                 }
                 _bins[bin].Add(element);
             }
             OnBinsUpdated();
         }
 
-        protected abstract TBin CreateBin(int binNumber);
-        protected abstract int GetBinNumber(TElement element);
+        protected abstract TBin CreateBin(uint binNumber);
+        protected abstract uint GetBinNumber(TElement element);
 
         public IEnumerator<TBin> GetEnumerator()
         {

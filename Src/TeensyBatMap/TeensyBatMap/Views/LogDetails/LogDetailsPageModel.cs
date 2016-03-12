@@ -17,7 +17,7 @@ namespace TeensyBatMap.Views.LogDetails
     {
         private readonly BatContext _db;
         private readonly NavigationService _navigationService;
-        private List<BatCall> _batCalls;
+        private IEnumerable<BatCall> _batCalls;
 
         public LogDetailsPageModel()
             : this(DesignData.CreateBatLog())
@@ -42,33 +42,34 @@ namespace TeensyBatMap.Views.LogDetails
             BatLog = batLog;
             _batCalls = new List<BatCall>();
 
-            FrequencyRange = new Range<int>(0, 100);
+            FrequencyRange = new Range<uint>(0, 100);
             FrequencyRange.PropertyChanged += async (s, e) => await UpdateBins();
 
-            IntensityRange = new Range<int>(0, 1024);
+            IntensityRange = new Range<uint>(0, 1024);
             IntensityRange.PropertyChanged += async (s, e) => await UpdateBins();
 
-            DurationRange = new Range<int>(0, 100);
+            DurationRange = new Range<uint>(0, 100);
             DurationRange.PropertyChanged += async (s, e) => await UpdateBins();
 
-            TimeRange = new Range<int>(0, 100);
+            TimeRange = new Range<uint>(0, 100);
             TimeRange.PropertyChanged += async (s, e) => await UpdateBins();
 
+			//BUG!
             Func<BatCall, bool> filter = c => IntensityRange.Contains(c.MaxIntensity) && FrequencyRange.Contains(c.MaxFrequency) && DurationRange.Contains(c.Duration / 1000) && TimeRange.Contains(c.StartTimeMs);
-            FreqBins = new IntBinCollection(100, b => b.MaxFrequency, filter);
-            IntensityBins = new IntBinCollection(200, b => b.MaxIntensity, filter);
-            CallDurationBins = new IntBinCollection(100, b => (b.Duration / 1000), filter);
+            FreqBins = new UintBinCollection(100, b => (uint)b.MaxFrequency, filter);
+            IntensityBins = new UintBinCollection(200, b => (uint)b.MaxIntensity, filter);
+            CallDurationBins = new UintBinCollection(100, b => b.Duration / 1000, filter);
             TimeBins = new TimeCallBinCollection(200, batLog.LogStart, filter);
         }
 
-        public Range<int> FrequencyRange { get; }
-        public Range<int> IntensityRange { get; }
-        public Range<int> DurationRange { get; }
-        public Range<int> TimeRange { get; }
+        public Range<uint> FrequencyRange { get; }
+        public Range<uint> IntensityRange { get; }
+        public Range<uint> DurationRange { get; }
+        public Range<uint> TimeRange { get; }
         public BatNodeLog BatLog { get; }
-        public IntBinCollection FreqBins { get; }
-        public IntBinCollection IntensityBins { get; }
-        public IntBinCollection CallDurationBins { get; }
+        public UintBinCollection FreqBins { get; }
+        public UintBinCollection IntensityBins { get; }
+        public UintBinCollection CallDurationBins { get; }
         public TimeCallBinCollection TimeBins { get; }
 
         public override string Titel
@@ -83,7 +84,7 @@ namespace TeensyBatMap.Views.LogDetails
             get
             {
                 int filteredCount = TimeBins.Bins.Sum(b => b.FilteredCount);
-                return string.Format(CultureInfo.CurrentCulture, "Resultat (Anzahl Rufe über die Zeit), Verwendete Daten: {0} / {1}", filteredCount, _batCalls.Count);
+                return string.Format(CultureInfo.CurrentCulture, "Resultat (Anzahl Rufe über die Zeit), Verwendete Daten: {0} / {1}", filteredCount, _batCalls.Count());
             }
         }
 
@@ -103,24 +104,21 @@ namespace TeensyBatMap.Views.LogDetails
         {
             if (_db != null)
             {
-                using (MarkBusy())
+                _batCalls = await _db.LoadCalls(BatLog);
+                await Task.Run(() =>
                 {
-                    //_batCalls = await _db.GetCalls(BatLog);
-                    await Task.Run(() =>
-                    {
-                        FreqBins.LoadBins(_batCalls);
-                        IntensityBins.LoadBins(_batCalls);
-                        CallDurationBins.LoadBins(_batCalls);
-                        TimeBins.LoadBins(_batCalls);
-                    });
+                    FreqBins.LoadBins(_batCalls);
+                    IntensityBins.LoadBins(_batCalls);
+                    CallDurationBins.LoadBins(_batCalls);
+                    TimeBins.LoadBins(_batCalls);
+                });
 
-                    FrequencyRange.Set(FreqBins.Range);
-                    IntensityRange.Set(IntensityBins.Range);
-                    DurationRange.Set(CallDurationBins.Range);
-                    TimeRange.Set(TimeBins.Range);
+                FrequencyRange.Set(FreqBins.Range);
+                IntensityRange.Set(IntensityBins.Range);
+                DurationRange.Set(CallDurationBins.Range);
+                TimeRange.Set(TimeBins.Range);
 
-                    OnPropertyChanged("FilterText");
-                }
+                OnPropertyChanged("FilterText");
             }
         }
     }

@@ -1,4 +1,8 @@
-﻿using Microsoft.Data.Entity;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+using Microsoft.Data.Entity;
 using TeensyBatMap.Domain;
 
 namespace TeensyBatMap.Database
@@ -19,6 +23,11 @@ namespace TeensyBatMap.Database
 		{
 			modelBuilder.Entity<BatNodeLog>().ToTable("BatNodeLogs");
 			modelBuilder.Entity<BatCall>().ToTable("BatCalls");
+		}
+
+		public async Task<IEnumerable<BatCall>> LoadCalls(BatNodeLog batLog)
+		{
+			return await Calls.Where(c => c.BatNodeLogId == batLog.Id).OrderBy(c => c.StartTimeMs).ToListAsync();
 		}
 	}
 }

@@ -38,8 +38,11 @@ namespace TeensyBatMap.Common
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             ViewModel = DependencyContainer.Current.Resolve<TModel>(new TypedParameterOverride<NavigationEventArgs>(e), new TypedParameterOverride<NavigationHelper>(NavigationHelper));
-            await ViewModel.Initialize();
-            NavigationHelper.OnNavigatedTo(e);
+	        using (ViewModel.MarkBusy())
+	        {
+		        await ViewModel.Initialize();
+		        NavigationHelper.OnNavigatedTo(e);
+	        }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

@@ -6,7 +6,7 @@ using WinRtLib;
 
 namespace TeensyBatMap.ViewModels
 {
-    public class BatLogViewModel : INotifyPropertyChanged
+	public class BatLogViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangedEventHandler BinsChanged;
@@ -77,7 +77,7 @@ namespace TeensyBatMap.ViewModels
             {
                 return;
             }
-            foreach (IntBin bin in Bins.Bins)
+            foreach (UintBin bin in Bins.Bins)
             {
                 if (bin != null)
                 {

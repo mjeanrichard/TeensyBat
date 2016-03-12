@@ -20,23 +20,29 @@ namespace TeensyBatMap.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int>("AvgFrequency");
+                    b.Property<uint>("AvgFrequency");
 
-                    b.Property<int>("AvgIntensity");
+                    b.Property<uint>("AvgIntensity");
 
                     b.Property<int>("BatNodeLogId");
 
-                    b.Property<int>("Duration");
+                    b.Property<int>("ClippedSamples");
+
+                    b.Property<uint>("Duration");
+
+                    b.Property<bool>("Enabled");
 
                     b.Property<byte[]>("FftData");
 
-                    b.Property<int>("MaxFrequency");
+                    b.Property<uint>("MaxFrequency");
 
-                    b.Property<int>("MaxIntensity");
+                    b.Property<uint>("MaxIntensity");
+
+                    b.Property<int>("MissedSamples");
 
                     b.Property<DateTime>("StartTime");
 
-                    b.Property<int>("StartTimeMs");
+                    b.Property<uint>("StartTimeMs");
 
                     b.HasKey("Id");
 
@@ -63,6 +69,8 @@ namespace TeensyBatMap.Migrations
                     b.Property<double>("Longitude");
 
                     b.Property<string>("Name");
+
+                    b.Property<int>("NodeId");
 
                     b.HasKey("Id");
 

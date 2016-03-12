@@ -26,10 +26,7 @@ namespace TeensyBatMap.Common
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChangedEventHandler onPropertyChanged = PropertyChanged;
-            if (onPropertyChanged != null)
-            {
-                onPropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+	        onPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public IDisposable MarkBusy()

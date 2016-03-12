@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
 
@@ -7,5 +8,6 @@ namespace TeensyBatMap.Common
     {
         Task Initialize();
         bool IsBusy { get; }
+	    IDisposable MarkBusy();
     }
 }

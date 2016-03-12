@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace TeensyBatMap.Domain.Bins
 {
-    public class TimeCallBinCollection : IntBinCollection
+    public class TimeCallBinCollection : UintBinCollection
     {
         private readonly DateTime _baseTime;
 
@@ -13,10 +13,10 @@ namespace TeensyBatMap.Domain.Bins
             _baseTime = baseTime;
         }
 
-        protected override IntBin CreateBin(int binNumber)
+        protected override UintBin CreateBin(uint binNumber)
         {
             string label = _baseTime.AddMilliseconds(binNumber * BinSize).ToString("t", CultureInfo.CurrentCulture);
-            return new IntBin(label, Filter);
+            return new UintBin(label, Filter);
         }
     }
 }

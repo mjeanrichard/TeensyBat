@@ -8,7 +8,7 @@ using TeensyBatMap.Database;
 namespace TeensyBatMap.Migrations
 {
     [DbContext(typeof(BatContext))]
-    [Migration("20160310102501_Migration01Initial")]
+    [Migration("20160312122025_Migration01Initial")]
     partial class Migration01Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,21 +21,29 @@ namespace TeensyBatMap.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int>("AvgFrequency");
+                    b.Property<uint>("AvgFrequency");
 
-                    b.Property<int>("AvgIntensity");
+                    b.Property<uint>("AvgIntensity");
 
                     b.Property<int>("BatNodeLogId");
 
-                    b.Property<int>("Duration");
+                    b.Property<int>("ClippedSamples");
 
-                    b.Property<int>("MaxFrequency");
+                    b.Property<uint>("Duration");
 
-                    b.Property<int>("MaxIntensity");
+                    b.Property<bool>("Enabled");
+
+                    b.Property<byte[]>("FftData");
+
+                    b.Property<uint>("MaxFrequency");
+
+                    b.Property<uint>("MaxIntensity");
+
+                    b.Property<int>("MissedSamples");
 
                     b.Property<DateTime>("StartTime");
 
-                    b.Property<int>("StartTimeMs");
+                    b.Property<uint>("StartTimeMs");
 
                     b.HasKey("Id");
 
@@ -62,6 +70,8 @@ namespace TeensyBatMap.Migrations
                     b.Property<double>("Longitude");
 
                     b.Property<string>("Name");
+
+                    b.Property<int>("NodeId");
 
                     b.HasKey("Id");
 

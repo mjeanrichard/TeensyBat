@@ -4,13 +4,13 @@ using WinRtLib;
 
 namespace TeensyBatMap.Domain.Bins
 {
-    public class IntBinCollection : BinCollectionBase<IntBin, BatCall>
+    public class UintBinCollection : BinCollectionBase<UintBin, BatCall>
     {
-        private Range<int> _range;
-        protected Func<BatCall, int> ValueAccessor { get; private set; }
-        protected int BinSize { get; set; }
+        private Range<uint> _range;
+        protected Func<BatCall, uint> ValueAccessor { get; private set; }
+        protected uint BinSize { get; set; }
 
-        public Range<int> Range
+        public Range<uint> Range
         {
             get { return _range; }
             protected set
@@ -20,18 +20,18 @@ namespace TeensyBatMap.Domain.Bins
             }
         }
 
-        public IntBinCollection(int binCount, Func<BatCall, int> valueAccessor, Func<BatCall, bool> filter) : base(binCount, filter)
+        public UintBinCollection(int binCount, Func<BatCall, uint> valueAccessor, Func<BatCall, bool> filter) : base(binCount, filter)
         {
             ValueAccessor = valueAccessor;
         }
 
-        public void LoadBins(IList<BatCall> calls)
+        public void LoadBins(IEnumerable<BatCall> calls)
         {
-            int minValue = int.MaxValue;
-            int maxValue = int.MinValue;
+            uint minValue = uint.MaxValue;
+            uint maxValue = uint.MinValue;
             foreach (BatCall call in calls)
             {
-                int value = ValueAccessor(call);
+                uint value = ValueAccessor(call);
                 if (minValue > value)
                 {
                     minValue = value;
@@ -41,22 +41,22 @@ namespace TeensyBatMap.Domain.Bins
                     maxValue = value;
                 }
             }
-            int range = maxValue - minValue;
-            BinSize = Math.Max((int)Math.Ceiling(range / (double)MaxBinCount), 1);
+            uint range = maxValue - minValue;
+            BinSize = Math.Max((uint)Math.Ceiling(range / (double)MaxBinCount), 1);
 
             ActualBinCount = Math.Min(MaxBinCount, (int)Math.Ceiling(range / (double)BinSize)+1);
 
-            Range = new Range<int>(minValue, maxValue);
+            Range = new Range<uint>(minValue, maxValue);
             LoadBinsInternal(calls);
         }
 
-        protected override IntBin CreateBin(int binNumber)
+        protected override UintBin CreateBin(uint binNumber)
         {
             string label = (Range.Minimum + binNumber * BinSize).ToString();
-            return new IntBin(label, Filter);
+            return new UintBin(label, Filter);
         }
 
-        protected override int GetBinNumber(BatCall element)
+        protected override uint GetBinNumber(BatCall element)
         {
             return (ValueAccessor(element) - Range.Minimum) / BinSize;
         }
