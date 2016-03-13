@@ -22,11 +22,11 @@ namespace TeensyBatMap.Migrations
 
                     b.Property<uint>("AvgFrequency");
 
-                    b.Property<uint>("AvgIntensity");
-
                     b.Property<int>("BatNodeLogId");
 
                     b.Property<int>("ClippedSamples");
+
+                    b.Property<uint>("DcOffset");
 
                     b.Property<uint>("Duration");
 
@@ -36,7 +36,7 @@ namespace TeensyBatMap.Migrations
 
                     b.Property<uint>("MaxFrequency");
 
-                    b.Property<uint>("MaxIntensity");
+                    b.Property<uint>("MaxPower");
 
                     b.Property<int>("MissedSamples");
 

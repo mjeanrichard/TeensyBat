@@ -5,5 +5,6 @@
         double Value { get; }
         double SecondaryValue { get; }
         string Label { get; }
-    }
+		bool IsHighlighted { get; }
+	}
 }

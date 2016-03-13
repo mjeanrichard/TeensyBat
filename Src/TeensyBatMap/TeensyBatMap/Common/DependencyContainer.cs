@@ -20,6 +20,8 @@ namespace TeensyBatMap.Common
             UnityContainer unityContainer = new UnityContainer();
 
             unityContainer.RegisterType<BatContext>(new ContainerControlledLifetimeManager());
+            unityContainer.RegisterType<BatNodeLogReader>(new ContainerControlledLifetimeManager());
+            unityContainer.RegisterInstance(new FftAnalyzer(1.5));
             unityContainer.RegisterInstance(new NavigationService(app), new ContainerControlledLifetimeManager());
 
             _unityContainer = unityContainer;

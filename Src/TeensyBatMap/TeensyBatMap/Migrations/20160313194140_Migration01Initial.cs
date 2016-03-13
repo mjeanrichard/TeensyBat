@@ -15,14 +15,14 @@ namespace TeensyBatMap.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     AvgFrequency = table.Column<uint>(nullable: false),
-                    AvgIntensity = table.Column<uint>(nullable: false),
                     BatNodeLogId = table.Column<int>(nullable: false),
                     ClippedSamples = table.Column<int>(nullable: false),
+                    DcOffset = table.Column<uint>(nullable: false),
                     Duration = table.Column<uint>(nullable: false),
                     Enabled = table.Column<bool>(nullable: false),
                     FftData = table.Column<byte[]>(nullable: true),
                     MaxFrequency = table.Column<uint>(nullable: false),
-                    MaxIntensity = table.Column<uint>(nullable: false),
+                    MaxPower = table.Column<uint>(nullable: false),
                     MissedSamples = table.Column<int>(nullable: false),
                     StartTime = table.Column<DateTime>(nullable: false),
                     StartTimeMs = table.Column<uint>(nullable: false)

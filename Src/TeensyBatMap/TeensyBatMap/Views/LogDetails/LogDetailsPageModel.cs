@@ -55,9 +55,9 @@ namespace TeensyBatMap.Views.LogDetails
             TimeRange.PropertyChanged += async (s, e) => await UpdateBins();
 
 			//BUG!
-            Func<BatCall, bool> filter = c => IntensityRange.Contains(c.MaxIntensity) && FrequencyRange.Contains(c.MaxFrequency) && DurationRange.Contains(c.Duration / 1000) && TimeRange.Contains(c.StartTimeMs);
+            Func<BatCall, bool> filter = c => IntensityRange.Contains(c.MaxPower) && FrequencyRange.Contains(c.MaxFrequency) && DurationRange.Contains(c.Duration / 1000) && TimeRange.Contains(c.StartTimeMs);
             FreqBins = new UintBinCollection(100, b => (uint)b.MaxFrequency, filter);
-            IntensityBins = new UintBinCollection(200, b => (uint)b.MaxIntensity, filter);
+            IntensityBins = new UintBinCollection(200, b => (uint)b.MaxPower, filter);
             CallDurationBins = new UintBinCollection(100, b => b.Duration / 1000, filter);
             TimeBins = new TimeCallBinCollection(200, batLog.LogStart, filter);
         }

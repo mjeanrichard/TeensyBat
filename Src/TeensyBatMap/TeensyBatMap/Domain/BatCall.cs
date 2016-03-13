@@ -5,14 +5,14 @@ namespace TeensyBatMap.Domain
 {
     public class BatCall
     {
-        public BatCall(BatNodeLog log, uint startTimeMs, uint duration, uint maxFrequency, uint maxIntensity, uint avgFrequency, uint avgIntensity, byte[] data)
+        public BatCall(BatNodeLog log, uint startTimeMs, uint duration, uint maxFrequency, uint maxPower, uint avgFrequency, uint dcOffset, byte[] data)
         {
             StartTimeMs = startTimeMs;
             Duration = duration;
             MaxFrequency = maxFrequency;
-            MaxIntensity = maxIntensity;
+            MaxPower = maxPower;
             AvgFrequency = avgFrequency;
-            AvgIntensity = avgIntensity;
+			DcOffset = dcOffset;
             StartTime = log.LogStart.AddMilliseconds(startTimeMs);
 			FftData = data;
 	        Enabled = true;
@@ -40,11 +40,11 @@ namespace TeensyBatMap.Domain
 
         public uint MaxFrequency { get; set; }
 
-        public uint MaxIntensity { get; set; }
+        public uint MaxPower { get; set; }
 
         public uint AvgFrequency { get; set; }
 
-        public uint AvgIntensity { get; set; }
+        public uint DcOffset { get; set; }
 
         public int BatNodeLogId { get; set; }
 

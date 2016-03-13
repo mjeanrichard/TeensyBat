@@ -591,6 +591,28 @@
           "lib/uap10.0/Microsoft.Xaml.Interactivity.dll": {}
         }
       },
+      "NUnit/3.2.0": {
+        "compile": {
+          "lib/dotnet/nunit.framework.dll": {}
+        },
+        "runtime": {
+          "lib/dotnet/nunit.framework.dll": {}
+        }
+      },
+      "NUnit.ConsoleRunner/3.2.0": {},
+      "NUnit.Extension.NUnitProjectLoader/3.2.0": {},
+      "NUnit.Extension.NUnitV2Driver/3.2.0": {},
+      "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {},
+      "NUnit.Extension.VSProjectLoader/3.2.0": {},
+      "NUnit.Runners/3.2.0": {
+        "dependencies": {
+          "NUnit.ConsoleRunner": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitProjectLoader": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2Driver": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2ResultWriter": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.VSProjectLoader": "[3.2.0, 3.2.0]"
+        }
+      },
       "Remotion.Linq/2.0.1": {
         "compile": {
           "lib/portable-net45+win+wpa81+wp80/Remotion.Linq.dll": {}
@@ -2640,6 +2662,28 @@
         "runtime": {
           "lib/uap10.0/Microsoft.Xaml.Interactions.dll": {},
           "lib/uap10.0/Microsoft.Xaml.Interactivity.dll": {}
+        }
+      },
+      "NUnit/3.2.0": {
+        "compile": {
+          "lib/dotnet/nunit.framework.dll": {}
+        },
+        "runtime": {
+          "lib/dotnet/nunit.framework.dll": {}
+        }
+      },
+      "NUnit.ConsoleRunner/3.2.0": {},
+      "NUnit.Extension.NUnitProjectLoader/3.2.0": {},
+      "NUnit.Extension.NUnitV2Driver/3.2.0": {},
+      "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {},
+      "NUnit.Extension.VSProjectLoader/3.2.0": {},
+      "NUnit.Runners/3.2.0": {
+        "dependencies": {
+          "NUnit.ConsoleRunner": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitProjectLoader": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2Driver": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2ResultWriter": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.VSProjectLoader": "[3.2.0, 3.2.0]"
         }
       },
       "Remotion.Linq/2.0.1": {
@@ -4727,6 +4771,28 @@
         "runtime": {
           "lib/uap10.0/Microsoft.Xaml.Interactions.dll": {},
           "lib/uap10.0/Microsoft.Xaml.Interactivity.dll": {}
+        }
+      },
+      "NUnit/3.2.0": {
+        "compile": {
+          "lib/dotnet/nunit.framework.dll": {}
+        },
+        "runtime": {
+          "lib/dotnet/nunit.framework.dll": {}
+        }
+      },
+      "NUnit.ConsoleRunner/3.2.0": {},
+      "NUnit.Extension.NUnitProjectLoader/3.2.0": {},
+      "NUnit.Extension.NUnitV2Driver/3.2.0": {},
+      "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {},
+      "NUnit.Extension.VSProjectLoader/3.2.0": {},
+      "NUnit.Runners/3.2.0": {
+        "dependencies": {
+          "NUnit.ConsoleRunner": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitProjectLoader": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2Driver": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2ResultWriter": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.VSProjectLoader": "[3.2.0, 3.2.0]"
         }
       },
       "Remotion.Linq/2.0.1": {
@@ -6824,6 +6890,28 @@
           "lib/uap10.0/Microsoft.Xaml.Interactivity.dll": {}
         }
       },
+      "NUnit/3.2.0": {
+        "compile": {
+          "lib/dotnet/nunit.framework.dll": {}
+        },
+        "runtime": {
+          "lib/dotnet/nunit.framework.dll": {}
+        }
+      },
+      "NUnit.ConsoleRunner/3.2.0": {},
+      "NUnit.Extension.NUnitProjectLoader/3.2.0": {},
+      "NUnit.Extension.NUnitV2Driver/3.2.0": {},
+      "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {},
+      "NUnit.Extension.VSProjectLoader/3.2.0": {},
+      "NUnit.Runners/3.2.0": {
+        "dependencies": {
+          "NUnit.ConsoleRunner": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitProjectLoader": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2Driver": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2ResultWriter": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.VSProjectLoader": "[3.2.0, 3.2.0]"
+        }
+      },
       "Remotion.Linq/2.0.1": {
         "compile": {
           "lib/portable-net45+win+wpa81+wp80/Remotion.Linq.dll": {}
@@ -8912,6 +9000,28 @@
         "runtime": {
           "lib/uap10.0/Microsoft.Xaml.Interactions.dll": {},
           "lib/uap10.0/Microsoft.Xaml.Interactivity.dll": {}
+        }
+      },
+      "NUnit/3.2.0": {
+        "compile": {
+          "lib/dotnet/nunit.framework.dll": {}
+        },
+        "runtime": {
+          "lib/dotnet/nunit.framework.dll": {}
+        }
+      },
+      "NUnit.ConsoleRunner/3.2.0": {},
+      "NUnit.Extension.NUnitProjectLoader/3.2.0": {},
+      "NUnit.Extension.NUnitV2Driver/3.2.0": {},
+      "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {},
+      "NUnit.Extension.VSProjectLoader/3.2.0": {},
+      "NUnit.Runners/3.2.0": {
+        "dependencies": {
+          "NUnit.ConsoleRunner": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitProjectLoader": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2Driver": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2ResultWriter": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.VSProjectLoader": "[3.2.0, 3.2.0]"
         }
       },
       "Remotion.Linq/2.0.1": {
@@ -11009,6 +11119,28 @@
           "lib/uap10.0/Microsoft.Xaml.Interactivity.dll": {}
         }
       },
+      "NUnit/3.2.0": {
+        "compile": {
+          "lib/dotnet/nunit.framework.dll": {}
+        },
+        "runtime": {
+          "lib/dotnet/nunit.framework.dll": {}
+        }
+      },
+      "NUnit.ConsoleRunner/3.2.0": {},
+      "NUnit.Extension.NUnitProjectLoader/3.2.0": {},
+      "NUnit.Extension.NUnitV2Driver/3.2.0": {},
+      "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {},
+      "NUnit.Extension.VSProjectLoader/3.2.0": {},
+      "NUnit.Runners/3.2.0": {
+        "dependencies": {
+          "NUnit.ConsoleRunner": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitProjectLoader": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2Driver": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2ResultWriter": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.VSProjectLoader": "[3.2.0, 3.2.0]"
+        }
+      },
       "Remotion.Linq/2.0.1": {
         "compile": {
           "lib/portable-net45+win+wpa81+wp80/Remotion.Linq.dll": {}
@@ -13097,6 +13229,28 @@
         "runtime": {
           "lib/uap10.0/Microsoft.Xaml.Interactions.dll": {},
           "lib/uap10.0/Microsoft.Xaml.Interactivity.dll": {}
+        }
+      },
+      "NUnit/3.2.0": {
+        "compile": {
+          "lib/dotnet/nunit.framework.dll": {}
+        },
+        "runtime": {
+          "lib/dotnet/nunit.framework.dll": {}
+        }
+      },
+      "NUnit.ConsoleRunner/3.2.0": {},
+      "NUnit.Extension.NUnitProjectLoader/3.2.0": {},
+      "NUnit.Extension.NUnitV2Driver/3.2.0": {},
+      "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {},
+      "NUnit.Extension.VSProjectLoader/3.2.0": {},
+      "NUnit.Runners/3.2.0": {
+        "dependencies": {
+          "NUnit.ConsoleRunner": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitProjectLoader": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2Driver": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.NUnitV2ResultWriter": "[3.2.0, 3.2.0]",
+          "NUnit.Extension.VSProjectLoader": "[3.2.0, 3.2.0]"
         }
       },
       "Remotion.Linq/2.0.1": {
@@ -15636,6 +15790,118 @@
         "lib/uap10.0/Microsoft.Xaml.Interactivity.xml",
         "Microsoft.Xaml.Behaviors.Uwp.Managed.nuspec",
         "package/services/metadata/core-properties/aa8a385ed5b94b29a44c3a4ace39232c.psmdcp"
+      ]
+    },
+    "NUnit/3.2.0": {
+      "sha512": "kJf/lxyi7AAW5B/2Vkn9lyAvqJlmAEVABAu3V/nvwmZFQxiaCq9mJt81VbhK13QJPc1jnyjh5D5mHeL1ivQJLA==",
+      "type": "Package",
+      "files": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "CHANGES.txt",
+        "lib/dotnet/nunit.framework.dll",
+        "lib/dotnet/nunit.framework.xml",
+        "lib/net20/nunit.framework.dll",
+        "lib/net20/nunit.framework.xml",
+        "lib/net40/nunit.framework.dll",
+        "lib/net40/nunit.framework.xml",
+        "lib/net45/nunit.framework.dll",
+        "lib/net45/nunit.framework.xml",
+        "lib/portable-net45+win8+wp8+wpa81+Xamarin.Mac+MonoAndroid10+MonoTouch10+Xamarin.iOS10/nunit.framework.dll",
+        "lib/portable-net45+win8+wp8+wpa81+Xamarin.Mac+MonoAndroid10+MonoTouch10+Xamarin.iOS10/nunit.framework.xml",
+        "LICENSE.txt",
+        "NOTICES.txt",
+        "NUnit.nuspec",
+        "package/services/metadata/core-properties/68f29da575ae4b34a5aa7f4c5b9eb59a.psmdcp"
+      ]
+    },
+    "NUnit.ConsoleRunner/3.2.0": {
+      "sha512": "0dYfm/KIOJD+bZQFIk1YdOe910pHYV1Uo0/WsgC4Dn3nt1ggRr2z2yr+qNGwMKZh1ewWOOilaDBgB/vDGTkkUA==",
+      "type": "Package",
+      "files": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "CHANGES.txt",
+        "LICENSE.txt",
+        "NOTICES.txt",
+        "NUnit.ConsoleRunner.nuspec",
+        "package/services/metadata/core-properties/a04a56ffcd4b4b9c9c28219a54b9a5ba.psmdcp",
+        "tools/Mono.Cecil.dll",
+        "tools/nunit.engine.api.dll",
+        "tools/nunit.engine.api.xml",
+        "tools/nunit.engine.dll",
+        "tools/nunit.nuget.addins",
+        "tools/nunit3-console.exe",
+        "tools/nunit3-console.exe.config",
+        "tools/nunit-agent.exe",
+        "tools/nunit-agent.exe.config",
+        "tools/nunit-agent-x86.exe",
+        "tools/nunit-agent-x86.exe.config"
+      ]
+    },
+    "NUnit.Extension.NUnitProjectLoader/3.2.0": {
+      "sha512": "PNO3c70QkG1HUDYE7+Ma9PANiZ/QaTi5WJ2hA7h0VK5K2n6mYMd2CnfJl8goAT0ddscE7biU4O5c/wqs/k5HiA==",
+      "type": "Package",
+      "files": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "LICENSE.txt",
+        "NOTICES.txt",
+        "NUnit.Extension.NUnitProjectLoader.nuspec",
+        "package/services/metadata/core-properties/3dc69973b8ee4586b7ca49b7b93780e8.psmdcp",
+        "tools/nunit-project-loader.dll"
+      ]
+    },
+    "NUnit.Extension.NUnitV2Driver/3.2.0": {
+      "sha512": "WDxer6FA+BPMJlo2Igq1r10j/pRE9kwf6w65RWzGNjLuBdwrqJFEqgiaGSeiDg2PWDYrIR5XO2QzMwF3dTh+qA==",
+      "type": "Package",
+      "files": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "LICENSE.txt",
+        "NOTICES.txt",
+        "NUnit.Extension.NUnitV2Driver.nuspec",
+        "package/services/metadata/core-properties/0ec13f4e89004756b3e780781d5bdd72.psmdcp",
+        "tools/nunit.core.dll",
+        "tools/nunit.core.interfaces.dll",
+        "tools/nunit.v2.driver.addins",
+        "tools/nunit.v2.driver.dll"
+      ]
+    },
+    "NUnit.Extension.NUnitV2ResultWriter/3.2.0": {
+      "sha512": "Z59v5oRXJnJ+BKrfvURA/V4vhg7CAcnSP1pWBzIc9+YnTjHswIcFTNoaxaR+Lj6evAQZjLF66JqF8x/3KVDRug==",
+      "type": "Package",
+      "files": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "LICENSE.txt",
+        "NOTICES.txt",
+        "NUnit.Extension.NUnitV2ResultWriter.nuspec",
+        "package/services/metadata/core-properties/3efbda7c48a24c35830b19a4a6436b27.psmdcp",
+        "tools/nunit-v2-result-writer.dll"
+      ]
+    },
+    "NUnit.Extension.VSProjectLoader/3.2.0": {
+      "sha512": "FMPb7mBDLke+/dwFrFW3OfD5O1w/9pkEagf9+MQLd/yRIkOHvd2H5csUPncTLx7vk3fmzwdhs8wiDQ1vsP3RoQ==",
+      "type": "Package",
+      "files": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "LICENSE.txt",
+        "NOTICES.txt",
+        "NUnit.Extension.VSProjectLoader.nuspec",
+        "package/services/metadata/core-properties/0dd87385effa4b3982e3f27bc2798c93.psmdcp",
+        "tools/vs-project-loader.dll"
+      ]
+    },
+    "NUnit.Runners/3.2.0": {
+      "sha512": "oXP5oPhtQ7t8mSd3nNkgrM1hb5M8JEYa4vyvJEJ48DcJOOmwMvClF1imk+3r9cmtf0Mis8QEHo/8f3TstUVitQ==",
+      "type": "Package",
+      "files": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "NUnit.Runners.nuspec",
+        "package/services/metadata/core-properties/63b92a23705b4e6cabadaca21bca094f.psmdcp"
       ]
     },
     "Remotion.Linq/2.0.1": {
@@ -18953,17 +19219,9 @@
   },
   "projectFileDependencyGroups": {
     "": [
-      "EntityFramework.Commands >= 7.0.0-rc1-final",
-      "EntityFramework.Core >= 7.0.0-rc1-final",
-      "EntityFramework.Sqlite >= 7.0.0-rc1-final",
-      "Microsoft.ApplicationInsights >= 1.2.3",
-      "Microsoft.ApplicationInsights.PersistenceChannel >= 1.2.3",
-      "Microsoft.ApplicationInsights.WindowsApps >= 1.1.1",
-      "Microsoft.Diagnostics.Tracing.EventSource >= 1.1.28",
       "Microsoft.NETCore.UniversalWindowsPlatform >= 5.0.0",
-      "Microsoft.Xaml.Behaviors.Uwp.Managed >= 1.1.0",
-      "Unity >= 4.0.1",
-      "WinRTXamlToolkit >= 2.0.0"
+      "NUnit >= 3.2.0",
+      "NUnit.Runners >= 3.2.0"
     ],
     "UAP,Version=v10.0": []
   }

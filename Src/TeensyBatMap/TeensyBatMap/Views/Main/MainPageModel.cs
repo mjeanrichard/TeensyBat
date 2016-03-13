@@ -23,7 +23,6 @@ namespace TeensyBatMap.Views.Main
 		private readonly BatNodeLogReader _logReader;
 		private readonly NavigationService _navigationService;
 		private BatNodeLog _selectedItem;
-		private bool _hasFiles;
 
 		public MainPageModel()
 		{
@@ -32,11 +31,11 @@ namespace TeensyBatMap.Views.Main
 			OnPropertyChanged(nameof(HasFiles));
 		}
 
-		public MainPageModel(NavigationEventArgs navigation, BatContext db, NavigationService navigationService)
+		public MainPageModel(NavigationEventArgs navigation, BatContext db, NavigationService navigationService, BatNodeLogReader logReader)
 		{
-			_logReader = new BatNodeLogReader();
 			_db = db;
 			_navigationService = navigationService;
+			_logReader = logReader;
 
 			ImportFileCommand = new RelayCommand(async () => await ImportLogFile());
 			EditCommand = new RelayCommand(() =>

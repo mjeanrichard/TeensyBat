@@ -27,7 +27,14 @@ namespace WinRtLib
             "MaxValue",
             typeof(double),
             typeof(HistogramControl),
-            new PropertyMetadata(null)
+            new PropertyMetadata(null, OnGraphicalPropertyChanged)
+            );
+
+        public static readonly DependencyProperty MinValueProperty = DependencyProperty.Register(
+            "MinValue",
+            typeof(double),
+            typeof(HistogramControl),
+            new PropertyMetadata(null, OnGraphicalPropertyChanged)
             );
 
         public static readonly DependencyProperty LabelSizeProperty = DependencyProperty.Register(
@@ -46,6 +53,13 @@ namespace WinRtLib
 
         public static readonly DependencyProperty SecondaryBarColorProperty = DependencyProperty.Register(
             "SecondaryBarColor",
+            typeof(Color),
+            typeof(HistogramControl),
+            new PropertyMetadata(null, OnGraphicalPropertyChanged)
+            );
+
+        public static readonly DependencyProperty HighlightBarColorProperty = DependencyProperty.Register(
+            "HighlightBarColor",
             typeof(Color),
             typeof(HistogramControl),
             new PropertyMetadata(null, OnGraphicalPropertyChanged)
@@ -100,6 +114,12 @@ namespace WinRtLib
             set { SetValue(SecondaryBarColorProperty, value); }
         }
 
+        public Color HighlightBarColor
+		{
+            get { return (Color)GetValue(HighlightBarColorProperty); }
+            set { SetValue(HighlightBarColorProperty, value); }
+        }
+
         public Size LabelSize
         {
             get { return (Size)GetValue(LabelSizeProperty); }
@@ -118,6 +138,12 @@ namespace WinRtLib
         {
             get { return (double)GetValue(MaxValueProperty); }
             set { SetValue(MaxValueProperty, value); }
+        }
+
+        public double MinValue
+		{
+            get { return (double)GetValue(MinValueProperty); }
+            set { SetValue(MinValueProperty, value); }
         }
 
         public Thickness BarPadding { get; set; }
@@ -208,12 +234,20 @@ namespace WinRtLib
                     maxValue = Math.Max(maxValue, secondaryValues.Max());
                 }
             }
-            double valueFactor = Math.Max(maxBarHeight / maxValue, 0);
+
+	        double minValue = MinValue;
+	        if (minValue > 0)
+	        {
+		        maxValue = Math.Max(minValue, maxValue);
+	        }
+	        double valueFactor = Math.Max(maxBarHeight / maxValue, 0);
 
 
             Color barColor = BarColor;
             Color secondaryBarColor = SecondaryBarColor;
-            for (int barIndex = 0; barIndex < binValues.Length; barIndex++)
+	        Color highlightColor = HighlightBarColor;
+
+			for (int barIndex = 0; barIndex < binValues.Length; barIndex++)
             {
                 double value = binValues[barIndex];
                 double left = barIndex * barWidth;
@@ -232,7 +266,14 @@ namespace WinRtLib
 
                 r.Height = value * valueFactor;
                 r.Y = maxBarHeight + BarPadding.Top - r.Height;
-                session.FillRectangle(r, barColor);
+	            if (bins[barIndex].IsHighlighted)
+	            {
+		            session.FillRectangle(r, highlightColor);
+	            }
+	            else
+	            {
+		            session.FillRectangle(r, barColor);
+	            }
             }
         }
 

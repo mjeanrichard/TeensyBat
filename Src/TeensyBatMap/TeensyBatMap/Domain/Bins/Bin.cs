@@ -35,8 +35,9 @@ namespace TeensyBatMap.Domain.Bins
         }
 
         public string Label { get; set; }
+	    public bool IsHighlighted { get; }
 
-        public int Count
+	    public int Count
         {
             get { return Elements.Count; }
         }

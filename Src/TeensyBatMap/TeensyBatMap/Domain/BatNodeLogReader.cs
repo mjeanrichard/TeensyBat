@@ -5,10 +5,19 @@ using System.Threading.Tasks;
 
 using Windows.Storage;
 
+using Microsoft.Data.Entity.Metadata.Internal;
+
 namespace TeensyBatMap.Domain
 {
 	public class BatNodeLogReader
 	{
+		private readonly FftAnalyzer _fftAnalyzer;
+
+		public BatNodeLogReader(FftAnalyzer fftAnalyzer)
+		{
+			_fftAnalyzer = fftAnalyzer;
+		}
+
 		public async Task<BatNodeLog> Load(IStorageFile file)
 		{
 			BatNodeLog log = new BatNodeLog();
@@ -52,7 +61,7 @@ namespace TeensyBatMap.Domain
 			call.Duration = reader.ReadUInt32();
 			call.StartTimeMs = reader.ReadUInt32();
 			call.ClippedSamples = reader.ReadUInt16();
-			call.MaxIntensity = reader.ReadUInt16();
+			call.MaxPower = reader.ReadUInt16();
 			call.MissedSamples = reader.ReadUInt16();
 
 			call.FftData = reader.ReadBytes(512);
@@ -63,6 +72,27 @@ namespace TeensyBatMap.Domain
 
 		private void AnalyzeFftData(BatCall call)
 		{
+			FftResult fftResult = _fftAnalyzer.Analyze(call);
+			call.DcOffset = (uint)fftResult.DcOffset;
+			uint maxPeak = 0;
+			int maxPeakIndex = -1;
+			foreach (int peakIndex in fftResult.Peaks)
+			{
+				uint peakValue = fftResult.FftData[peakIndex];
+				if (peakValue > maxPeak)
+				{
+					maxPeak = peakValue;
+					maxPeakIndex = peakIndex;
+				}
+			}
+			if (maxPeakIndex >= 0 && maxPeak > 10)
+			{
+				call.MaxFrequency = (uint)(maxPeakIndex / 2);
+			}
+			else
+			{
+				call.Enabled = false;
+			}
 		}
 
 		private RecordTypes GetNextRecordType(BinaryReader reader)

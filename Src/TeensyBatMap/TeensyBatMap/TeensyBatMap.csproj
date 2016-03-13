@@ -123,13 +123,15 @@
     <Compile Include="Domain\Bins\IntBin.cs" />
     <Compile Include="Domain\Bins\UintBinCollection.cs" />
     <Compile Include="Domain\Bins\TimeCallBinCollection.cs" />
+    <Compile Include="Domain\FftAnalyzer.cs" />
+    <Compile Include="Domain\FftResult.cs" />
     <Compile Include="Domain\RecordTypes.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\Migration01Initial.cs" />
-    <Compile Include="Migrations\Migration01Initial.designer.cs">
-      <DependentUpon>Migration01Initial.cs</DependentUpon>
+    <Compile Include="Migrations\20160313194140_Migration01Initial.cs" />
+    <Compile Include="Migrations\20160313194140_Migration01Initial.designer.cs">
+      <DependentUpon>20160313194140_Migration01Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\BatContextModelSnapshot.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
