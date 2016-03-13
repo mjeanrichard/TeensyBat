@@ -7,43 +7,40 @@
 
 void BatAnalog::process()
 {
-	BatCall * currentCall = &callLog[currentCallIndex];
+	BatCall * currentCall = &_callLog[_currentCallIndex];
 
 	if (AdcHandler::readyBuffer == nullptr)
 	{
-		/*if (currentCallIndex > 0 && currentCall->sampleCount == 0) {
-			LogCall();
-		}*/
 		return;
 	}
 
-	copy_to_fft_buffer(complexBuffer, AdcHandler::readyBuffer);
-	apply_window_to_fft_buffer(complexBuffer);
-	arm_cfft_radix4_q15(&fft_inst, complexBuffer);
+	copy_to_fft_buffer(_complexBuffer, AdcHandler::readyBuffer);
+	apply_window_to_fft_buffer(_complexBuffer);
+	arm_cfft_radix4_q15(&_fft_inst, _complexBuffer);
 
 	uint16_t p = AdcHandler::ReadEnvelope();
 
 	uint32_t * binData = currentCall->data;
 
 
-	if (p > 1000 || (currentCall->sampleCount > 0 && p > 1000))
+	if (p > 500 || (currentCall->sampleCount > 0 && p > 200))
 	{
 		if (currentCall->sampleCount == 0)
 		{
-			callDuration = 0;
+			_callDuration = 0;
 			digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
 			currentCall->startTimeMs = millis();
 			currentCall->maxPower = p;
 
-			uint32_t tmp = *((uint32_t *)complexBuffer);
+			uint32_t tmp = *((uint32_t *)_complexBuffer);
 			binData[0] = multiply_16tx16t_add_16bx16b(tmp, tmp);
 
 			int index = 2;
 			for (int i = 1; i < TB_QUART_FFT_SIZE; i++)
 			{
-				tmp = *((uint32_t *)complexBuffer + index++);
+				tmp = *((uint32_t *)_complexBuffer + index++);
 				binData[i] = multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
-				tmp = *((uint32_t *)complexBuffer + index++);
+				tmp = *((uint32_t *)_complexBuffer + index++);
 				binData[i] += multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
 			}
 		}
@@ -51,16 +48,16 @@ void BatAnalog::process()
 		{
 			if (p > currentCall->maxPower) currentCall->maxPower = p;
 
-			uint32_t tmp = *((uint32_t *)complexBuffer);
+			uint32_t tmp = *((uint32_t *)_complexBuffer);
 			uint32_t magsq = multiply_16tx16t_add_16bx16b(tmp, tmp);
 			binData[0] += magsq;
 
 			int index = 2;
 			for (int i = 1; i < TB_QUART_FFT_SIZE; i++)
 			{
-				tmp = *((uint32_t *)complexBuffer + index++);
+				tmp = *((uint32_t *)_complexBuffer + index++);
 				magsq = multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
-				tmp = *((uint32_t *)complexBuffer + index++);
+				tmp = *((uint32_t *)_complexBuffer + index++);
 				magsq += multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
 				binData[i] += magsq;
 			}
@@ -71,7 +68,7 @@ void BatAnalog::process()
 	}
 	else if (currentCall->sampleCount > 0)
 	{
-		currentCall->durationMicros = callDuration;
+		currentCall->durationMicros = _callDuration;
 		AdcHandler::MissedSamples = 0;
 		AdcHandler::ClippedSignalCount = 0;
 
@@ -95,12 +92,15 @@ void BatAnalog::process()
 
 		digitalWriteFast(TB_PIN_LED_GREEN, LOW);
 		
-		currentCallIndex++;
-		if (currentCallIndex >= 10)
+		_currentCallIndex++;
+		if (_currentCallIndex >= 10)
 		{
 			LogCalls();
 		}
-		callLog[currentCallIndex].sampleCount = 0;
+		_callLog[_currentCallIndex].sampleCount = 0;
+	} else
+	{
+		AdcHandler::MissedSamples = 0;
 	}
 	AdcHandler::readyBuffer = nullptr;
 }
@@ -109,12 +109,12 @@ void BatAnalog::LogCalls()
 {
 #ifdef TB_DEBUG
 	Serial.print(F("Logging Calls: "));
-	Serial.println(currentCallIndex);
+	Serial.println(_currentCallIndex);
 #endif
 
 	InitLogFile(false);
 
-	if (isFileReady)
+	if (_isFileReady)
 	{
 		if (!WriteLog())
 		{
@@ -123,7 +123,7 @@ void BatAnalog::LogCalls()
 #endif
 			//Reinitialize SDCard and try again.
 			InitLogFile(true);
-			if (isFileReady) {
+			if (_isFileReady) {
 				if (!WriteLog())
 				{
 					Error(TB_ERROR_LOG_WRITE);
@@ -137,45 +137,61 @@ void BatAnalog::LogCalls()
 #endif
 		}
 	}
-	callLog[0].sampleCount = 0;
-	currentCallIndex = 0;
+	_callLog[0].sampleCount = 0;
+	_currentCallIndex = 0;
+}
+
+void BatAnalog::WriteLogHeader()
+{
+	_file.write("TBL");
+	_file.write(1);
+	_file.write(_nodeId);
+	uint32_t time = Teensy3Clock.get();
+	_file.write(&time, 4);
+#ifdef TB_DEBUG
+	Serial.print(F("Writing Header at "));
+	Serial.print(time);
+	Serial.print(F("ms for Node "));
+	Serial.print(_nodeId);
+	Serial.print(F("."));
+#endif
 }
 
 bool BatAnalog::WriteLog()
 {
-	for (int callIndex = 0; callIndex < currentCallIndex; callIndex++) 
+	for (int callIndex = 0; callIndex < _currentCallIndex; callIndex++) 
 	{
-		BatCall *currentCall = &callLog[callIndex];
+		BatCall *currentCall = &_callLog[callIndex];
 
-		int retVal = file.write(255);
+		int retVal = _file.write(255);
 		if (retVal <= 0)
 		{
 #ifdef TB_DEBUG
 			Serial.print(F("Failed to Write to File: "));
-			Serial.println(file.getError());
+			Serial.println(_file.getError());
 #endif
 			return false;
 		}
-		file.write(255);
+		_file.write(255);
 
-		file.write(&currentCall->durationMicros, 4);
-		file.write(&currentCall->startTimeMs, 4);
-		file.write(&currentCall->clippedSamples, 2);
-		file.write(&currentCall->maxPower, 2);
-		file.write(&currentCall->missedSamples, 2);
+		_file.write(&currentCall->durationMicros, 4);
+		_file.write(&currentCall->startTimeMs, 4);
+		_file.write(&currentCall->clippedSamples, 2);
+		_file.write(&currentCall->maxPower, 2);
+		_file.write(&currentCall->missedSamples, 2);
 
 		uint16_t * val = ((uint16_t *)currentCall->data);
 		for (int i = 0; i < TB_QUART_FFT_SIZE; i++)
 		{
-			file.write(val, 2);
+			_file.write(val, 2);
 			val += 2;
 		}
 	}
-	if (!file.sync())
+	if (!_file.sync())
 	{
 #ifdef TB_DEBUG
 		Serial.print(F("Failed to Sync File: "));
-		Serial.println(file.getError());
+		Serial.println(_file.getError());
 #endif
 		return false;
 	}
@@ -189,11 +205,11 @@ void BatAnalog::InitLogFile(bool forceReset)
 #ifdef TB_DEBUG
 		Serial.println(F("No SD-Card present!"));
 #endif
-		isFileReady = false;
+		_isFileReady = false;
 		return;
 	}
 
-	if (isFileReady && !forceReset)
+	if (_isFileReady && !forceReset)
 	{
 		return;
 	}
@@ -202,24 +218,42 @@ void BatAnalog::InitLogFile(bool forceReset)
 	Serial.println(F("Initializing SD Card..."));
 #endif
 
-	if (!sd.begin(TB_PIN_SDCS, SPI_FULL_SPEED)) {
+	if (!_sd.begin(TB_PIN_SDCS, SPI_FULL_SPEED)) {
 #ifdef TB_DEBUG
-		sd.initErrorPrint();
+		_sd.initErrorPrint();
 #endif
 		Error(TB_ERROR_OPEN_CARD);
 	}
-	if (file.isOpen())
+	if (_file.isOpen())
 	{
-		file.close();
+		_file.close();
 	}
-	file.clearError();
-	if (!file.open("out.txt", O_RDWR | O_CREAT | O_AT_END)) {
+	_file.clearError();
+
+	if (!_sd.exists(_filename)) {
+		for (int i = 0; i < 100; i++) {
+			_filename[5] = i / 10 + '0';
+			_filename[6] = i % 10 + '0';
+
+			if (!_sd.exists(_filename)) {
+				if (!_file.open(_filename, O_RDWR | O_CREAT | O_AT_END)) {
+#ifdef TB_DEBUG
+					Serial.println(F("Could not create/open File!"));
+#endif
+					Error(TB_ERROR_OPEN_FILE);
+				}
+				break;
+			}
+		}
+	}
+	else if (!_file.open(_filename, O_RDWR | O_CREAT | O_AT_END)) {
 #ifdef TB_DEBUG
 		Serial.println(F("Could not create/open File!"));
 #endif
 		Error(TB_ERROR_OPEN_FILE);
 	}
-	isFileReady = true;
+	WriteLogHeader();
+	_isFileReady = true;
 }
 
 void BatAnalog::Error(int code)
@@ -269,14 +303,18 @@ void BatAnalog::apply_window_to_fft_buffer(void* buffer)
 
 void BatAnalog::init()
 {
+	strcpy_P(_filename, PSTR("TBXX --.DAT"));
+	_filename[2] = _nodeId / 10 + '0';
+	_filename[3] = _nodeId % 10 + '0';
+
 	AdcHandler::InitAdc();
-	arm_cfft_radix4_init_q15(&fft_inst, TB_FFT_SIZE, 0, 1);
+	arm_cfft_radix4_init_q15(&_fft_inst, TB_FFT_SIZE, 0, 1);
 }
 
 void BatAnalog::start()
 {
-	currentCallIndex = 0;
-	callLog[currentCallIndex].sampleCount = 0;
+	_currentCallIndex = 0;
+	_callLog[_currentCallIndex].sampleCount = 0;
 	AdcHandler::Start();
 }
 

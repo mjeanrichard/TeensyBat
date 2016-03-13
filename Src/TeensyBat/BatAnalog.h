@@ -29,26 +29,29 @@ public:
 class BatAnalog
 {
 private:
-
 	static void copy_to_fft_buffer(void *destination, const void *source);
 	static void apply_window_to_fft_buffer(void *buffer);
 
-	int currentCallIndex;
-	BatCall callLog[10];
+	int _currentCallIndex;
+	BatCall _callLog[10];
 
-	SdFat sd;
-	SdFile file;
+	SdFat _sd;
+	SdFile _file;
 
-	elapsedMicros callDuration;
+	elapsedMicros _callDuration;
 
 	//FFT
-	int16_t complexBuffer[TB_DOUBLE_FFT_SIZE] __attribute__((aligned(4)));
+	int16_t _complexBuffer[TB_DOUBLE_FFT_SIZE] __attribute__((aligned(4)));
 
-	arm_cfft_radix4_instance_q15 fft_inst;
+	arm_cfft_radix4_instance_q15 _fft_inst;
 
-	bool isFileReady = false;
+	bool _isFileReady = false;
+	char _filename[11];
+
+	byte _nodeId = 1;
 
 	void LogCalls();
+	void WriteLogHeader();
 	void InitLogFile(bool forceReset);
 	bool WriteLog();
 
