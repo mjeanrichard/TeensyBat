@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -112,7 +113,8 @@ namespace TeensyBatMap.ViewModels
 			int iPeak = 0;
 			for (int i = 1; i < fftResult.FftData.Length; i++)
 			{
-				simpleIntBins[i - 1] = new SimpleIntBin(fftResult.FftData[i], (i / 2).ToString(CultureInfo.CurrentCulture), false);
+				//231kHz Sample Rate with 1024 Buffer -> 115.5 / 256 Bins => 0.451 kHz pro Bin
+				simpleIntBins[i - 1] = new SimpleIntBin(fftResult.FftData[i], (Math.Round(i * 0.451).ToString(CultureInfo.CurrentCulture), false);
 				if (iPeak < fftResult.Peaks.Length && fftResult.Peaks[iPeak] == i)
 				{
 					simpleIntBins[i - 1].IsHighlighted = true;

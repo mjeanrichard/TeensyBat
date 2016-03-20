@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="TeensyBat.ino" />
+    <None Include="Core.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.TeensyBat.vsarduino.h">
@@ -39,6 +40,12 @@
     <ClInclude Include="..\libraries\ADC\ADC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BatLog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BatCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sqrt_integer.c">
@@ -48,6 +55,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AdcHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BatLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

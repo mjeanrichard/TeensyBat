@@ -16,6 +16,7 @@ private:
 
 	static unsigned int volatile bufIndex;
 
+
 	static ADC* adc;
 
 
@@ -26,7 +27,7 @@ public:
 	static volatile unsigned int ClippedSignalCount;
 
 	static uint16_t ReadEnvelope();
-
+	static uint16_t ReadBatteryVoltage();
 	static void InitAdc();
 	static void Start();
 	static void Stop();

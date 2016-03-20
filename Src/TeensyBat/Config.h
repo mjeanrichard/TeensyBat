@@ -1,11 +1,29 @@
 #ifndef CONFIG_h
 #define CONFIG_h
 
+#include "WProgram.h"
+
 #define TB_DEBUG = 1;
+
+// User Config
+
+static const uint16_t TB_TIME_BEFORE_AUTO_LOG_MS = 1000;
+static const uint32_t TB_INFO_LOG_INTERVAL_MS = 5 * 60 * 1000;
+
+//Power required to start a logging of a Call
+static const uint32_t TB_MIN_CALL_START_POWER = 500;
+//Power required for call recording
+static const uint32_t TB_MIN_CALL_POWER = 100;
+
+
+static const uint32_t TB_LOG_BUFFER_LENGTH = 10;
+
+// END User Config
 
 
 static const uint8_t TB_PIN_AUDIO = A9;
 static const uint8_t TB_PIN_ENVELOPE = A3;
+static const uint8_t TB_PIN_BATTERY = A2;
 
 static const uint8_t TB_PIN_LED_GREEN = 6;
 static const uint8_t TB_PIN_LED_YELLOW = 5;

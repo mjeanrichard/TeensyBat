@@ -48,6 +48,11 @@ uint16_t AdcHandler::ReadEnvelope()
 	return adc->analogRead(TB_PIN_ENVELOPE, ADC_1);
 }
 
+uint16_t AdcHandler::ReadBatteryVoltage()
+{
+	return adc->analogRead(TB_PIN_BATTERY, ADC_1);
+}
+
 void AdcHandler::HandleAdc0Isr()
 {
 	int16_t s = adc->analogReadContinuous(ADC_0);
@@ -59,6 +64,7 @@ void AdcHandler::HandleAdc0Isr()
 			MissedSamples++;
 			return;
 		}
+
 		readyBuffer = sampleBuffer;
 		if (sampleBuffer == samples1)
 		{
@@ -72,7 +78,7 @@ void AdcHandler::HandleAdc0Isr()
 	}
 	sampleBuffer[bufIndex] = s;
 	bufIndex++;
-	if (s == 4095 || s == 0)
+	if (s >= 4094 || s <= 2)
 	{
 		ClippedSignalCount++;
 	}
