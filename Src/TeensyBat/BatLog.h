@@ -32,6 +32,7 @@ private:
 
 public:
 	void LogCalls(BatCall calls[], uint8_t callsLength, BatInfo infos[], uint8_t infoLength);
+	void SetNodeId(uint8_t nodeId);
 };
 
 

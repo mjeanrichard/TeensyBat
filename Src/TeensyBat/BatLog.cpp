@@ -42,6 +42,11 @@ void BatLog::LogCalls(BatCall calls[], uint8_t callsLength, BatInfo infos[], uin
 	}
 }
 
+void BatLog::SetNodeId(uint8_t nodeId)
+{
+	_nodeId = nodeId;
+}
+
 void BatLog::WriteLogHeader()
 {
 	_file.write("TBL");
@@ -107,7 +112,7 @@ bool BatLog::InitLogFile()
 #endif
 
 	if (!_sd.begin(TB_PIN_SDCS, SPI_FULL_SPEED)) {
-#ifdef TB_DEBUG
+#ifdef TB_DEBUG 
 		_sd.initErrorPrint();
 #endif
 		FatalError(TB_ERROR_OPEN_CARD);
@@ -124,7 +129,7 @@ bool BatLog::InitLogFile()
 	//TBXX-YYYYMMDDHHMM.DAT
 	sprintf(_filename, "TB%02hhu-%04u%02hhu%02hhu%02hhu%02hhu.DAT", _nodeId, 1970 + time.Year, time.Month, time.Day, time.Hour, time.Minute);
 
-	bool created = _file.exists(_filename);
+	bool createdNewFile = !_file.exists(_filename);
 
 	if (!_file.open(_filename, O_RDWR | O_CREAT | O_AT_END)) {
 #ifdef TB_DEBUG
@@ -133,7 +138,7 @@ bool BatLog::InitLogFile()
 		FatalError(TB_ERROR_OPEN_FILE);
 	}
 
-	if (created) {
+	if (createdNewFile) {
 		_file.timestamp(T_CREATE | T_ACCESS | T_WRITE, 1970 + time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second);
 		WriteLogHeader();
 	}

@@ -11,6 +11,7 @@
 #include "dspinst.h"
 #include "sqrt_integer.h"
 #include "AdcHandler.h"
+#include <EEPROM.h>
 
 
 class BatAnalog

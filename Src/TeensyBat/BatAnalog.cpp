@@ -2,8 +2,6 @@
 
 void BatAnalog::process()
 {
-	BatCall * currentCall = &_callLog[_currentCallIndex];
-
 	noInterrupts();
 	int16_t* readyBuffer = AdcHandler::readyBuffer;
 	interrupts();
@@ -18,6 +16,7 @@ void BatAnalog::process()
 		return;
 	}
 
+	BatCall * currentCall = &_callLog[_currentCallIndex];
 	_lastSampleDuration = _usSinceLastSample;
 	_usSinceLastSample = 0;
 
@@ -27,7 +26,6 @@ void BatAnalog::process()
 
 	uint16_t p = AdcHandler::ReadEnvelope();
 	uint32_t * binData = currentCall->data;
-
 
 	if (p > TB_MIN_CALL_START_POWER || (currentCall->sampleCount > 0 && p > TB_MIN_CALL_POWER))
 	{
@@ -94,6 +92,8 @@ void BatAnalog::process()
 			Serial.print(F("Clipped Samples: "));
 			Serial.println(currentCall->clippedSamples);
 		}
+		uint16_t maxPower = currentCall->maxPower;
+		Serial.printf(F("Call end Detected (Max P: %u, D: %u us, End P: %u.\n"), maxPower, (uint32_t)_callDuration, p);
 #endif 
 
 		for (int i = 0; i < TB_QUART_FFT_SIZE; i++)
@@ -104,9 +104,9 @@ void BatAnalog::process()
 		digitalWriteFast(TB_PIN_LED_GREEN, LOW);
 		
 		_currentCallIndex++;
+		_msSinceLastCall = 0;
 		CheckLog();
 		_callLog[_currentCallIndex].sampleCount = 0;
-		_msSinceLastCall = 0;
 	} else
 	{
 		noInterrupts();
@@ -127,24 +127,27 @@ void BatAnalog::AddInfoLog()
 	batInfo->BatteryVoltage = (AdcHandler::ReadBatteryVoltage() * 2550) / 1000;
 	batInfo->LastBufferDuration = _lastSampleDuration;
 #ifdef TB_DEBUG
-	Serial.print(F("Adding Info: "));
-	Serial.printf("Bat: %u mV, Sample Duration: %u ms, Time: %ul, MS: %ul\n", batInfo->BatteryVoltage, batInfo->LastBufferDuration, batInfo->time, batInfo->startTimeMs);
+	Serial.printf("Adding Info: Bat: %u mV, Sample Duration: %u ms, Time: %ul, MS: %ul\n", batInfo->BatteryVoltage, batInfo->LastBufferDuration, batInfo->time, batInfo->startTimeMs);
 #endif
 	_currentInfoIndex++;
 	if (_currentInfoIndex > TB_LOG_BUFFER_LENGTH)
 	{
-		_currentInfoIndex = 0;
+		CheckLog();
 	}
 	_msSinceLastInfoLog = 0;
 }
 
 void BatAnalog::CheckLog()
 {
-	if (_currentCallIndex >= TB_LOG_BUFFER_LENGTH || (_currentCallIndex > 0 && _msSinceLastCall >= TB_TIME_BEFORE_AUTO_LOG_MS))
+	if (_currentCallIndex >= TB_LOG_BUFFER_LENGTH || (_currentCallIndex > 0 && _msSinceLastCall >= TB_TIME_BEFORE_AUTO_LOG_MS) || _currentInfoIndex >= TB_LOG_BUFFER_LENGTH)
 	{
+#ifdef TB_DEBUG
+		Serial.printf(F("Logging: Calls: %hhu, %hhu ms\n"), _currentCallIndex, (unsigned long)_msSinceLastCall);
+#endif
 		_log.LogCalls(_callLog, _currentCallIndex, _infoLog, _currentInfoIndex);
 		_currentInfoIndex = 0;
 		_currentCallIndex = 0;
+		_callLog[0].sampleCount = 0;
 	}
 }
 
@@ -175,8 +178,13 @@ void BatAnalog::apply_window_to_fft_buffer(void* buffer)
 
 void BatAnalog::init()
 {
+	_nodeId = EEPROM.read(0);
+	_log.SetNodeId(_nodeId);
 	AdcHandler::InitAdc();
 	arm_cfft_radix4_init_q15(&_fft_inst, TB_FFT_SIZE, 0, 1);
+#ifdef TB_DEBUG
+	Serial.printf(F("Initialization completed (NodeId: %hhu).\n"), _nodeId);
+#endif
 }
 
 void BatAnalog::start()

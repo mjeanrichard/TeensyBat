@@ -1,8 +1,11 @@
 #include <Arduino.h>
 
+#include "Config.h"
 #include "AdcHandler.h"
 #include "BatAnalog.h"
+#include "Configurator.h"
 #include <SdFatUtil.h>
+#include <EEPROM.h>
 
 #define TFT_DC       15
 #define TFT_CS       9
@@ -12,7 +15,11 @@
 #define TFT_MISO     8
 //ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC, TFT_RST, TFT_MOSI, TFT_SCLK, TFT_MISO);
 
+
+
 BatAnalog *ba = new BatAnalog();
+
+
 
 void setup() {
 
@@ -24,25 +31,27 @@ void setup() {
 	pinMode(TB_PIN_S1, INPUT_PULLUP);
 	pinMode(TB_PIN_S2, INPUT_PULLUP);
 
+#ifdef TB_DEBUG
 	Serial.begin(57600);
-	delay(1000);
+	delay(500);
 	Serial.println("Start!");
+#else
+	Serial.end();
+#endif
+
+	if (digitalReadFast(TB_PIN_S1) == LOW)
+	{
+		Configurator *c = new Configurator();
+		c->Start();
+	}
 
 	ba->init();
-
-	/*tft.begin();
-	tft.fillScreen(ILI9341_YELLOW);
-	tft.fillScreen(ILI9341_BLACK);
-	tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-	tft.setTextSize(1);
-	*/
-
-	delay(500);
-
 	ba->start();
 
+#ifdef TB_DEBUG
 	Serial.print("Free MEM: ");
 	Serial.println(FreeRam());
+#endif
 }
 
 
