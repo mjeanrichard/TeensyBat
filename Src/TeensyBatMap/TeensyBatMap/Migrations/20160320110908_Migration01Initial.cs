@@ -63,6 +63,28 @@ namespace TeensyBatMap.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
+            migrationBuilder.CreateTable(
+                name: "BatInfos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    BatNodeLogId = table.Column<int>(nullable: true),
+                    BatteryVoltage = table.Column<uint>(nullable: false),
+                    SampleDuration = table.Column<uint>(nullable: false),
+                    Time = table.Column<DateTime>(nullable: false),
+                    TimeMs = table.Column<uint>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BatInfo", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BatInfo_BatNodeLog_BatNodeLogId",
+                        column: x => x.BatNodeLogId,
+                        principalTable: "BatNodeLogs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
             migrationBuilder.AddForeignKey(
                 name: "FK_BatCall_BatNodeLog_BatNodeLogId",
                 table: "BatCalls",
@@ -76,6 +98,7 @@ namespace TeensyBatMap.Migrations
         {
             migrationBuilder.DropForeignKey(name: "FK_BatNodeLog_BatCall_FirstCallId", table: "BatNodeLogs");
             migrationBuilder.DropForeignKey(name: "FK_BatNodeLog_BatCall_LastCallId", table: "BatNodeLogs");
+            migrationBuilder.DropTable("BatInfos");
             migrationBuilder.DropTable("BatCalls");
             migrationBuilder.DropTable("BatNodeLogs");
         }

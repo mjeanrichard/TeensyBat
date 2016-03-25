@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Navigation;
+
+using Syncfusion.UI.Xaml.Diagram;
+
 using TeensyBatMap.Common;
 using TeensyBatMap.Database;
 using TeensyBatMap.Domain;
@@ -88,6 +92,8 @@ namespace TeensyBatMap.Views.LogDetails
             }
         }
 
+		public ObservableCollection<KeyValuePair<DateTime, uint>> Freq { get; set; }
+
         protected async Task UpdateBins()
         {
             await Task.Run(() =>
@@ -100,7 +106,7 @@ namespace TeensyBatMap.Views.LogDetails
             OnPropertyChanged("FilterText");
         }
 
-        public override async Task Initialize()
+	    protected override async Task InitializeInternal()
         {
             if (_db != null)
             {
@@ -118,7 +124,10 @@ namespace TeensyBatMap.Views.LogDetails
                 DurationRange.Set(CallDurationBins.Range);
                 TimeRange.Set(TimeBins.Range);
 
-                OnPropertyChanged("FilterText");
+
+	            Freq = new ObservableCollection<KeyValuePair<DateTime, uint>>(_batCalls.Select(c => new KeyValuePair<DateTime, uint>(c.StartTime, c.MaxFrequency)));
+				OnPropertyChanged(nameof(Freq));
+				OnPropertyChanged("FilterText");
             }
         }
     }

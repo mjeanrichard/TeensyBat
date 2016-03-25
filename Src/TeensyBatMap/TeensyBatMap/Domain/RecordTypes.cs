@@ -4,6 +4,7 @@ namespace TeensyBatMap.Domain
 	{
 		None,
 		Call,
+		Info,
 		Header,
 	}
 }

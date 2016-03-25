@@ -8,6 +8,7 @@
 	xmlns:winRtLib="using:WinRtLib"
 	xmlns:logDetails="using:TeensyBatMap.Views.LogDetails"
 	xmlns:controls="using:TeensyBatMap.Controls"
+	xmlns:sf="using:Syncfusion.UI.Xaml.Charts"
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=logDetails:LogDetailsPageModel, IsDesignTimeCreatable=True }">
 
     <winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
@@ -25,13 +26,13 @@
             <controls:HistogramFilter Titel="Frequenzen [kHz]" Margin="0,0,5,5"
                                       BinsSource="{Binding FreqBins}"
                                       FilterRange="{Binding FrequencyRange}" DisplayRange="{Binding FreqBins.Range}"
-                                      DrawPrimaryFirst="True" LabelSize="20,20" 
+                                      DrawPrimaryFirst="True" LabelSize="25,20" 
                                       Grid.Row="0" Grid.Column="0" />
 
             <controls:HistogramFilter Titel="Intensität" Margin="5,0,0,5"
                                       BinsSource="{Binding IntensityBins}"
                                       FilterRange="{Binding IntensityRange}"  DisplayRange="{Binding IntensityBins.Range}"
-                                      DrawPrimaryFirst="True" LabelSize="25,20" 
+                                      DrawPrimaryFirst="True" LabelSize="30,20" 
                                       Grid.Row="0" Grid.Column="1" />
 
             <controls:HistogramFilter Titel="Ruflänge [ms]" Margin="0,5,5,5"
@@ -40,14 +41,13 @@
                                       DrawPrimaryFirst="True" LabelSize="20,20"
                                       Grid.Row="1" Grid.Column="0" />
 
-            <controls:HistogramFilter Titel="{Binding FilterText}" Margin="0,5,0,0"
+			<controls:HistogramFilter Titel="{Binding FilterText}" Margin="0,5,0,0"
                                       BinsSource="{Binding TimeBins}" 
                                       FilterRange="{Binding TimeRange}"  DisplayRange="{Binding TimeBins.Range}"
                                       BarColor="GreenYellow" SecondaryBarColor="#496405"
-                                      DrawPrimaryFirst="True" LabelSize="30,20" ShowTextBoxes="False" ShowSecondary="False"
+                                      DrawPrimaryFirst="True" LabelSize="45,20" ShowTextBoxes="False" ShowSecondary="False"
                                       Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" />
-
-        </Grid>
+		</Grid>
     </winRtLib:PageGrid>
     
     <Page.BottomAppBar>
@@ -57,3 +57,4 @@
     </Page.BottomAppBar>
 
 </logDetails:LogDetailsPageBase>
+

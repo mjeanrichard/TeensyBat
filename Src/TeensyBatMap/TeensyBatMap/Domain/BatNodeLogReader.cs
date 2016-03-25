@@ -1,11 +1,8 @@
 using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Windows.Storage;
-
-using Microsoft.Data.Entity.Metadata.Internal;
 
 namespace TeensyBatMap.Domain
 {
@@ -45,6 +42,9 @@ namespace TeensyBatMap.Domain
 					case RecordTypes.Call:
 						ReadCallRecord(log, reader);
 						break;
+					case RecordTypes.Info:
+						ReadInfoRecord(log, reader);
+						break;
 					case RecordTypes.Header:
 						ReadHeader(log, reader);
 						break;
@@ -68,6 +68,18 @@ namespace TeensyBatMap.Domain
 			AnalyzeFftData(call);
 
 			log.Calls.Add(call);
+		}
+
+		private void ReadInfoRecord(BatNodeLog log, BinaryReader reader)
+		{
+			BatInfo info = new BatInfo();
+
+			info.Time = CreateDate(reader.ReadUInt32());
+			info.TimeMs = reader.ReadUInt32();
+			info.BatteryVoltage = reader.ReadUInt16();
+			info.SampleDuration = reader.ReadUInt16();
+
+			log.Infos.Add(info);
 		}
 
 		private void AnalyzeFftData(BatCall call)
@@ -133,6 +145,8 @@ namespace TeensyBatMap.Domain
 				{
 					case 255:
 						return RecordTypes.Call;
+					case 244:
+						return RecordTypes.Info;
 					default:
 						return RecordTypes.None;
 				}
@@ -155,8 +169,13 @@ namespace TeensyBatMap.Domain
 			int version = marker[1];
 			log.NodeId = reader.ReadByte();
 			uint seconds = reader.ReadUInt32();
-			DateTime startTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local).AddSeconds(seconds);
+			DateTime startTime = CreateDate(seconds);
 			log.LogStart = startTime;
+		}
+
+		private DateTime CreateDate(uint time)
+		{
+			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local).AddSeconds(time);
 		}
 	}
 }

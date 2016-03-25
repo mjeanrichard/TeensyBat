@@ -6,120 +6,24 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-using Windows.UI.Xaml.Navigation;
-
 using TeensyBatMap.Common;
-using TeensyBatMap.Database;
 using TeensyBatMap.Domain;
 using TeensyBatMap.ViewModels;
 
 namespace TeensyBatMap.Views.EditLog
 {
-	public class EditLogViewModel : BaseViewModel
-	{
-		private BatNodeLog _batLog;
-		private readonly BatContext _db;
-		private readonly NavigationHelper _navigationHelper;
-		private PivotModelBase _selectedItem;
-
-		public EditLogViewModel(NavigationEventArgs navigation, BatContext db, NavigationHelper navigationHelper)
-		{
-			_db = db;
-			_navigationHelper = navigationHelper;
-
-			_batLog = (BatNodeLog)navigation.Parameter;
-
-			SaveCommand = new RelayCommand(async () => await SaveAction());
-			CancelCommand = new RelayCommand(() => GoBack());
-
-
-			PivotItems = new ObservableCollection<PivotModelBase>();
-			PivotItems.Add(new EditCallsPivotModel(_batLog, this));
-			PivotItems.Add(new EditCallsPivotModel(_batLog, this));
-		}
-
-		public PivotModelBase SelectedItem
-		{
-			get { return _selectedItem; }
-			set
-			{
-				if (_selectedItem != value)
-				{
-					_selectedItem = value;
-					using (MarkBusy())
-					{
-						_selectedItem.Initialize();
-						OnPropertyChanged();
-					}
-				}
-			}
-		}
-
-		public ObservableCollection<PivotModelBase> PivotItems { get; set; }
-
-		public override async Task Initialize()
-		{
-			if (_db != null)
-			{
-				IEnumerable<BatCall> batCalls = await _db.LoadCalls(_batLog);
-				Calls = batCalls.ToList();
-			}
-		}
-
-		public List<BatCall> Calls { get; private set; }
-
-		public override string Titel { get { return "asdfasdf"; } }
-
-		public void GoBack()
-		{
-			_navigationHelper.GoBack();
-		}
-
-		public RelayCommand SaveCommand { get; private set; }
-		public RelayCommand CancelCommand { get; private set; }
-
-
-		private async Task SaveAction()
-		{
-			//using (MarkBusy())
-			//{
-			//	BatLog.Name = Name;
-			//	BatLog.Description = Description;
-			//	BatLog.LogStart = StartDate.Add(StartTime).DateTime;
-			//	await _db.SaveChangesAsync();
-			//}
-			//ParentViewModel.GoBack();
-		}
-
-	}
-
-
 	public class EditCallsPivotModel : PivotModelBase
 	{
-		private string _description;
-		private string _name;
-		private DateTimeOffset _startDate;
-		private TimeSpan _startTime;
 		private ObservableCollection<BatCallViewModel> _calls;
 		private BatCallViewModel _selectedCall;
 		private bool _isInitialized;
 
-		//public EditLogPageModel()
-		//	: this(DesignData.CreateBatLog())
-		//{
-		//	Calls = new ObservableCollection<BatCallViewModel>(BatLog.Calls.Select((c, i) => new BatCallViewModel(BatLog, c, i+1)));
-		//	if (Calls.Any())
-		//	{
-		//		SelectedCall = Calls.First();
-		//	}
-		//}
-
+		private DateTimeOffset _startDate;
+		private TimeSpan _startTime;
 
 		public EditCallsPivotModel(BatNodeLog batLog, EditLogViewModel parentViewModel) : base(parentViewModel)
 		{
 			BatLog = batLog;
-			Name = batLog.Name;
-			Description = batLog.Description;
 			StartDate = new DateTimeOffset(BatLog.LogStart.Date);
 			StartTime = batLog.LogStart.TimeOfDay;
 			ToggleEnabledCommand = new RelayCommand(() =>
@@ -135,20 +39,20 @@ namespace TeensyBatMap.Views.EditLog
 
 		public string Name
 		{
-			get { return _name; }
+			get { return BatLog.Name; }
 			set
 			{
-				_name = value;
+				BatLog.Name = value;
 				OnPropertyChanged();
 			}
 		}
 
 		public string Description
 		{
-			get { return _description; }
+			get { return BatLog.Description; }
 			set
 			{
-				_description = value;
+				BatLog.Description = value;
 				OnPropertyChanged();
 			}
 		}
@@ -178,6 +82,11 @@ namespace TeensyBatMap.Views.EditLog
 			get { return "Details"; }
 		}
 
+		public override void BeforeSave()
+		{
+			BatLog.LogStart = StartDate.Add(StartTime).DateTime;
+		}
+
 		public RelayCommand ToggleEnabledCommand { get; private set; }
 
 		public ObservableCollection<BatCallViewModel> Calls
@@ -195,6 +104,7 @@ namespace TeensyBatMap.Views.EditLog
 			if (!_isInitialized)
 			{
 				Calls = new ObservableCollection<BatCallViewModel>(ParentViewModel.Calls.Select((c, i) => new BatCallViewModel(BatLog, c, i + 1)));
+				SelectedCall = Calls.FirstOrDefault();
 				_isInitialized = true;
 			}
 		}
@@ -216,6 +126,43 @@ namespace TeensyBatMap.Views.EditLog
 			}
 		}
 
+	}
+
+	public class ViewInfosPivotModel : PivotModelBase
+	{
+		private bool _isInitialized;
+
+		private ObservableCollection<BatInfo> _infos;
+		
+		public ViewInfosPivotModel(BatNodeLog batLog, EditLogViewModel parentViewModel) : base(parentViewModel)
+		{
+			BatLog = batLog;
+		}
+
+		public BatNodeLog BatLog { get; set; }
+
+
+
+		public override string Titel
+		{
+			get { return "Infos"; }
+		}
+
+		public override void BeforeSave()
+		{
+		}
+
+		public ObservableCollection<KeyValuePair<DateTime, decimal>> Voltage { get; private set; }
+
+		public override async Task Initialize()
+		{
+			if (!_isInitialized)
+			{
+				Voltage = new ObservableCollection<KeyValuePair<DateTime, decimal>>(ParentViewModel.BatInfos.Select((b, i) => new KeyValuePair<DateTime, decimal>(b.Time, b.BatteryVoltage/1000.0m)));
+				OnPropertyChanged(nameof(Voltage));
+				_isInitialized = true;
+			}
+		}
 	}
 
 	public abstract class PivotModelBase : INotifyPropertyChanged
@@ -248,6 +195,8 @@ namespace TeensyBatMap.Views.EditLog
 		}
 
 		public abstract string Titel { get; }
+
+		public abstract void BeforeSave();
 
 	}
 }

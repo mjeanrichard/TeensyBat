@@ -10,7 +10,9 @@ namespace TeensyBatMap.Common
         public event PropertyChangedEventHandler PropertyChanged;
         private bool _isBusy;
 
-        public bool IsBusy
+	    protected bool IsInitialized { get; set; }
+
+	    public bool IsBusy
         {
             get { return _isBusy; }
             protected set
@@ -20,8 +22,22 @@ namespace TeensyBatMap.Common
             }
         }
 
-        public abstract Task Initialize();
-        public abstract string Titel { get; }
+	    protected abstract Task InitializeInternal();
+
+	    public async Task Initialize()
+	    {
+		    if (IsInitialized)
+		    {
+			    return;
+		    }
+			using (MarkBusy())
+			{
+				await InitializeInternal();
+			}
+			IsInitialized = true;
+		}
+
+		public abstract string Titel { get; }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -15,7 +15,7 @@ namespace TeensyBatMap.Domain.Bins
 
         protected override UintBin CreateBin(uint binNumber)
         {
-            string label = _baseTime.AddMilliseconds(binNumber * BinSize).ToString("t", CultureInfo.CurrentCulture);
+            string label = _baseTime.AddMilliseconds(binNumber * BinSize).ToString("HH:mm", CultureInfo.CurrentCulture);
             return new UintBin(label, Filter);
         }
     }

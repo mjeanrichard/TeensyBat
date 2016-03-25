@@ -125,7 +125,7 @@ namespace TeensyBatMap.Views.Main
 			OnPropertyChanged(nameof(HasFiles));
 		}
 
-		public override async Task Initialize()
+		protected override async Task InitializeInternal()
 		{
 			using (MarkBusy())
 			{

@@ -116,6 +116,7 @@
     </Compile>
     <Compile Include="Database\BatContext.cs" />
     <Compile Include="Domain\BatCall.cs" />
+    <Compile Include="Domain\BatInfo.cs" />
     <Compile Include="Domain\BatNodeLog.cs" />
     <Compile Include="Domain\BatNodeLogReader.cs" />
     <Compile Include="Domain\Bins\Bin.cs" />
@@ -129,9 +130,9 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\20160313194140_Migration01Initial.cs" />
-    <Compile Include="Migrations\20160313194140_Migration01Initial.designer.cs">
-      <DependentUpon>20160313194140_Migration01Initial.cs</DependentUpon>
+    <Compile Include="Migrations\20160320110908_Migration01Initial.cs" />
+    <Compile Include="Migrations\20160320110908_Migration01Initial.designer.cs">
+      <DependentUpon>20160320110908_Migration01Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\BatContextModelSnapshot.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -141,7 +142,8 @@
     <Compile Include="Views\EditLog\EditLogPage.xaml.cs">
       <DependentUpon>EditLogPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\EditLog\EditLogPageModel.cs" />
+    <Compile Include="Views\EditLog\EditCallsPivotModel.cs" />
+    <Compile Include="Views\EditLog\EditLogViewModel.cs" />
     <Compile Include="Views\LogDetails\LogDetailsPage.xaml.cs">
       <DependentUpon>LogDetailsPage.xaml</DependentUpon>
     </Compile>
@@ -244,7 +246,11 @@
       <Name>WinRtLib</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <SDKReference Include="Syncfusion Controls for UWP XAML, Version=13.4.0.58">
+      <Name>Syncfusion Controls for UWP XAML</Name>
+    </SDKReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

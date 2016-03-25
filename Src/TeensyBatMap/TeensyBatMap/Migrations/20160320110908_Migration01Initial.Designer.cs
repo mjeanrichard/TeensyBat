@@ -8,7 +8,7 @@ using TeensyBatMap.Database;
 namespace TeensyBatMap.Migrations
 {
     [DbContext(typeof(BatContext))]
-    [Migration("20160313194140_Migration01Initial")]
+    [Migration("20160320110908_Migration01Initial")]
     partial class Migration01Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,6 +50,26 @@ namespace TeensyBatMap.Migrations
                     b.HasAnnotation("Relational:TableName", "BatCalls");
                 });
 
+            modelBuilder.Entity("TeensyBatMap.Domain.BatInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int?>("BatNodeLogId");
+
+                    b.Property<uint>("BatteryVoltage");
+
+                    b.Property<uint>("SampleDuration");
+
+                    b.Property<DateTime>("Time");
+
+                    b.Property<uint>("TimeMs");
+
+                    b.HasKey("Id");
+
+                    b.HasAnnotation("Relational:TableName", "BatInfos");
+                });
+
             modelBuilder.Entity("TeensyBatMap.Domain.BatNodeLog", b =>
                 {
                     b.Property<int>("Id")
@@ -79,6 +99,13 @@ namespace TeensyBatMap.Migrations
                 });
 
             modelBuilder.Entity("TeensyBatMap.Domain.BatCall", b =>
+                {
+                    b.HasOne("TeensyBatMap.Domain.BatNodeLog")
+                        .WithMany()
+                        .HasForeignKey("BatNodeLogId");
+                });
+
+            modelBuilder.Entity("TeensyBatMap.Domain.BatInfo", b =>
                 {
                     b.HasOne("TeensyBatMap.Domain.BatNodeLog")
                         .WithMany()
