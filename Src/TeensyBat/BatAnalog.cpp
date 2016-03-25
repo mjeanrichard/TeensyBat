@@ -139,7 +139,7 @@ void BatAnalog::AddInfoLog()
 
 void BatAnalog::CheckLog()
 {
-	if (_currentCallIndex >= TB_LOG_BUFFER_LENGTH || (_currentCallIndex > 0 && _msSinceLastCall >= TB_TIME_BEFORE_AUTO_LOG_MS) || _currentInfoIndex >= TB_LOG_BUFFER_LENGTH)
+	if (_currentCallIndex >= TB_LOG_BUFFER_LENGTH || ((_currentCallIndex > 0 || _currentInfoIndex > 0) && _msSinceLastCall >= TB_TIME_BEFORE_AUTO_LOG_MS) || _currentInfoIndex >= TB_LOG_BUFFER_LENGTH)
 	{
 #ifdef TB_DEBUG
 		Serial.printf(F("Logging: Calls: %hhu, %hhu ms\n"), _currentCallIndex, (unsigned long)_msSinceLastCall);
