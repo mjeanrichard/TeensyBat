@@ -139,11 +139,17 @@
     <Compile Include="ViewModels\BatCallViewModel.cs" />
     <Compile Include="ViewModels\BatLogViewModel.cs" />
     <Compile Include="ViewModels\DesignLogDetailsPageModel.cs" />
+    <Compile Include="Views\Device\ManageDevice.xaml.cs">
+      <DependentUpon>ManageDevice.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Device\ManageDevicePageModel.cs" />
     <Compile Include="Views\EditLog\EditLogPage.xaml.cs">
       <DependentUpon>EditLogPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\EditLog\EditCallsPivotModel.cs" />
     <Compile Include="Views\EditLog\EditLogViewModel.cs" />
+    <Compile Include="ViewModels\PivotModelBase.cs" />
+    <Compile Include="Views\LogDetails\ViewInfosPivotModel.cs" />
+    <Compile Include="Views\LogDetails\CallDetailsViewModel.cs" />
     <Compile Include="Views\LogDetails\LogDetailsPage.xaml.cs">
       <DependentUpon>LogDetailsPage.xaml</DependentUpon>
     </Compile>
@@ -224,6 +230,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Themes\Common.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Device\ManageDevice.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

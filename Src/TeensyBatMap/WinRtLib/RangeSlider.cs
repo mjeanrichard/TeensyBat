@@ -18,6 +18,8 @@ namespace WinRtLib
         private const string ThumbPartNameUpper = "PART_Thumb_Upper";
         private const string LeftRectPartName = "PART_RectLeft";
         private const string RightRectPartName = "PART_RectRight";
+        private const string UpperRectPartName = "PART_RectUpper";
+        private const string LowerRectPartName = "PART_RectLower";
 
         public static readonly DependencyProperty UpperValueProperty =
             DependencyProperty.Register("UpperValue", typeof(double), typeof(RangeSlider), new PropertyMetadata(80.0, UpperValuePropertyChanged));
@@ -63,6 +65,8 @@ namespace WinRtLib
         private Thumb _upperThumb;
         private Rectangle _rightRect;
         private Rectangle _leftRect;
+        private Rectangle _upperRect;
+        private Rectangle _lowerRect;
 
         public RangeSlider()
         {
@@ -140,21 +144,30 @@ namespace WinRtLib
 
             _upperThumb = (Thumb)GetTemplateChild(ThumbPartNameUpper);
             _upperThumb.DragDelta += UpperThumb_DragDelta;
+			_upperThumb.ManipulationMode = ManipulationModes.TranslateY;
 
-            _lowerThumb = (Thumb)GetTemplateChild(ThumbPartNameLower);
+			_lowerThumb = (Thumb)GetTemplateChild(ThumbPartNameLower);
             _lowerThumb.DragDelta += LowerThumb_DragDelta;
+            _lowerThumb.ManipulationMode = ManipulationModes.TranslateY;
 
             _middleThumb = (Thumb)GetTemplateChild(MiddleThumbPartName);
             _middleThumb.DragDelta += MiddleThumbDrageDelta;
+			_middleThumb.ManipulationMode = ManipulationModes.TranslateY;
 
-            _rightRect = (Rectangle)GetTemplateChild(RightRectPartName);
+			_rightRect = (Rectangle)GetTemplateChild(RightRectPartName);
             _rightRect.Tapped += RightRectTapped;
 
             _leftRect = (Rectangle)GetTemplateChild(LeftRectPartName);
             _leftRect.Tapped += LeftRectTapped;
-        }
 
-        private void LeftRectTapped(object sender, TappedRoutedEventArgs e)
+			_upperRect = (Rectangle)GetTemplateChild(UpperRectPartName);
+			_upperRect.IsHitTestVisible = false;
+
+			_lowerRect = (Rectangle)GetTemplateChild(LowerRectPartName);
+			_lowerRect.IsHitTestVisible = false;
+		}
+
+		private void LeftRectTapped(object sender, TappedRoutedEventArgs e)
         {
             SetLowerValue(-TapChange);
         }
@@ -208,11 +221,6 @@ namespace WinRtLib
             return thumbChange / positionFactor;
         }
 
-        protected override Size MeasureOverride(Size availableSize)
-        {
-            return base.MeasureOverride(availableSize);
-        }
-
         protected double SanitizeValue(double value)
         {
             if (value > Maximum)
@@ -231,36 +239,46 @@ namespace WinRtLib
             if (Minimum >= Maximum)
             {
                 _lowerThumb.Visibility = Visibility.Collapsed;
+                _lowerRect.Visibility = Visibility.Collapsed;
                 _upperThumb.Visibility = Visibility.Collapsed;
+                _upperRect.Visibility = Visibility.Collapsed;
                 _middleThumb.Visibility = Visibility.Collapsed;
                 _rightRect.Visibility = Visibility.Collapsed;
                 _leftRect.Visibility = Visibility.Collapsed;
                 return base.ArrangeOverride(finalSize);
             }
+	        if (ActualWidth <= 0)
+	        {
+				return base.ArrangeOverride(finalSize);
+			}
 
-            double thumbsWidth = _upperThumb.ActualWidth + _lowerThumb.ActualWidth;
+			double thumbsWidth = _upperRect.ActualWidth + _lowerRect.ActualWidth;
             double positionFactor = (ActualWidth - thumbsWidth) / (Maximum - Minimum);
 
             double lower = SanitizeValue(LowerValue);
             double upper = Math.Max(SanitizeValue(UpperValue), lower);
 
             double lowerLeft = positionFactor * (lower - Minimum);
-            double upperLeft = positionFactor * (upper - Minimum) + _lowerThumb.ActualWidth;
+            double upperLeft = positionFactor * (upper - Minimum) + _lowerRect.ActualWidth;
 
             Canvas.SetLeft(_lowerThumb, lowerLeft);
+            Canvas.SetLeft(_lowerRect, lowerLeft);
             Canvas.SetLeft(_upperThumb, upperLeft);
-            Canvas.SetLeft(_middleThumb, lowerLeft + _lowerThumb.ActualWidth);
-            _middleThumb.Width = upperLeft - (lowerLeft + _lowerThumb.ActualWidth);
+            Canvas.SetLeft(_upperRect, upperLeft);
+            Canvas.SetLeft(_middleThumb, lowerLeft + _lowerRect.ActualWidth);
+            _middleThumb.Width = upperLeft - (lowerLeft + _lowerRect.ActualWidth);
 
             Canvas.SetLeft(_leftRect, 0);
             _leftRect.Width = lowerLeft;
 
-            double upperRight = upperLeft + _upperThumb.ActualWidth;
+            double upperRight = upperLeft + _upperRect.ActualWidth;
             Canvas.SetLeft(_rightRect, upperRight);
             _rightRect.Width = Math.Max(1, ActualWidth - upperRight);
 
             _lowerThumb.Visibility = Visibility.Visible;
+            _lowerRect.Visibility = Visibility.Visible;
             _upperThumb.Visibility = Visibility.Visible;
+            _upperRect.Visibility = Visibility.Visible;
             _middleThumb.Visibility = Visibility.Visible;
             _rightRect.Visibility = Visibility.Visible;
             _leftRect.Visibility = Visibility.Visible;

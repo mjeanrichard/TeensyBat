@@ -46,7 +46,8 @@
     
     <Page.BottomAppBar>
         <CommandBar IsOpen="True" IsSticky="True">
-            <AppBarButton Label="Anzeigen" Icon="Zoom" Command="{Binding DetailsCommand}" />
+			<AppBarButton Label="Geräte" Icon="MapDrive" Command="{Binding ManageDevicesCommand}" />
+			<AppBarButton Label="Anzeigen" Icon="Zoom" Command="{Binding DetailsCommand}" />
             <AppBarButton Label="Bearbeiten" Icon="Edit" Command="{Binding EditCommand}" />
             <AppBarButton Label="Importieren" Icon="Add" Command="{Binding ImportFileCommand}" />
         </CommandBar>

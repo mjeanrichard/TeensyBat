@@ -27,9 +27,14 @@ namespace TeensyBatMap.Database
 			modelBuilder.Entity<BatInfo>().ToTable("BatInfos");
 		}
 
-		public async Task<IEnumerable<BatCall>> LoadCalls(BatNodeLog batLog)
+		public async Task<IEnumerable<BatCall>> LoadCalls(BatNodeLog batLog, bool includeDisabled)
 		{
-			return await Calls.Where(c => c.BatNodeLogId == batLog.Id).OrderBy(c => c.StartTimeMs).ToListAsync();
+			IQueryable<BatCall> batCalls = Calls.Where(c => c.BatNodeLogId == batLog.Id);
+			if (!includeDisabled)
+			{
+				batCalls = batCalls.Where(c => c.Enabled);
+			}
+			return await batCalls.OrderBy(c => c.StartTimeMs).ToListAsync();
 		}
 
 		public async Task<IEnumerable<BatInfo>> LoadInfos(BatNodeLog batLog)

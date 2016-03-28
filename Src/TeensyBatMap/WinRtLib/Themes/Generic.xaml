@@ -39,8 +39,10 @@
                             <Rectangle x:Name="PART_RectRight" Height="10" Fill="{TemplateBinding Background}" />
                             <Rectangle x:Name="PART_RectLeft" Height="10" Fill="{TemplateBinding Background}" />
                             <Thumb x:Name="PART_Thumb_Middle" Height="10" Background="{TemplateBinding Foreground}" />
-                            <Thumb x:Name="PART_Thumb_Lower" Width="10" Height="10" Background="White" BorderThickness="0" />
-                            <Thumb x:Name="PART_Thumb_Upper" Width="10" Height="10" Background="White" BorderThickness="0" />
+							<Rectangle x:Name="PART_RectUpper" Height="10" Width="10" Fill="White" />
+							<Rectangle x:Name="PART_RectLower" Height="10" Width="10" Fill="White" />
+							<Thumb x:Name="PART_Thumb_Lower" Width="30" Height="30" Margin="-10,-10,0,0" Opacity="0"  BorderThickness="0" />
+							<Thumb x:Name="PART_Thumb_Upper" Width="30" Height="30" Margin="-10,-10,0,0" Opacity="0" BorderThickness="0" />
                         </Canvas>
                     </Grid>
                 </ControlTemplate>
@@ -57,7 +59,7 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}">
 
-                        <Grid>
+                        <Grid MinWidth="1150">
                             <Grid.ChildrenTransitions>
                                 <TransitionCollection>
                                     <EntranceThemeTransition/>

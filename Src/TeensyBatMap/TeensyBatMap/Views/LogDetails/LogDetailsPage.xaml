@@ -12,43 +12,93 @@
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=logDetails:LogDetailsPageModel, IsDesignTimeCreatable=True }">
 
     <winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
+		<Pivot Margin="0,-20,0,0">
+			<PivotItem DataContext="{Binding CallDetailsViewModel}">
+				<PivotItem.Header>
+					<TextBlock>Rufe</TextBlock>
+				</PivotItem.Header>
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="*" />
+						<RowDefinition Height="*" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition />
+						<ColumnDefinition />
+					</Grid.ColumnDefinitions>
 
-            <controls:HistogramFilter Titel="Frequenzen [kHz]" Margin="0,0,5,5"
+					<controls:HistogramFilter Titel="Frequenzen [kHz]" Margin="0,0,5,5"
                                       BinsSource="{Binding FreqBins}"
                                       FilterRange="{Binding FrequencyRange}" DisplayRange="{Binding FreqBins.Range}"
                                       DrawPrimaryFirst="True" LabelSize="25,20" 
                                       Grid.Row="0" Grid.Column="0" />
 
-            <controls:HistogramFilter Titel="Intensität" Margin="5,0,0,5"
+					<controls:HistogramFilter Titel="Intensität" Margin="5,0,0,5"
                                       BinsSource="{Binding IntensityBins}"
                                       FilterRange="{Binding IntensityRange}"  DisplayRange="{Binding IntensityBins.Range}"
                                       DrawPrimaryFirst="True" LabelSize="30,20" 
                                       Grid.Row="0" Grid.Column="1" />
 
-            <controls:HistogramFilter Titel="Ruflänge [ms]" Margin="0,5,5,5"
+					<controls:HistogramFilter Titel="Ruflänge [ms]" Margin="0,5,5,5"
                                       BinsSource="{Binding CallDurationBins}" 
                                       FilterRange="{Binding DurationRange}" DisplayRange="{Binding CallDurationBins.Range}"
                                       DrawPrimaryFirst="True" LabelSize="20,20"
                                       Grid.Row="1" Grid.Column="0" />
 
-			<controls:HistogramFilter Titel="{Binding FilterText}" Margin="0,5,0,0"
+					<controls:HistogramFilter Titel="{Binding FilterText}" Margin="0,5,0,0"
                                       BinsSource="{Binding TimeBins}" 
                                       FilterRange="{Binding TimeRange}"  DisplayRange="{Binding TimeBins.Range}"
                                       BarColor="GreenYellow" SecondaryBarColor="#496405"
                                       DrawPrimaryFirst="True" LabelSize="45,20" ShowTextBoxes="False" ShowSecondary="False"
                                       Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" />
-		</Grid>
-    </winRtLib:PageGrid>
+				</Grid>
+			</PivotItem>
+			<PivotItem DataContext="{Binding ViewInfosPivotModel}">
+				<PivotItem.Header>
+					<TextBlock>Gerät</TextBlock>
+				</PivotItem.Header>
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition />
+						<RowDefinition />
+					</Grid.RowDefinitions>
+					<Grid Grid.Row="0" Margin="0,0,0,20">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="*" />
+						</Grid.RowDefinitions>
+						<TextBlock Grid.Row="0" TextAlignment="Center" Margin="0,0,0,10">Batteriespannung</TextBlock>
+						<sf:SfChart Grid.Row="1" Margin="0" Padding="0">
+							<sf:SfChart.PrimaryAxis>
+								<sf:DateTimeAxis LabelFormat="HH:mm" Header="Uhrzeit" />
+							</sf:SfChart.PrimaryAxis>
+							<sf:SfChart.SecondaryAxis>
+								<sf:NumericalAxis Header="Spannung in Volt" Minimum="1.9" LabelFormat="0.0" />
+							</sf:SfChart.SecondaryAxis>
+							<sf:LineSeries ItemsSource="{Binding Voltage}" XBindingPath="Key" YBindingPath="Value"></sf:LineSeries>
+						</sf:SfChart>
+					</Grid>
+					<Grid Grid.Row="1">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="*" />
+						</Grid.RowDefinitions>
+						<TextBlock Grid.Row="0" TextAlignment="Center" Margin="0,0,0,10">Sample Dauer</TextBlock>
+						<sf:SfChart Grid.Row="1" Margin="0" Padding="0">
+							<sf:SfChart.PrimaryAxis>
+								<sf:DateTimeAxis LabelFormat="HH:mm" Header="Uhrzeit" />
+							</sf:SfChart.PrimaryAxis>
+							<sf:SfChart.SecondaryAxis>
+								<sf:NumericalAxis Header="Dauer in &#x00B5;S" LabelFormat="0" />
+							</sf:SfChart.SecondaryAxis>
+							<sf:LineSeries ItemsSource="{Binding SampleTime}" XBindingPath="Key" YBindingPath="Value"></sf:LineSeries>
+						</sf:SfChart>
+					</Grid>
+				</Grid>
+			</PivotItem>
+		</Pivot>
+	</winRtLib:PageGrid>
     
     <Page.BottomAppBar>
         <CommandBar>

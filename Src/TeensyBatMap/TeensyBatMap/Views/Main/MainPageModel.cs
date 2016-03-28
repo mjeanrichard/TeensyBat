@@ -52,11 +52,14 @@ namespace TeensyBatMap.Views.Main
 					_navigationService.NavigateToLogDetails(SelectedItem);
 				}
 			}, () => SelectedItem != null);
+
+			ManageDevicesCommand = new RelayCommand(() => _navigationService.NavigateToMangeDevices());
 		}
 
 		public RelayCommand ImportFileCommand { get; private set; }
 		public RelayCommand DetailsCommand { get; }
 		public RelayCommand EditCommand { get; }
+		public RelayCommand ManageDevicesCommand { get; }
 
 		public ObservableCollection<BatNodeLog> LogFiles
 		{

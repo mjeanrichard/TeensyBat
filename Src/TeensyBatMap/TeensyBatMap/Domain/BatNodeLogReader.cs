@@ -65,6 +65,11 @@ namespace TeensyBatMap.Domain
 			call.MissedSamples = reader.ReadUInt16();
 
 			call.FftData = reader.ReadBytes(512);
+
+			if (call.Duration > 100000)
+			{
+				call.Enabled = false;
+			}
 			AnalyzeFftData(call);
 
 			log.Calls.Add(call);
@@ -78,7 +83,6 @@ namespace TeensyBatMap.Domain
 			info.TimeMs = reader.ReadUInt32();
 			info.BatteryVoltage = reader.ReadUInt16();
 			info.SampleDuration = reader.ReadUInt16();
-
 			log.Infos.Add(info);
 		}
 

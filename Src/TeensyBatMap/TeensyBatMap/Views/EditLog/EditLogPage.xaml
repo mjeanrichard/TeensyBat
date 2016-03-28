@@ -11,6 +11,7 @@
 	xmlns:converters="using:WinRTXamlToolkit.Converters"
 	xmlns:viewModels="using:TeensyBatMap.ViewModels"
 	xmlns:sf="using:Syncfusion.UI.Xaml.Charts"
+	xmlns:sfc="using:Syncfusion.UI.Xaml.Primitives"
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=editLog:EditLogViewModel, IsDesignTimeCreatable=True }">
 
 	<Page.Resources>
@@ -19,135 +20,114 @@
 	</Page.Resources>
 
 	<winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
-		<Pivot SelectionChanged="Pivot_OnSelectionChanged">
-			<PivotItem DataContext="{Binding EditCallsModel}">
-				<PivotItem.Header>
-					<TextBlock>Rufe</TextBlock>
-				</PivotItem.Header>
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto" />
-						<ColumnDefinition Width="*" />
-					</Grid.ColumnDefinitions>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto" />
-						<RowDefinition Height="Auto" />
-						<RowDefinition Height="*" />
-					</Grid.RowDefinitions>
-					<Grid Height="Auto" Margin="10" Grid.Row="0" Grid.ColumnSpan="2">
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="*" />
+			</Grid.RowDefinitions>
+			<Grid Height="Auto" Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,10">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+				<TextBox Header="Name:" Text="{Binding Name, Mode=TwoWay}" Grid.Column="0" Margin="0,0,15,0" />
+				<DatePicker Date="{Binding StartDate, Mode=TwoWay}" Header="Startdatum:" Margin="0,0,15,0" Grid.Column="1" />
+				<TimePicker Time="{Binding StartTime, Mode=TwoWay}" Header="Startzeit:" Margin="0,0,0,0" ClockIdentifier="24HourClock" Grid.Column="2" />
+			</Grid>
+			<TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Header="Description:" Text="{Binding Description, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" Height="100" Margin="0,0,0,10" />
+			<ListView Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Calls}" Margin="0,10,0,0"
+					    SelectedItem="{Binding SelectedCall, Mode=TwoWay}" SelectionMode="Single"
+					    DoubleTapped="ItemOnDoubleTapped">
+				<ListView.Header>
+					<Grid Margin="18,0,0,0">
 						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="*"/>
-							<ColumnDefinition Width="Auto"/>
-							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition Width="30" />
+							<ColumnDefinition Width="30" />
+							<ColumnDefinition Width="100" />
+							<ColumnDefinition Width="80" />
 						</Grid.ColumnDefinitions>
-						<TextBox  Header="Name:" Text="{Binding Name, Mode=TwoWay}" Grid.Column="0" Margin="0,0,15,0" />
-						<DatePicker Date="{Binding StartDate, Mode=TwoWay}" Header="Startdatum:" Margin="0,0,15,0" Grid.Column="1" />
-						<TimePicker Time="{Binding StartTime, Mode=TwoWay}" Header="Startzeit:" Margin="0,0,0,0" ClockIdentifier="24HourClock" Grid.Column="2" />
+						<TextBlock Grid.Column="0" Text="Nr."/>
+						<TextBlock Grid.Column="2" Text="Zeit" />
+						<TextBlock Grid.Column="3" Text="Dauer" />
 					</Grid>
-					<TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Header="Description:" Text="{Binding Description, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" Height="100" />
-					<ListView Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Calls}" Margin="0,10,0,0"
-					          SelectedItem="{Binding SelectedCall, Mode=TwoWay}" SelectionMode="Single"
-					          DoubleTapped="ItemOnDoubleTapped">
-						<ListView.Header>
-							<StackPanel Orientation="Horizontal">
-								<TextBlock Text="Nr." Width="30px" TextAlignment="Left" Margin="15,2,38,2" />
-								<TextBlock Text="Zeit" Width="130px" Margin="5,2,5,2" />
-								<TextBlock Text="Dauer" Width="60px" TextAlignment="Left" Margin="5,2" />
-							</StackPanel>
-						</ListView.Header>
-						<ListView.ItemTemplate>
-							<DataTemplate x:DataType="viewModels:BatCallViewModel">
-								<StackPanel Orientation="Horizontal">
-									<TextBlock Text="{Binding Index}" Width="30px" TextAlignment="Right" Margin="5,0" />
-									<SymbolIcon Symbol="Accept" Margin="5,0" Foreground="Green" Visibility="{Binding Enabled, Converter={StaticResource boolToVis}}" />
-									<SymbolIcon Symbol="Cancel" Margin="5,0" Foreground="Red" Visibility="{Binding Enabled, Converter={StaticResource invertedBoolToVis}}" />
-									<TextBlock Text="{Binding StartTime}" Width="130px" Margin="5,0" />
-									<TextBlock Text="{Binding Duration}" Width="60px" TextAlignment="Right" Margin="5,0" />
-								</StackPanel>
-							</DataTemplate>
-						</ListView.ItemTemplate>
-					</ListView>
-					<Grid Grid.Row="2" Grid.Column="1" DataContext="{Binding SelectedCall}" Margin="10,25,0,0">
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto" />
-							<RowDefinition Height="Auto" />
-							<RowDefinition Height="Auto" />
-							<RowDefinition />
-							<RowDefinition Height="Auto" />
-						</Grid.RowDefinitions>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="*" />
-						</Grid.ColumnDefinitions>
+				</ListView.Header>
+				<ListView.ItemTemplate>
+					<DataTemplate x:DataType="viewModels:BatCallViewModel">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="30" />
+								<ColumnDefinition Width="30" />
+								<ColumnDefinition Width="100" />
+								<ColumnDefinition Width="80" />
+							</Grid.ColumnDefinitions>
+							<TextBlock  Grid.Column="0" Text="{Binding Index}" TextAlignment="Right" Margin="5,0" />
+							<SymbolIcon Grid.Column="1" Symbol="Accept" Margin="0,0" Foreground="Green" Visibility="{Binding Enabled, Converter={StaticResource boolToVis}}" />
+							<SymbolIcon Grid.Column="1" Symbol="Cancel" Margin="0,0" Foreground="Red" Visibility="{Binding Enabled, Converter={StaticResource invertedBoolToVis}}" />
+							<TextBlock  Grid.Column="2" Text="{Binding StartTime}" TextAlignment="Right" Margin="5,0" />
+							<TextBlock  Grid.Column="3" Text="{Binding Duration}" TextAlignment="Right" Margin="5,0" />
+						</Grid>
+					</DataTemplate>
+				</ListView.ItemTemplate>
+				<ListView.ItemContainerStyle>
+					<Style TargetType="ListViewItem">
+						<Setter Property="MinHeight" Value="30"/>
+					</Style>
+				</ListView.ItemContainerStyle>
+			</ListView>
+			<Grid Grid.Row="2" Grid.Column="1" DataContext="{Binding SelectedCall}" Margin="10,25,0,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
 
-						<TextBlock Grid.Row="0" Grid.Column="0" Margin="5">Zeitpunkt:</TextBlock>
-						<TextBlock Grid.Row="0" Grid.Column="1" Margin="5" Text="{Binding StartTimeFull}" />
+				<TextBlock Grid.Row="0" Grid.Column="0" Margin="5" Style="{ThemeResource LabelStyle}">Zeitpunkt:</TextBlock>
+				<TextBlock Grid.Row="0" Grid.Column="1" Margin="5" Text="{Binding StartTimeFull}" />
 
-						<TextBlock Grid.Row="0" Grid.Column="2" Margin="15,5,5,5">Verwenden:</TextBlock>
-						<CheckBox  Grid.Row="0" Grid.Column="3" Margin="5,0,0,0" IsChecked="{Binding Enabled, Mode=TwoWay}" />
+				<TextBlock Grid.Row="0" Grid.Column="2" Margin="15,5,5,5" Style="{ThemeResource LabelStyle}">Verwenden:</TextBlock>
+				<CheckBox  Grid.Row="0" Grid.Column="3" Margin="5,0,0,0" IsChecked="{Binding Enabled, Mode=TwoWay}" />
 
-						<TextBlock Grid.Row="0" Grid.Column="4" Margin="15,5,5,5">DC Offset:</TextBlock>
-						<TextBlock Grid.Row="0" Grid.Column="5" Margin="5" Text="{Binding BatCall.DcOffset}" />
+				<TextBlock Grid.Row="0" Grid.Column="4" Margin="15,5,5,5" Style="{ThemeResource LabelStyle}">DC Offset:</TextBlock>
+				<TextBlock Grid.Row="0" Grid.Column="5" Margin="5" Text="{Binding BatCall.DcOffset}" />
 
-						<TextBlock Grid.Row="1" Grid.Column="0" Margin="5">Dauer:</TextBlock>
-						<TextBlock Grid.Row="1" Grid.Column="1" Margin="5" Text="{Binding Duration}" />
+				<TextBlock Grid.Row="1" Grid.Column="0" Margin="5" Style="{ThemeResource LabelStyle}">Dauer:</TextBlock>
+				<TextBlock Grid.Row="1" Grid.Column="1" Margin="5" Text="{Binding Duration}" />
 
-						<TextBlock Grid.Row="1" Grid.Column="2" Margin="15,5,5,5">Frequenz:</TextBlock>
-						<TextBlock Grid.Row="1" Grid.Column="3" Margin="5" Text="{Binding MainFrequencies}" />
+				<TextBlock Grid.Row="1" Grid.Column="2" Margin="15,5,5,5" Style="{ThemeResource LabelStyle}">Frequenz:</TextBlock>
+				<TextBlock Grid.Row="1" Grid.Column="3" Margin="5" Text="{Binding MainFrequencies}" />
 
-						<TextBlock Grid.Row="1" Grid.Column="4" Margin="15,5,5,5">Clipped Samples:</TextBlock>
-						<TextBlock Grid.Row="1" Grid.Column="5" Margin="5" Text="{Binding BatCall.ClippedSamples}" />
+				<TextBlock Grid.Row="1" Grid.Column="4" Margin="15,5,5,5" Style="{ThemeResource LabelStyle}">Clipped Samples:</TextBlock>
+				<TextBlock Grid.Row="1" Grid.Column="5" Margin="5" Text="{Binding BatCall.ClippedSamples}" />
 
-						<TextBlock Grid.Row="2" Grid.Column="0" Margin="5">Intensität:</TextBlock>
-						<TextBlock Grid.Row="2" Grid.Column="1" Margin="5" Text="{Binding BatCall.MaxPower}" />
+				<TextBlock Grid.Row="2" Grid.Column="0" Margin="5" Style="{ThemeResource LabelStyle}">Intensität:</TextBlock>
+				<TextBlock Grid.Row="2" Grid.Column="1" Margin="5" Text="{Binding BatCall.MaxPower}" />
 
-						<TextBlock Grid.Row="2" Grid.Column="4" Margin="15,5,5,5">Verlorene Samples:</TextBlock>
-						<TextBlock Grid.Row="2" Grid.Column="5" Margin="5" Text="{Binding BatCall.MissedSamples}" />
+				<TextBlock Grid.Row="2" Grid.Column="4" Margin="15,5,5,5" Style="{ThemeResource LabelStyle}">Verlorene Samples:</TextBlock>
+				<TextBlock Grid.Row="2" Grid.Column="5" Margin="5" Text="{Binding BatCall.MissedSamples}" />
 
-						<winRtLib:HistogramControl Grid.Row="3" Grid.ColumnSpan="6" Grid.Column="0" BinsSource="{Binding Frequencies}" 
-						                           BarColor="DarkRed" BarPadding="0,0,0,0" ShowSecondary="False" HighlightBarColor="Yellow"
-						                           LabelSize="30,20" MinValue="100" />
-						<TextBlock Grid.Row="4" Grid.ColumnSpan="6" Grid.Column="0" Text="kHz" TextAlignment="Center" />
+				<winRtLib:HistogramControl Grid.Row="3" Grid.ColumnSpan="6" Grid.Column="0" BinsSource="{Binding Frequencies}" 
+						                    BarColor="DarkRed" BarPadding="0,0,0,0" ShowSecondary="False" HighlightBarColor="Yellow"
+						                    LabelSize="30,20" MinValue="100" />
+				<TextBlock Grid.Row="4" Grid.ColumnSpan="6" Grid.Column="0" Text="kHz" TextAlignment="Center" />
 
-					</Grid>
-				</Grid>
-			</PivotItem>
-			<PivotItem DataContext="{Binding ViewInfosModel}">
-				<PivotItem.Header>
-					<TextBlock>Infos</TextBlock>
-				</PivotItem.Header>
-				<Grid>
-					<Grid.RowDefinitions>
-						<RowDefinition />
-						<RowDefinition />
-					</Grid.RowDefinitions>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition />
-						<ColumnDefinition />
-					</Grid.ColumnDefinitions>
-					<Grid Grid.Column="1" Grid.Row="0">
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto" />
-							<RowDefinition Height="*" />
-						</Grid.RowDefinitions>
-						<TextBlock Grid.Row="0" TextAlignment="Center" Margin="0,0,0,10">Batteriespannung</TextBlock>
-						<sf:SfChart Grid.Row="1" Margin="0" Padding="0">
-							<sf:SfChart.PrimaryAxis>
-								<sf:DateTimeAxis LabelFormat="HH:mm" Header="Zeit" />
-							</sf:SfChart.PrimaryAxis>
-							<sf:SfChart.SecondaryAxis>
-								<sf:NumericalAxis Header="[Volt]" Minimum="1.9" LabelFormat="0.0" />
-							</sf:SfChart.SecondaryAxis>
-							<sf:LineSeries ItemsSource="{Binding Voltage}" XBindingPath="Key" YBindingPath="Value"></sf:LineSeries>
-						</sf:SfChart>
-					</Grid>
-				</Grid>
-			</PivotItem>
-		</Pivot>
+			</Grid>
+		</Grid>
 	</winRtLib:PageGrid>
 
 	<Page.BottomAppBar>

@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
 using Windows.UI.Xaml.Navigation;
+
+using Syncfusion.Data.Extensions;
 
 using TeensyBatMap.Common;
 using TeensyBatMap.Database;
@@ -15,25 +19,34 @@ namespace TeensyBatMap.Views.EditLog
 	{
 		private readonly BatContext _db;
 		private readonly NavigationHelper _navigationHelper;
-		private BatNodeLog _batLog;
+
+		private ObservableCollection<BatCallViewModel> _calls;
+		private BatCallViewModel _selectedCall;
+
+		private DateTimeOffset _startDate;
+		private TimeSpan _startTime;
 
 		public EditLogViewModel() : this(DesignData.CreateBatLog())
 		{
-			Calls = _batLog.Calls;
-			BatInfos = new List<BatInfo>();
-			EditCallsModel.Initialize().Wait();
-			ViewInfosModel.Initialize().Wait();
+			Calls = BatLog.Calls.Select((c, i) => new BatCallViewModel(BatLog, c, i)).ToObservableCollection();
 		}
 
 		private EditLogViewModel(BatNodeLog batLog)
 		{
-			_batLog = batLog;
+			BatLog = batLog;
 
 			SaveCommand = new RelayCommand(async () => await SaveAction());
 			CancelCommand = new RelayCommand(GoBack);
+			ToggleEnabledCommand = new RelayCommand(() =>
+			{
+				if (SelectedCall != null)
+				{
+					SelectedCall.Enabled = !SelectedCall.Enabled;
+				}
+			});
 
-			EditCallsModel = new EditCallsPivotModel(_batLog, this);
-			ViewInfosModel = new ViewInfosPivotModel(_batLog, this);
+			StartDate = new DateTimeOffset(BatLog.LogStart.Date);
+			StartTime = batLog.LogStart.TimeOfDay;
 		}
 
 		public EditLogViewModel(NavigationEventArgs navigation, BatContext db, NavigationHelper navigationHelper)
@@ -43,29 +56,23 @@ namespace TeensyBatMap.Views.EditLog
 			_navigationHelper = navigationHelper;
 		}
 
-		public EditCallsPivotModel EditCallsModel { get; }
-		public ViewInfosPivotModel ViewInfosModel { get; }
-
 		protected override async Task InitializeInternal()
 		{
 			if (_db != null)
 			{
-				IEnumerable<BatCall> batCalls = await _db.LoadCalls(_batLog);
-				Calls = batCalls.ToList();
-				IEnumerable<BatInfo> batInfos = await _db.LoadInfos(_batLog);
-				BatInfos = batInfos.ToList();
-
-				await ViewInfosModel.Initialize();
-				await EditCallsModel.Initialize();
+				IEnumerable<BatCall> batCalls = await _db.LoadCalls(BatLog, true);
+				Calls = batCalls.Select((c, i) => new BatCallViewModel(BatLog, c, i)).ToObservableCollection();
 			}
 		}
 
-		public List<BatCall> Calls { get; private set; }
-		public List<BatInfo> BatInfos { get; private set; }
-
-		public override string Titel
+		private async Task SaveAction()
 		{
-			get { return _batLog.Name + " bearbeiten"; }
+			using (MarkBusy())
+			{
+				BatLog.LogStart = StartDate.Add(StartTime).DateTime;
+				await _db.SaveChangesAsync();
+			}
+			GoBack();
 		}
 
 		public void GoBack()
@@ -73,20 +80,84 @@ namespace TeensyBatMap.Views.EditLog
 			_navigationHelper.GoBack();
 		}
 
+		public override string Titel
+		{
+			get { return BatLog.Name + " bearbeiten"; }
+		}
+
 		public RelayCommand SaveCommand { get; private set; }
+
 		public RelayCommand CancelCommand { get; private set; }
 
+		public RelayCommand ToggleEnabledCommand { get; private set; }
 
+		public BatNodeLog BatLog { get; set; }
 
-		private async Task SaveAction()
+		public string Name
 		{
-			using (MarkBusy())
+			get { return BatLog.Name; }
+			set
 			{
-				EditCallsModel.BeforeSave();
-				ViewInfosModel.BeforeSave();
-				await _db.SaveChangesAsync();
+				BatLog.Name = value;
+				OnPropertyChanged();
 			}
-			GoBack();
+		}
+
+		public string Description
+		{
+			get { return BatLog.Description; }
+			set
+			{
+				BatLog.Description = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public TimeSpan StartTime
+		{
+			get { return _startTime; }
+			set
+			{
+				_startTime = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public DateTimeOffset StartDate
+		{
+			get { return _startDate; }
+			set
+			{
+				_startDate = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public ObservableCollection<BatCallViewModel> Calls
+		{
+			get { return _calls; }
+			private set
+			{
+				_calls = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public BatCallViewModel SelectedCall
+		{
+			get { return _selectedCall; }
+			set
+			{
+				if (_selectedCall != value)
+				{
+					if (value != null)
+					{
+						value.Initialize();
+					}
+					_selectedCall = value;
+					OnPropertyChanged();
+				}
+			}
 		}
 	}
 }

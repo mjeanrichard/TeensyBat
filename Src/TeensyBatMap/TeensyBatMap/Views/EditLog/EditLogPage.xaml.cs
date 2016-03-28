@@ -1,7 +1,4 @@
-﻿using System.Threading.Tasks;
-
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
+﻿using Windows.UI.Xaml.Input;
 
 using TeensyBatMap.Common;
 
@@ -23,19 +20,10 @@ namespace TeensyBatMap.Views.EditLog
 
 		private void ItemOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
 		{
-			//if (ViewModel.ToggleEnabledCommand.CanExecute())
-			//{
-			//	ViewModel.ToggleEnabledCommand.Execute();
-			//}
-		}
-
-		private void Pivot_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-		{
-		//	PivotItem pivotItem = ((Pivot)sender).SelectedItem as PivotItem;
-		//	if (pivotItem != null)
-		//	{
-		//		ViewModel.PivotModelChanged(pivotItem.DataContext as PivotModelBase);
-		//	}
+			if (ViewModel.ToggleEnabledCommand.CanExecute())
+			{
+				ViewModel.ToggleEnabledCommand.Execute();
+			}
 		}
 	}
 }

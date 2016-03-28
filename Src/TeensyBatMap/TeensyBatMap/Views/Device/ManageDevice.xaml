@@ -1,0 +1,30 @@
+﻿<device:ManageDevicePageBase
+    x:Name="pageRoot"
+    x:Class="TeensyBatMap.Views.Device.ManageDevicePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:winRtLib="using:WinRtLib"
+	xmlns:controls="using:TeensyBatMap.Controls"
+	xmlns:sf="using:Syncfusion.UI.Xaml.Charts"
+	xmlns:device="using:TeensyBatMap.Views.Device"
+	xmlns:serial="using:Windows.Devices.Enumeration"
+	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=device:ManageDevicePageModel, IsDesignTimeCreatable=True }">
+
+    <winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
+        <Grid>
+			<TextBlock Text="{Binding Data}" TextWrapping="WrapWholeWords" />
+		</Grid>
+    </winRtLib:PageGrid>
+    
+    <Page.BottomAppBar>
+        <CommandBar>
+            <!--<AppBarButton Label="Edit" Icon="Edit" Command="{Binding EditLogCommand}" />-->
+        </CommandBar>
+    </Page.BottomAppBar>
+
+</device:ManageDevicePageBase>
+
+
+
