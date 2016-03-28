@@ -20,9 +20,9 @@ namespace TeensyBatMap.Views.EditLog
 
 		private void ItemOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
 		{
-			if (ViewModel.ToggleEnabledCommand.CanExecute())
+			if (ViewModel.CallDetailsPivotModel.ToggleEnabledCommand.CanExecute())
 			{
-				ViewModel.ToggleEnabledCommand.Execute();
+				ViewModel.CallDetailsPivotModel.ToggleEnabledCommand.Execute();
 			}
 		}
 	}
