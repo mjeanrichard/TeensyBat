@@ -5,7 +5,7 @@ void Configurator::SetTime()
 	uint32_t time = 0;
 	time = Serial.parseInt();
 	Teensy3Clock.set(time);
-	Serial.println(F("Die neue Zeit wurde gesetzt."));
+	Serial.println(F("OK: Die neue Zeit wurde gesetzt."));
 	ReadConfig();
 }
 
@@ -15,11 +15,11 @@ void Configurator::SetNodeId()
 	nodeid = Serial.parseInt();
 	if (nodeid > 255 || nodeid < 0)
 	{
-		Serial.printf(F("Die Node Id muss zwischen 0 und 255 liegen (%lu).\n"), nodeid);
+		Serial.printf(F("ERR: Die Node Id muss zwischen 0 und 255 liegen (%lu).\n"), nodeid);
 	}
 	else
 	{
-		Serial.printf(F("Setze NodeId %hhu..."), (uint8_t)nodeid);
+		Serial.printf(F("OK: Setze NodeId %hhu..."), (uint8_t)nodeid);
 		EEPROM.write(0, (uint8_t)nodeid);
 		Serial.println(F("Done."));
 	}
@@ -32,20 +32,20 @@ void Configurator::ReadConfig()
 	tmElements_t time;
 	breakTime(t, time);
 
-	Serial.printf(F("=====\nAktuelle Konfiguration:\nNodeId:  %02hhu\nZeit:    %02hhu.%02hhu.%04u %02hhu:%02hhu:%02hhu\n=====\n"), nodeId, time.Day, time.Month, 1970 + time.Year, time.Hour, time.Minute, time.Second);
+	Serial.printf(F("OK:=====\nAktuelle Konfiguration:\nNodeId:  %02hhu\nZeit:    %02hhu.%02hhu.%04u %02hhu:%02hhu:%02hhu\n=====\n"), nodeId, time.Day, time.Month, 1970 + time.Year, time.Hour, time.Minute, time.Second);
 }
 
 void Configurator::Start()
 {
-	digitalWriteFast(TB_PIN_LED_YELLOW, HIGH);
-	digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
+	analogWrite(TB_PIN_LED_YELLOW, 5);
+	analogWrite(TB_PIN_LED_GREEN, 5);
 
 #ifndef TB_DEBUG
 	//Start Serial if it was not already enabled.
 	Serial.begin(57600);
 	delay(500);
 #endif
-	Serial.println(F("Entering Configuration Mode..."));
+	Serial.println(F("OK: Entering Configuration Mode..."));
 	ReadConfig();
 	while (true)
 	{
@@ -65,12 +65,12 @@ void Configurator::Start()
 			ReadConfig();
 			break;
 		case 'X':
-			Serial.println(F("Restarting...\n"));
+			Serial.println(F("RST: Restarting...\n"));
 			delay(500);
 			CPU_RESTART;
 			break;
 		default:
-			Serial.printf(F("Unbekannter Befehl: '%c'.\nP      : Zeigt die aktuelle Konfiguration\nCN<nn> : Setzt die NodeId auf nn\nCX     : Startet den TeensyBat neu.\nCT<tt> : Aktualisiert die Zeit.\n"), command);
+			Serial.printf(F("ERR: Unbekannter Befehl: '%c'.\nP      : Zeigt die aktuelle Konfiguration\nCN<nn> : Setzt die NodeId auf nn\nCX     : Startet den TeensyBat neu.\nCT<tt> : Aktualisiert die Zeit.\n"), command);
 			break;
 		}
 	}
