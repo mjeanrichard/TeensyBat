@@ -49,6 +49,7 @@ public:
 	void start();
 	void stop();
 
+	void ApplyFftSample(uint32_t* binData);
 	void process();
 };
 #endif

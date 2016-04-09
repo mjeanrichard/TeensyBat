@@ -11,12 +11,13 @@ static const uint16_t TB_TIME_BEFORE_AUTO_LOG_MS = 1000;
 static const uint32_t TB_INFO_LOG_INTERVAL_MS = 5 * 60 * 1000;
 
 //Power required to start a logging of a Call
-static const uint32_t TB_MIN_CALL_START_POWER = 500;
+static const uint16_t TB_MIN_CALL_START_POWER = 20;
 //Power required for call recording
-static const uint32_t TB_MIN_CALL_POWER = 100;
+static const uint16_t TB_MIN_CALL_POWER = 5;
 
 
 static const uint32_t TB_LOG_BUFFER_LENGTH = 10;
+static const uint16_t  POWER_DATA_COUNT = 1024;
 
 // END User Config
 
@@ -45,7 +46,7 @@ static const int TB_HALF_FFT_SIZE = TB_FFT_SIZE / 2;
 static const int TB_QUART_FFT_SIZE = TB_FFT_SIZE / 4;
 static const int TB_DOUBLE_FFT_SIZE = TB_FFT_SIZE * 2;
 
-
+static const int POWER_BUF_SIZE = 25;
 
 static const int16_t AudioWindowHanning1024[] __attribute__((aligned(4))) = {
 	0, 0, 1, 3, 5, 8, 11, 15, 20, 25,

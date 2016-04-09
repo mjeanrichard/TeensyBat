@@ -50,7 +50,7 @@ void BatLog::SetNodeId(uint8_t nodeId)
 void BatLog::WriteLogHeader()
 {
 	_file.write("TBL");
-	_file.write(1);
+	_file.write(2);
 	_file.write(_nodeId);
 	uint32_t time = Teensy3Clock.get();
 	_file.write(&time, 4);
@@ -78,8 +78,10 @@ void BatLog::WriteCall(BatCall * call)
 	_file.write(&call->durationMicros, 4);
 	_file.write(&call->startTimeMs, 4);
 	_file.write(&call->clippedSamples, 2);
-	_file.write(&call->maxPower, 2);
 	_file.write(&call->missedSamples, 2);
+
+	_file.write(&call->powerDataLength, 2);
+	_file.write(call->powerData, call->powerDataLength);
 
 	uint16_t * val = ((uint16_t *)call->data);
 	for (int i = 0; i < TB_QUART_FFT_SIZE; i++)

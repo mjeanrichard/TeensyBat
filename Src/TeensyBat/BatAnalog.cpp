@@ -1,9 +1,12 @@
 #include "BatAnalog.h"
 
+
 void BatAnalog::process()
 {
 	noInterrupts();
-	int16_t* readyBuffer = AdcHandler::readyBuffer;
+	int16_t * readyBuffer = AdcHandler::readyBuffer;
+	uint8_t * powerBuffer = AdcHandler::powerReadyBuffer;
+	uint16_t powerBufferSize = AdcHandler::powerReadyCount;
 	interrupts();
 
 	if (readyBuffer == nullptr)
@@ -16,69 +19,81 @@ void BatAnalog::process()
 		return;
 	}
 
-	BatCall * currentCall = &_callLog[_currentCallIndex];
+
+	// Sample duration measurement
 	_lastSampleDuration = _usSinceLastSample;
 	_usSinceLastSample = 0;
+	uint32_t tmpCallDuration = _callDuration;
 
+
+	// Calculate average Power of the last sample period; only use the last five samples...
+	uint8_t i = 0;
+	uint16_t avgPower = 0;
+	if (powerBufferSize > 5) {
+		i = powerBufferSize - 5;
+	}
+	for (; i < powerBufferSize; i++)
+	{
+		avgPower += powerBuffer[i];
+	}
+	avgPower = avgPower / 5;
+
+	// Check if the sample can be discarded
+	BatCall * currentCall = &_callLog[_currentCallIndex];
+	if (avgPower < TB_MIN_CALL_START_POWER && currentCall->sampleCount == 0)
+	{
+		// Power too low for a new call and no call in progress
+		// Reset and exit
+		noInterrupts();
+		AdcHandler::MissedSamples = 0;
+		AdcHandler::ClippedSignalCount = 0;
+		AdcHandler::readyBuffer = nullptr;
+		interrupts();
+		return;
+	}
+
+	uint32_t * binData = currentCall->data;
+
+	// Reset Data structures if new call
+	if (currentCall->sampleCount == 0)
+	{
+		_callDuration = 0;
+		currentCall->startTimeMs = millis();
+		digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
+
+		//Clear buffer
+		memset(binData, 0, sizeof(int16_t)*TB_HALF_FFT_SIZE);
+	}
+
+
+	// FFT
 	copy_to_fft_buffer(_complexBuffer, readyBuffer);
 	apply_window_to_fft_buffer(_complexBuffer);
 	arm_cfft_radix4_q15(&_fft_inst, _complexBuffer);
 
-	uint16_t p = AdcHandler::ReadEnvelope();
-	uint32_t * binData = currentCall->data;
 
-	if (p > TB_MIN_CALL_START_POWER || (currentCall->sampleCount > 0 && p > TB_MIN_CALL_POWER))
-	{
-		if (currentCall->sampleCount == 0)
+	// Add FFT of the last sample to the call data.
+	ApplyFftSample(binData);
+
+	currentCall->AddPowerData(powerBuffer, powerBufferSize);
+	currentCall->sampleCount++;
+	_msSinceLastCall = 0;
+
+
+	// Check if call has ended; only use the last five samples...
+	if (avgPower < TB_MIN_CALL_POWER) {
+		currentCall->durationMicros = tmpCallDuration;
+
+		// Take sqrt of the FFT Samples.
+		for (int i = 0; i < TB_HALF_FFT_SIZE; i++)
 		{
-			_callDuration = 0;
-			digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
-			currentCall->startTimeMs = millis();
-			currentCall->maxPower = p;
-
-			uint32_t tmp = *((uint32_t *)_complexBuffer);
-			binData[0] = multiply_16tx16t_add_16bx16b(tmp, tmp);
-
-			int index = 2;
-			for (int i = 1; i < TB_QUART_FFT_SIZE; i++)
-			{
-				tmp = *((uint32_t *)_complexBuffer + index++);
-				binData[i] = multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
-				tmp = *((uint32_t *)_complexBuffer + index++);
-				binData[i] += multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
-			}
+			binData[i] = (uint16_t)sqrt_uint32_approx(binData[i] / currentCall->sampleCount);
 		}
-		else
-		{
-			if (p > currentCall->maxPower) currentCall->maxPower = p;
 
-			uint32_t tmp = *((uint32_t *)_complexBuffer);
-			uint32_t magsq = multiply_16tx16t_add_16bx16b(tmp, tmp);
-			binData[0] += magsq;
-
-			int index = 2;
-			for (int i = 1; i < TB_QUART_FFT_SIZE; i++)
-			{
-				tmp = *((uint32_t *)_complexBuffer + index++);
-				magsq = multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
-				tmp = *((uint32_t *)_complexBuffer + index++);
-				magsq += multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
-				binData[i] += magsq;
-			}
-		}
-		currentCall->sampleCount++;
+		// Add sample info
 		noInterrupts();
 		currentCall->clippedSamples = AdcHandler::ClippedSignalCount;
 		currentCall->missedSamples = AdcHandler::MissedSamples;
-		interrupts();
-		_msSinceLastCall = 0;
-	}
-	else if (currentCall->sampleCount > 0)
-	{
-		currentCall->durationMicros = _callDuration;
-		noInterrupts();
-		AdcHandler::MissedSamples = 0;
-		AdcHandler::ClippedSignalCount = 0;
 		interrupts();
 
 #ifdef TB_DEBUG
@@ -92,31 +107,40 @@ void BatAnalog::process()
 			Serial.print(F("Clipped Samples: "));
 			Serial.println(currentCall->clippedSamples);
 		}
-		uint16_t maxPower = currentCall->maxPower;
-		Serial.printf(F("Call end Detected (Max P: %u, D: %u us, End P: %u.\n"), maxPower, (uint32_t)_callDuration, p);
+		Serial.printf(F("Call end Detected (Initial P: %hhu, D: %u us, End P: %hhu (%u).\n"), currentCall->powerData[0], (uint32_t)tmpCallDuration, avgPower, currentCall->powerDataLength);
 #endif 
 
-		for (int i = 0; i < TB_QUART_FFT_SIZE; i++)
-		{
-			binData[i] = (uint16_t)sqrt_uint32_approx(binData[i] / currentCall->sampleCount);
-		}
-
 		digitalWriteFast(TB_PIN_LED_GREEN, LOW);
-		
-		_currentCallIndex++;
-		_msSinceLastCall = 0;
-		CheckLog();
-		_callLog[_currentCallIndex].sampleCount = 0;
-	} else
-	{
 		noInterrupts();
 		AdcHandler::MissedSamples = 0;
 		AdcHandler::ClippedSignalCount = 0;
 		interrupts();
+
+
+		_currentCallIndex++;
+		_msSinceLastCall = 0;
+		CheckLog();
+		_callLog[_currentCallIndex].Clear();
 	}
+
 	noInterrupts();
 	AdcHandler::readyBuffer = nullptr;
 	interrupts();
+}
+
+void BatAnalog::ApplyFftSample(uint32_t* binData)
+{
+	uint32_t tmp = *((uint32_t *)_complexBuffer);
+	binData[0] += multiply_16tx16t_add_16bx16b(tmp, tmp);
+
+	int index = 2;
+	for (int i = 1; i < TB_QUART_FFT_SIZE; i++)
+	{
+		tmp = *((uint32_t *)_complexBuffer + index++);
+		binData[i] += multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
+		tmp = *((uint32_t *)_complexBuffer + index++);
+		binData[i] += multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
+	}
 }
 
 void BatAnalog::AddInfoLog()
@@ -147,7 +171,7 @@ void BatAnalog::CheckLog()
 		_log.LogCalls(_callLog, _currentCallIndex, _infoLog, _currentInfoIndex);
 		_currentInfoIndex = 0;
 		_currentCallIndex = 0;
-		_callLog[0].sampleCount = 0;
+		_callLog[0].Clear();
 	}
 }
 
