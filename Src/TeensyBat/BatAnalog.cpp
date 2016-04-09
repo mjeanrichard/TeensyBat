@@ -148,10 +148,10 @@ void BatAnalog::AddInfoLog()
 	BatInfo * batInfo = &_infoLog[_currentInfoIndex];
 	batInfo->time = Teensy3Clock.get();
 	batInfo->startTimeMs = millis();
-	batInfo->BatteryVoltage = (AdcHandler::ReadBatteryVoltage() * 2550) / 1000;
+	batInfo->BatteryVoltage = AdcHandler::ReadBatteryVoltage();
 	batInfo->LastBufferDuration = _lastSampleDuration;
 #ifdef TB_DEBUG
-	Serial.printf("Adding Info: Bat: %u mV, Sample Duration: %u ms, Time: %ul, MS: %ul\n", batInfo->BatteryVoltage, batInfo->LastBufferDuration, batInfo->time, batInfo->startTimeMs);
+	Serial.printf("Adding Info: Bat: %u mV, Sample Duration: %u ms, Time: %lu, MS: %lu\n", batInfo->BatteryVoltage, batInfo->LastBufferDuration, batInfo->time, batInfo->startTimeMs);
 #endif
 	_currentInfoIndex++;
 	if (_currentInfoIndex > TB_LOG_BUFFER_LENGTH)
@@ -165,9 +165,6 @@ void BatAnalog::CheckLog()
 {
 	if (_currentCallIndex >= TB_LOG_BUFFER_LENGTH || ((_currentCallIndex > 0 || _currentInfoIndex > 0) && _msSinceLastCall >= TB_TIME_BEFORE_AUTO_LOG_MS) || _currentInfoIndex >= TB_LOG_BUFFER_LENGTH)
 	{
-#ifdef TB_DEBUG
-		Serial.printf(F("Logging: Calls: %hhu, %hhu ms\n"), _currentCallIndex, (unsigned long)_msSinceLastCall);
-#endif
 		_log.LogCalls(_callLog, _currentCallIndex, _infoLog, _currentInfoIndex);
 		_currentInfoIndex = 0;
 		_currentCallIndex = 0;

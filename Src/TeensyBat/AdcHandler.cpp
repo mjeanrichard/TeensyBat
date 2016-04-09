@@ -59,7 +59,17 @@ void AdcHandler::InitAdc()
 
 uint16_t AdcHandler::ReadBatteryVoltage()
 {
-	return adc->analogRead(TB_PIN_BATTERY, ADC_1);
+	adc->disableInterrupts(ADC_1);
+	noInterrupts();
+	adc->setResolution(12, ADC_1);
+
+	int16_t voltage = adc->analogRead(TB_PIN_BATTERY, ADC_1);
+
+	adc->setResolution(8, ADC_1);
+	interrupts();
+	adc->enableInterrupts(ADC_1);
+
+	return (voltage * 2550) / 1000;
 }
 
 void AdcHandler::HandleAdc0Isr()
