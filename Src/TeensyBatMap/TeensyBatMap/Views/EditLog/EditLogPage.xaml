@@ -7,14 +7,18 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:winRtLib="using:WinRtLib"
 	xmlns:editLog="using:TeensyBatMap.Views.EditLog"
-	xmlns:domain="using:TeensyBatMap.Domain"
-	xmlns:converters="using:WinRTXamlToolkit.Converters"
 	xmlns:viewModels="using:TeensyBatMap.ViewModels"
+	xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+	xmlns:tiles="using:UniversalMapControl.Tiles"
+	xmlns:universalMapControl="using:UniversalMapControl"
+	xmlns:behaviors="using:UniversalMapControl.Behaviors"
+	xmlns:converters="using:WinRTXamlToolkit.Converters"
+	xmlns:sf="using:Syncfusion.UI.Xaml.Charts"
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=editLog:EditLogViewModel, IsDesignTimeCreatable=True }">
 
 	<Page.Resources>
-		<converters:BooleanToVisibilityConverter x:Key="boolToVis" IsInversed="False" />
-		<converters:BooleanToVisibilityConverter x:Key="invertedBoolToVis" IsInversed="True" />
+		<converters:BooleanToVisibilityConverter x:Key="BoolToVis" IsInversed="False" />
+		<converters:BooleanToVisibilityConverter x:Key="InvertedBoolToVis" IsInversed="True" />
 	</Page.Resources>
 
 	<winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
@@ -44,6 +48,12 @@
 						<TimePicker Time="{Binding StartTime, Mode=TwoWay}" Header="Startzeit:" Margin="0,0,0,0" ClockIdentifier="24HourClock" Grid.Column="2" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
 					</Grid>
 					<TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Header="Description:" Text="{Binding Description, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" Height="100" Margin="0,0,0,10" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
+					<universalMapControl:Map Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Heading="0" ZoomLevel="4.5" MapCenter="47,15" ManipulationMode="Scale,TranslateX,TranslateY">
+						<interactivity:Interaction.Behaviors>
+							<behaviors:TouchMapBehavior />
+						</interactivity:Interaction.Behaviors>
+						<tiles:WebTileLayer />
+					</universalMapControl:Map>
 				</Grid>
 			</PivotItem>
 			<PivotItem DataContext="{Binding CallDetailsPivotModel}">
@@ -88,8 +98,8 @@
 										<ColumnDefinition Width="80" />
 									</Grid.ColumnDefinitions>
 									<TextBlock Grid.Column="0" Text="{Binding Index}" TextAlignment="Right" Margin="5,0" />
-									<SymbolIcon Grid.Column="1" Symbol="Accept" Margin="0,0" Foreground="Green" Visibility="{Binding Enabled, Converter={StaticResource boolToVis}}" />
-									<SymbolIcon Grid.Column="1" Symbol="Cancel" Margin="0,0" Foreground="Red" Visibility="{Binding Enabled, Converter={StaticResource invertedBoolToVis}}" />
+									<SymbolIcon Grid.Column="1" Symbol="Accept" Margin="0,0" Foreground="Green" Visibility="{Binding Enabled, Converter={StaticResource BoolToVis}}" />
+									<SymbolIcon Grid.Column="1" Symbol="Cancel" Margin="0,0" Foreground="Red" Visibility="{Binding Enabled, Converter={StaticResource InvertedBoolToVis}}" />
 									<TextBlock Grid.Column="2" Text="{Binding StartTime}" TextAlignment="Right" Margin="5,0" />
 									<TextBlock Grid.Column="3" Text="{Binding Duration}" TextAlignment="Right" Margin="5,0" />
 								</Grid>
@@ -142,9 +152,26 @@
 						<TextBlock Grid.Row="2" Grid.Column="4" Margin="15,5,5,5" Style="{ThemeResource LabelStyle}">Verlorene Samples:</TextBlock>
 						<TextBlock Grid.Row="2" Grid.Column="5" Margin="5" Text="{Binding BatCall.MissedSamples}" />
 
-						<winRtLib:HistogramControl Grid.Row="3" Grid.ColumnSpan="6" Grid.Column="0" BinsSource="{Binding Frequencies}"
+						<Grid Grid.Row="3" Grid.ColumnSpan="6" Grid.Column="0">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition />
+								<ColumnDefinition />
+							</Grid.ColumnDefinitions>
+							<winRtLib:HistogramControl Grid.Column="0" BinsSource="{Binding Frequencies}"
 						                           BarColor="DarkRed" BarPadding="0,0,0,0" ShowSecondary="False" HighlightBarColor="Yellow"
 						                           LabelSize="30,20" MinValue="100" />
+
+							<sf:SfChart Grid.Column="1" Margin="0" Padding="0">
+								<!--<sf:SfChart.PrimaryAxis>
+									<sf:DateTimeAxis LabelFormat="HH:mm" Header="Uhrzeit" />
+								</sf:SfChart.PrimaryAxis>
+								<sf:SfChart.SecondaryAxis>
+									<sf:NumericalAxis Header="Spannung in Volt" Minimum="1.9" LabelFormat="0.0" />
+								</sf:SfChart.SecondaryAxis>-->
+								<sf:LineSeries ItemsSource="{Binding Power}" XBindingPath="Key" YBindingPath="Value"></sf:LineSeries>
+							</sf:SfChart>
+
+						</Grid>
 						<TextBlock Grid.Row="4" Grid.ColumnSpan="6" Grid.Column="0" Text="kHz" TextAlignment="Center" />
 
 					</Grid>

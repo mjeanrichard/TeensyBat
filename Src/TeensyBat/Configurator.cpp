@@ -32,7 +32,7 @@ void Configurator::ReadConfig()
 	tmElements_t time;
 	breakTime(t, time);
 
-	Serial.printf(F("OK:=====\nAktuelle Konfiguration:\nNodeId:  %02hhu\nZeit:    %02hhu.%02hhu.%04u %02hhu:%02hhu:%02hhu\n=====\n"), nodeId, time.Day, time.Month, 1970 + time.Year, time.Hour, time.Minute, time.Second);
+	Serial.printf(F("CFG:NodeId: %02hhu;Time: %02hhu.%02hhu.%04u %02hhu:%02hhu:%02hhu\n"), nodeId, time.Day, time.Month, 1970 + time.Year, time.Hour, time.Minute, time.Second);
 }
 
 void Configurator::Start()

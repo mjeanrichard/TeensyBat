@@ -9,5 +9,6 @@ namespace TeensyBatMap.Common
         Task Initialize();
         bool IsBusy { get; }
 	    IDisposable MarkBusy();
-    }
+		void Leave();
+	}
 }

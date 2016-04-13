@@ -24,6 +24,7 @@ namespace TeensyBatMap.Migrations
                     MaxFrequency = table.Column<uint>(nullable: false),
                     MaxPower = table.Column<uint>(nullable: false),
                     MissedSamples = table.Column<int>(nullable: false),
+                    PowerData = table.Column<byte[]>(nullable: true),
                     StartTime = table.Column<DateTime>(nullable: false),
                     StartTimeMs = table.Column<uint>(nullable: false)
                 },
@@ -45,7 +46,8 @@ namespace TeensyBatMap.Migrations
                     LogStart = table.Column<DateTime>(nullable: false),
                     Longitude = table.Column<double>(nullable: false),
                     Name = table.Column<string>(nullable: true),
-                    NodeId = table.Column<int>(nullable: false)
+                    NodeId = table.Column<int>(nullable: false),
+                    Verison = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -69,7 +71,7 @@ namespace TeensyBatMap.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    BatNodeLogId = table.Column<int>(nullable: true),
+                    BatNodeLogId = table.Column<int>(nullable: false),
                     BatteryVoltage = table.Column<uint>(nullable: false),
                     SampleDuration = table.Column<uint>(nullable: false),
                     Time = table.Column<DateTime>(nullable: false),
@@ -83,7 +85,7 @@ namespace TeensyBatMap.Migrations
                         column: x => x.BatNodeLogId,
                         principalTable: "BatNodeLogs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
             migrationBuilder.AddForeignKey(
                 name: "FK_BatCall_BatNodeLog_BatNodeLogId",

@@ -13,6 +13,9 @@ namespace TeensyBatMap.ViewModels
 			byte[] data = new byte[512];
 			rnd.NextBytes(data);
 
+			byte[] powerData = new byte[256];
+			rnd.NextBytes(powerData);
+
             uint timeMs = 0;
 
             BatNodeLog batNodeLog = new BatNodeLog();
@@ -22,7 +25,7 @@ namespace TeensyBatMap.ViewModels
             for (int i = 0; i < 1000; i++)
             {
                 timeMs += (uint)rnd.Next(1000);
-				batNodeLog.Calls.Add(new BatCall(batNodeLog, timeMs, (uint)rnd.Next(100000), (uint)rnd.Next(50), (uint)rnd.Next(1024), (uint)rnd.Next(50), (uint)rnd.Next(1024), data));
+				batNodeLog.Calls.Add(new BatCall(batNodeLog, timeMs, (uint)rnd.Next(100000), (uint)rnd.Next(50), (uint)rnd.Next(1024), (uint)rnd.Next(50), (uint)rnd.Next(1024), data, powerData));
             }
 	        batNodeLog.CallCount = batNodeLog.Calls.Count;
             return batNodeLog;

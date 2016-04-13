@@ -3,13 +3,14 @@
     "EntityFramework.Commands": "7.0.0-rc1-final",
     "EntityFramework.Core": "7.0.0-rc1-final",
     "EntityFramework.Sqlite": "7.0.0-rc1-final",
-    "Microsoft.ApplicationInsights": "1.2.3",
-    "Microsoft.ApplicationInsights.PersistenceChannel": "1.2.3",
+    "Microsoft.ApplicationInsights": "2.1.0-beta1",
+    "Microsoft.ApplicationInsights.PersistenceChannel": "2.0.0-beta3",
     "Microsoft.ApplicationInsights.WindowsApps": "1.1.1",
     "Microsoft.Diagnostics.Tracing.EventSource": "1.1.28",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
     "Microsoft.Xaml.Behaviors.Uwp.Managed": "1.1.0",
     "Unity": "4.0.1",
+    "UniversalMapControl": "0.2.24",
     "WinRTXamlToolkit": "2.0.0"
   },
   "frameworks": {

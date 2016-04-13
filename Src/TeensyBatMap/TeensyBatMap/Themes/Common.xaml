@@ -4,6 +4,12 @@
 
 	<Style TargetType="TextBlock" x:Key="LabelStyle">
 		<Setter Property="FontWeight" Value="Bold"/>
+		<Setter Property="Margin" Value="15,5,5,5"/>
+	</Style>
+
+	<Style TargetType="TextBlock" x:Key="ValueStyle">
+		<Setter Property="Margin" Value="15,5,5,5"/>
+		<Setter Property="HorizontalAlignment" Value="Right"/>
 	</Style>
 
 	<DataTemplate x:Key="DefaultHeaderTemplate">

@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Windows.Storage;
@@ -32,21 +34,35 @@ namespace TeensyBatMap.Domain
 
 		private void ReadData(BatNodeLog log, BinaryReader reader)
 		{
+			RecordTypes recordType = GetNextRecordType(reader);
+			if (recordType != RecordTypes.Header)
+			{
+				throw new InvalidOperationException("No Header found in Log File!");
+			}
+			ReadHeader(log, reader);
+
 			while (reader.BaseStream.Position < reader.BaseStream.Length)
 			{
-				RecordTypes recordType = GetNextRecordType(reader);
+				recordType = GetNextRecordType(reader);
 				switch (recordType)
 				{
 					case RecordTypes.None:
 						break;
 					case RecordTypes.Call:
-						ReadCallRecord(log, reader);
+						if (log.Verison == 1)
+						{
+							ReadCallRecordV1(log, reader);
+						}
+						else
+						{
+							ReadCallRecordV2(log, reader);
+						}
 						break;
 					case RecordTypes.Info:
 						ReadInfoRecord(log, reader);
 						break;
 					case RecordTypes.Header:
-						ReadHeader(log, reader);
+						BatMapperEvents.Log.LogImportHeaderRecordWithinFile(reader.BaseStream.Position);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -54,7 +70,7 @@ namespace TeensyBatMap.Domain
 			}
 		}
 
-		private void ReadCallRecord(BatNodeLog log, BinaryReader reader)
+		private void ReadCallRecordV1(BatNodeLog log, BinaryReader reader)
 		{
 			BatCall call = new BatCall();
 
@@ -63,6 +79,30 @@ namespace TeensyBatMap.Domain
 			call.ClippedSamples = reader.ReadUInt16();
 			call.MaxPower = reader.ReadUInt16();
 			call.MissedSamples = reader.ReadUInt16();
+
+			call.FftData = reader.ReadBytes(512);
+
+			if (call.Duration > 100000)
+			{
+				call.Enabled = false;
+			}
+			AnalyzeFftData(call);
+
+			log.Calls.Add(call);
+		}
+
+		private void ReadCallRecordV2(BatNodeLog log, BinaryReader reader)
+		{
+			BatCall call = new BatCall();
+
+			call.Duration = reader.ReadUInt32();
+			call.StartTimeMs = reader.ReadUInt32();
+			call.ClippedSamples = reader.ReadUInt16();
+			call.MissedSamples = reader.ReadUInt16();
+
+			int powerDataLength = reader.ReadUInt16();
+			call.PowerData = reader.ReadBytes(powerDataLength);
+			call.MaxPower = call.PowerData.Max();
 
 			call.FftData = reader.ReadBytes(512);
 
@@ -89,7 +129,7 @@ namespace TeensyBatMap.Domain
 		private void AnalyzeFftData(BatCall call)
 		{
 			FftResult fftResult = _fftAnalyzer.Analyze(call);
-			call.DcOffset = (uint)fftResult.DcOffset;
+			call.DcOffset = fftResult.DcOffset;
 			uint maxPeak = 0;
 			int maxPeakIndex = -1;
 			foreach (int peakIndex in fftResult.Peaks)
@@ -168,9 +208,9 @@ namespace TeensyBatMap.Domain
 			byte[] marker = reader.ReadBytes(2);
 			if (marker[0] != 76) //  76 -> L
 			{
-				throw new InvalidOperationException("Ungültiger Marker.");
+				throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Ungültiger Marker ({0}).", marker[0]));
 			}
-			int version = marker[1];
+			log.Verison = marker[1];
 			log.NodeId = reader.ReadByte();
 			uint seconds = reader.ReadUInt32();
 			DateTime startTime = CreateDate(seconds);

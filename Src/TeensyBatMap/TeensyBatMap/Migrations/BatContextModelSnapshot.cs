@@ -40,6 +40,8 @@ namespace TeensyBatMap.Migrations
 
                     b.Property<int>("MissedSamples");
 
+                    b.Property<byte[]>("PowerData");
+
                     b.Property<DateTime>("StartTime");
 
                     b.Property<uint>("StartTimeMs");
@@ -54,7 +56,7 @@ namespace TeensyBatMap.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("BatNodeLogId");
+                    b.Property<int>("BatNodeLogId");
 
                     b.Property<uint>("BatteryVoltage");
 
@@ -91,6 +93,8 @@ namespace TeensyBatMap.Migrations
                     b.Property<string>("Name");
 
                     b.Property<int>("NodeId");
+
+                    b.Property<int>("Verison");
 
                     b.HasKey("Id");
 

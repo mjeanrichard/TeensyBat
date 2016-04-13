@@ -47,6 +47,7 @@ namespace TeensyBatMap.Common
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+	        ViewModel.Leave();
             NavigationHelper.OnNavigatedFrom(e);
         }
     }

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 using TeensyBatMap.Domain;
@@ -33,6 +35,7 @@ namespace TeensyBatMap.ViewModels
 		private readonly FftAnalyzer _fftAnalyzer;
 		private bool _isInitialized;
 		private ObservableCollection<SimpleIntBin> _frequencies;
+		private ObservableCollection<KeyValuePair<int, byte>> _power;
 
 		public BatCallViewModel(BatNodeLog log, BatCall batCall, int index)
 		{
@@ -99,6 +102,16 @@ namespace TeensyBatMap.ViewModels
 			}
 		}
 
+		public ObservableCollection<KeyValuePair<int, byte>> Power
+		{
+			get { return _power; }
+			set
+			{
+				_power = value;
+				OnPropertyChanged();
+			}
+		}
+
 		public void Initialize()
 		{
 			if (_isInitialized)
@@ -107,9 +120,9 @@ namespace TeensyBatMap.ViewModels
 			}
 			_isInitialized = true;
 
-			SimpleIntBin[] simpleIntBins = new SimpleIntBin[255];
-
 			FftResult fftResult = _fftAnalyzer.Analyze(_batCall);
+
+			SimpleIntBin[] simpleIntBins = new SimpleIntBin[fftResult.FftData.Length-1];
 			int iPeak = 0;
 			for (int i = 1; i < fftResult.FftData.Length; i++)
 			{
@@ -123,6 +136,14 @@ namespace TeensyBatMap.ViewModels
 			}
 
 			Frequencies = new ObservableCollection<SimpleIntBin>(simpleIntBins);
+			if (_batCall.PowerData != null)
+			{
+				Power = new ObservableCollection<KeyValuePair<int, byte>>(_batCall.PowerData.Select((b, i) => new KeyValuePair<int, byte>(i, b)));
+			}
+			else
+			{
+				Power = new ObservableCollection<KeyValuePair<int, byte>>();
+			}
 		}
 	}
 }

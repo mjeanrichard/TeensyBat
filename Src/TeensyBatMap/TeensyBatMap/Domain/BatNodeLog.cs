@@ -40,6 +40,9 @@ namespace TeensyBatMap.Domain
 		public BatCall LastCall { get; set; }
 
 		public int CallCount { get; set; }
+
 		public int NodeId { get; set; }
+
+		public int Verison { get; set; }
 	}
 }

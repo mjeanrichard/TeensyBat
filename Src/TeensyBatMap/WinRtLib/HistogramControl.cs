@@ -282,7 +282,7 @@ namespace WinRtLib
 
         public void DrawTicks(IBin[] bins, CanvasDrawingSession session, CanvasControl canvas)
         {
-            if (LabelSize.Height == 0 || LabelSize.Width == 0)
+            if (LabelSize.Height < 1 || LabelSize.Width < 1 || bins.Length <= 1 || canvas.ActualWidth < 1)
             {
                 return;
             }
@@ -295,7 +295,6 @@ namespace WinRtLib
             labelFormat.WordWrapping = CanvasWordWrapping.NoWrap;
             labelFormat.FontSize = 12;
 
-            double lastLabelRight = 0;
             for (int barIndex = 0; barIndex < bins.Length; barIndex++)
             {
                 if (barIndex % labelFrequency != 0 && barIndex < bins.Length - 1)

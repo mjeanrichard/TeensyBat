@@ -11,5 +11,11 @@ namespace TeensyBatMap
 		{
 			WriteEvent(1000, position);
 		}
+
+		[Event(1010, Message = "Header Record found at Position {0}. Ingnoring record.", Level = EventLevel.Warning)]
+		public void LogImportHeaderRecordWithinFile(long position)
+		{
+			WriteEvent(1010, position);
+		}
 	}
 }
