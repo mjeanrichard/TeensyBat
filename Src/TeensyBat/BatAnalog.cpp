@@ -19,24 +19,22 @@ void BatAnalog::process()
 		return;
 	}
 
-
 	// Sample duration measurement
 	_lastSampleDuration = _usSinceLastSample;
 	_usSinceLastSample = 0;
 	uint32_t tmpCallDuration = _callDuration;
 
-
 	// Calculate average Power of the last sample period; only use the last five samples...
 	uint8_t i = 0;
 	uint16_t avgPower = 0;
-	if (powerBufferSize > 5) {
-		i = powerBufferSize - 5;
+	if (powerBufferSize > TB_AVG_POWER_COUNT) {
+		i = powerBufferSize - TB_AVG_POWER_COUNT;
 	}
 	for (; i < powerBufferSize; i++)
 	{
 		avgPower += powerBuffer[i];
 	}
-	avgPower = avgPower / 5;
+	avgPower = avgPower / TB_AVG_POWER_COUNT;
 
 	// Check if the sample can be discarded
 	BatCall * currentCall = &_callLog[_currentCallIndex];
@@ -59,7 +57,9 @@ void BatAnalog::process()
 	{
 		_callDuration = 0;
 		currentCall->startTimeMs = millis();
+#ifdef TB_ENABLE_CALL_LED
 		digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
+#endif
 
 		//Clear buffer
 		memset(binData, 0, sizeof(int16_t)*TB_HALF_FFT_SIZE);
@@ -109,8 +109,13 @@ void BatAnalog::process()
 		}
 		Serial.printf(F("Call end Detected (Initial P: %hhu, D: %u us, End P: %hhu (%u).\n"), currentCall->powerData[0], (uint32_t)tmpCallDuration, avgPower, currentCall->powerDataLength);
 #endif 
+#ifdef TB_DISPLAY
+		PrintPowerData(currentCall->powerData, currentCall->powerDataLength);
+#endif
 
+#ifdef TB_ENABLE_CALL_LED
 		digitalWriteFast(TB_PIN_LED_GREEN, LOW);
+#endif
 		noInterrupts();
 		AdcHandler::MissedSamples = 0;
 		AdcHandler::ClippedSignalCount = 0;

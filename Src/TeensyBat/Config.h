@@ -4,6 +4,8 @@
 #include "WProgram.h"
 
 #define TB_DEBUG = 1;
+#define TB_DISPLAY = 1;
+#define TB_ENABLE_CALL_LED = 1;
 
 // User Config
 
@@ -11,13 +13,20 @@ static const uint16_t TB_TIME_BEFORE_AUTO_LOG_MS = 1000;
 static const uint32_t TB_INFO_LOG_INTERVAL_MS = 5 * 60 * 1000;
 
 //Power required to start a logging of a Call
-static const uint16_t TB_MIN_CALL_START_POWER = 20;
+static const uint16_t TB_MIN_CALL_START_POWER = 100;
+
 //Power required for call recording
-static const uint16_t TB_MIN_CALL_POWER = 5;
+static const uint16_t TB_MIN_CALL_POWER = 50;
+
+//Number of sampels that are used for the power average.
+static const uint16_t TB_AVG_POWER_COUNT = 15;
+
+//Average Power required to write the call to the Card
+static const uint16_t TB_MIN_AVG_POWER = 180;
 
 
 static const uint32_t TB_LOG_BUFFER_LENGTH = 10;
-static const uint16_t  POWER_DATA_COUNT = 1024;
+static const uint16_t POWER_DATA_COUNT = 1024;
 
 // END User Config
 

@@ -16,9 +16,9 @@ public:
 	uint8_t powerData[POWER_DATA_COUNT];
 	uint32_t data[TB_HALF_FFT_SIZE] __attribute__((aligned(4)));
 
-	void AddPowerData(uint8_t * power, uint8_t length)
+	void AddPowerData(uint8_t * power, uint16_t length)
 	{
-		for (uint8_t i = 0; i < length; i++) {
+		for (uint16_t i = 0; i < length; i++) {
 			if (powerDataLength < POWER_DATA_COUNT)
 			{
 				powerData[powerDataLength] = power[i];

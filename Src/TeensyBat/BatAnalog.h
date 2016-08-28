@@ -13,6 +13,9 @@
 #include "AdcHandler.h"
 #include <EEPROM.h>
 
+#ifdef TB_DISPLAY
+#include "Display.h"
+#endif
 
 class BatAnalog
 {
