@@ -112,7 +112,9 @@
     <Compile Include="Common\ObservableDictionary.cs" />
     <Compile Include="Common\RelayCommand.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
+    <Compile Include="Common\ValueConverters\LocationConverter.cs" />
     <Compile Include="Common\ValueConverters\StringFormatter.cs" />
+    <Compile Include="Common\ValueConverters\SwissGridConverter.cs" />
     <Compile Include="Controls\HistogramFilter.xaml.cs">
       <DependentUpon>HistogramFilter.xaml</DependentUpon>
     </Compile>
@@ -132,15 +134,13 @@
     <Compile Include="Domain\FftAnalyzer.cs" />
     <Compile Include="Domain\FftResult.cs" />
     <Compile Include="Domain\RecordTypes.cs" />
-    <Compile Include="MainPage.xaml.cs">
-      <DependentUpon>MainPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Migrations\20160405193102_Migration01Initial.cs" />
     <Compile Include="Migrations\20160405193102_Migration01Initial.designer.cs">
       <DependentUpon>20160405193102_Migration01Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\BatContextModelSnapshot.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Map\SwissGridHelper.cs" />
     <Compile Include="ViewModels\BatCallViewModel.cs" />
     <Compile Include="ViewModels\BatLogViewModel.cs" />
     <Compile Include="ViewModels\DesignLogDetailsPageModel.cs" />
@@ -149,6 +149,7 @@
       <DependentUpon>ManageDevice.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Device\ManageDevicePageModel.cs" />
+    <Compile Include="Views\EditLog\CallDetailsPivotModel.cs" />
     <Compile Include="Views\EditLog\EditLogPage.xaml.cs">
       <DependentUpon>EditLogPage.xaml</DependentUpon>
     </Compile>
@@ -231,10 +232,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MainPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Themes\Common.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -267,7 +264,15 @@
       <Name>Syncfusion Controls for UWP XAML</Name>
     </SDKReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="swisstopo.data, Version=1.1.0.0, Culture=neutral, PublicKeyToken=ea90158b1bff6de6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\ReframeLibrary\Binaries\AnyCPU\swisstopo.data.dll</HintPath>
+    </Reference>
+    <Reference Include="swisstopo.reframelib">
+      <HintPath>..\lib\ReframeLibrary\Binaries\AnyCPU\swisstopo.reframelib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

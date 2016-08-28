@@ -5,7 +5,7 @@ namespace TeensyBatMap.Domain
 {
 	public class BatNodeLog
 	{
-		private readonly List<BatCall> _calls;
+		private List<BatCall> _calls;
 		private readonly List<BatInfo> _infos;
 
 		public BatNodeLog()
@@ -28,6 +28,7 @@ namespace TeensyBatMap.Domain
 		public List<BatCall> Calls
 		{
 			get { return _calls; }
+			set { _calls = value; }
 		}
 
 		public List<BatInfo> Infos

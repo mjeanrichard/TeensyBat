@@ -65,7 +65,10 @@ namespace TeensyBatMap.Devices
 			if (_currentDevice != null)
 			{
 				_serialDevice = await SerialDevice.FromIdAsync(_currentDevice.Id);
-
+				if (_serialDevice == null)
+				{
+					return;
+				}
 				// Configure serial settings
 				_serialDevice.WriteTimeout = TimeSpan.FromMilliseconds(500);
 				_serialDevice.ReadTimeout = TimeSpan.FromMilliseconds(500);

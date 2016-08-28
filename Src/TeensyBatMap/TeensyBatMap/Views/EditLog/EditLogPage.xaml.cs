@@ -1,6 +1,11 @@
-﻿using Windows.UI.Xaml.Input;
+﻿using Windows.Foundation;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Navigation;
 
 using TeensyBatMap.Common;
+
+using UniversalMapControl.Interfaces;
+using UniversalMapControl.Projections;
 
 namespace TeensyBatMap.Views.EditLog
 {
@@ -24,6 +29,19 @@ namespace TeensyBatMap.Views.EditLog
 			{
 				ViewModel.CallDetailsPivotModel.ToggleEnabledCommand.Execute();
 			}
+		}
+
+		private void MapOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+		{
+			Point position = e.GetPosition(_map);
+			ILocation location = _map.GetLocationFromPoint(position);
+			ViewModel.Location = location;
+		}
+
+		protected override void OnNavigatedTo(NavigationEventArgs e)
+		{
+			base.OnNavigatedTo(e);
+			_map.MapCenter = ViewModel.Location;
 		}
 	}
 }

@@ -26,6 +26,22 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
+    <Style TargetType="winRtLib:LineControl" >
+        <Setter Property="Template">
+            <Setter.Value>
+				<ControlTemplate TargetType="winRtLib:LineControl">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        
+                        <xaml:CanvasControl x:Name="LineCanvas" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <Style TargetType="winRtLib:RangeSlider" >
         <Setter Property="Background" Value="{ThemeResource SliderTrackBackgroundThemeBrush}" />

@@ -29,9 +29,9 @@
                 <winRtLib:RangeSlider Height="20" Minimum="{Binding DisplayRange.Minimum}" Maximum="{Binding DisplayRange.Maximum}" 
                                       LowerValue="{Binding FilterRange.Minimum, Mode=TwoWay}" UpperValue="{Binding FilterRange.Maximum, Mode=TwoWay}" />
                 <Grid>
-                    <TextBox HorizontalAlignment="Left" InputScope="Number" VerticalAlignment="Top" TextAlignment="Right" TextWrapping="NoWrap" Text="{Binding FilterRange.Minimum, Mode=TwoWay}" x:Name="txtMin" />
+                    <TextBox HorizontalAlignment="Left" HeaderTemplate="{ThemeResource NoHeaderTemplate}" InputScope="Number" VerticalAlignment="Top" TextAlignment="Right" TextWrapping="NoWrap" Text="{Binding FilterRange.Minimum, Mode=TwoWay}" x:Name="txtMin" />
                     <ToggleSwitch Template="{StaticResource ToggleSwitchButton}" HorizontalAlignment="Center" x:Name="tgShowSecondary" IsOn="True" OnContent="Gefilterte Werte anzeigen" OffContent="Gefilterte Werte anzeigen" Padding="0" Margin="0" />
-					<TextBox HorizontalAlignment="Right" InputScope="Number" VerticalAlignment="Top" TextAlignment="Right" TextWrapping="NoWrap" Text="{Binding FilterRange.Maximum, Mode=TwoWay}" x:Name="txtMax" />
+					<TextBox HorizontalAlignment="Right" HeaderTemplate="{ThemeResource NoHeaderTemplate}" InputScope="Number" VerticalAlignment="Top" TextAlignment="Right" TextWrapping="NoWrap" Text="{Binding FilterRange.Maximum, Mode=TwoWay}" x:Name="txtMax" />
                 </Grid>
             </StackPanel>
         </Grid>

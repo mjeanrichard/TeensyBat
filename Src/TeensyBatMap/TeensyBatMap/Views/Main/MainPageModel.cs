@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data.Common;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Windows.Storage;
@@ -8,6 +10,8 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml.Navigation;
 
 using Microsoft.Data.Entity;
+using Microsoft.Data.Entity.Storage;
+using Microsoft.Data.Sqlite;
 
 using TeensyBatMap.Common;
 using TeensyBatMap.Database;
@@ -122,8 +126,9 @@ namespace TeensyBatMap.Views.Main
 		{
 			BatNodeLog batNodeLog = await _logReader.Load(file);
 			batNodeLog.Name = file.DisplayName;
-			_db.Logs.Add(batNodeLog);
-			await _db.SaveChangesAsync();
+
+			await _db.InsertLog(batNodeLog);
+
 			_logFiles.Add(batNodeLog);
 			OnPropertyChanged(nameof(HasFiles));
 		}

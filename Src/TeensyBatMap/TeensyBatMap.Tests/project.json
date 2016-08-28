@@ -1,8 +1,7 @@
 ﻿{
   "dependencies": {
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
-    "NUnit": "3.2.0",
-    "NUnit.Runners": "3.2.0"
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2",
+    "UniversalMapControl": "0.3.36"
   },
   "frameworks": {
     "uap10.0": {}

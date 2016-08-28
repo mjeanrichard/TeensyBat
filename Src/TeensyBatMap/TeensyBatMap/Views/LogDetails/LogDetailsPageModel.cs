@@ -47,7 +47,7 @@ namespace TeensyBatMap.Views.LogDetails
 
 		protected override async Task InitializeInternal()
 		{
-			BatCalls = await _db.LoadCalls(BatLog, false);
+			BatCalls = await _db.LoadCalls(BatLog, false, true);
 			BatInfos = await _db.LoadInfos(BatLog);
 
 			await CallDetailsViewModel.Initialize();

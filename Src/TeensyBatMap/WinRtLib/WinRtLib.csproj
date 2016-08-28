@@ -107,6 +107,7 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LineControl.cs" />
     <Compile Include="HistogramControl.cs" />
     <Compile Include="IBin.cs" />
     <Compile Include="PageGrid.cs" />

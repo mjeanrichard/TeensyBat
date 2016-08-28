@@ -41,7 +41,7 @@
 				<TextBlock Style="{ThemeResource ValueStyle}" Text="{Binding DeviceInfo.TimeDeltaSeconds, Converter={StaticResource sf}, ConverterParameter=Drift: \{0:0.00\} s}" />
 			</StackPanel>
 
-			<TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" Text="{Binding Data}" TextWrapping="WrapWholeWords" Visibility="{Binding ShowLog, Converter={StaticResource BoolToVis}}" />
+			<TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Text="{Binding Data}" TextWrapping="WrapWholeWords" Visibility="{Binding ShowLog, Converter={StaticResource BoolToVis}}" />
 		</Grid>
     </winRtLib:PageGrid>
     

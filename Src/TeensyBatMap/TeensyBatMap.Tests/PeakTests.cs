@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
 using TeensyBatMap.Domain;
 
 namespace TeensyBatMap.Tests
 {
-	[TestFixture]
-    public class PeakTests
-    {
-		[Test]
+	public class PeakTests
+	{
+		[TestMethod]
 		public void CanFindSinglePeak()
 		{
 			FftAnalyzer analyzer = new FftAnalyzer(1.5, 3);
@@ -27,7 +23,7 @@ namespace TeensyBatMap.Tests
 			Assert.AreEqual(8, peaks[0].Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanFindSingleMiddlePeak()
 		{
 			FftAnalyzer analyzer = new FftAnalyzer(1.5, 3);
@@ -40,7 +36,7 @@ namespace TeensyBatMap.Tests
 			Assert.AreEqual(2, peaks[0].Key);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanFindPeakWithNoiseAtEnd()
 		{
 			FftAnalyzer analyzer = new FftAnalyzer(1.5, 3);
@@ -53,7 +49,7 @@ namespace TeensyBatMap.Tests
 			Assert.AreEqual(2, peaks[0].Key);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanFindMultipleSteepPeaks()
 		{
 			FftAnalyzer analyzer = new FftAnalyzer(1.5, 3);
@@ -68,7 +64,7 @@ namespace TeensyBatMap.Tests
 			Assert.AreEqual(9, peaks[2].Key);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanFindPeaksInRealSample()
 		{
 			FftAnalyzer analyzer = new FftAnalyzer(2.5);
@@ -82,7 +78,7 @@ namespace TeensyBatMap.Tests
 			Assert.AreEqual(31, peaks[1].Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanFindPeaksInRealSample2()
 		{
 			FftAnalyzer analyzer = new FftAnalyzer(2.5);
@@ -95,7 +91,7 @@ namespace TeensyBatMap.Tests
 			Assert.AreEqual(62, peaks[0].Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanFindPeaksWithNoise()
 		{
 			FftAnalyzer analyzer = new FftAnalyzer(1.5, 3);
@@ -118,5 +114,5 @@ namespace TeensyBatMap.Tests
 			Assert.AreEqual(11, peaks[1].Key);
 			Assert.AreEqual(4, peaks[1].Value);
 		}
-    }
+	}
 }

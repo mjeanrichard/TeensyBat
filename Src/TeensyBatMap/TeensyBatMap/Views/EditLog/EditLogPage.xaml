@@ -10,15 +10,20 @@
 	xmlns:viewModels="using:TeensyBatMap.ViewModels"
 	xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
 	xmlns:tiles="using:UniversalMapControl.Tiles"
-	xmlns:universalMapControl="using:UniversalMapControl"
+	xmlns:umc="using:UniversalMapControl"
 	xmlns:behaviors="using:UniversalMapControl.Behaviors"
 	xmlns:converters="using:WinRTXamlToolkit.Converters"
 	xmlns:sf="using:Syncfusion.UI.Xaml.Charts"
+	xmlns:valueConverters="using:TeensyBatMap.Common.ValueConverters"
+	xmlns:default="using:UniversalMapControl.Tiles.Default"
+	xmlns:swissTopo="using:UniversalMapControl.Tiles.SwissTopo"
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=editLog:EditLogViewModel, IsDesignTimeCreatable=True }">
 
 	<Page.Resources>
 		<converters:BooleanToVisibilityConverter x:Key="BoolToVis" IsInversed="False" />
 		<converters:BooleanToVisibilityConverter x:Key="InvertedBoolToVis" IsInversed="True" />
+		<valueConverters:LocationConverter x:Key="locConverter" />
+		<valueConverters:SwissGridConverter x:Key="sgConverter" />
 	</Page.Resources>
 
 	<winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
@@ -29,7 +34,7 @@
 				</PivotItem.Header>
 				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<Grid.RowDefinitions>
@@ -43,17 +48,36 @@
 							<ColumnDefinition Width="Auto" />
 							<ColumnDefinition Width="Auto" />
 						</Grid.ColumnDefinitions>
-						<TextBox Header="Name:" Text="{Binding Name, Mode=TwoWay}" Grid.Column="0" Margin="0,0,15,0" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
-						<DatePicker Date="{Binding StartDate, Mode=TwoWay}" Header="Startdatum:" Margin="0,0,15,0" Grid.Column="1" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
-						<TimePicker Time="{Binding StartTime, Mode=TwoWay}" Header="Startzeit:" Margin="0,0,0,0" ClockIdentifier="24HourClock" Grid.Column="2" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
+						<Grid.RowDefinitions>
+							<RowDefinition />
+							<RowDefinition />
+						</Grid.RowDefinitions>
+						<TextBox Header="Name:" Text="{Binding Name, Mode=TwoWay}" Grid.Column="0" />
+						<DatePicker Grid.Row="0" Grid.Column="1" Header="Startdatum:" Date="{Binding StartDate, Mode=TwoWay}" Margin="0,0,15,0" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
+						<TimePicker Grid.Row="0" Grid.Column="2" Header="Startzeit:" Time="{Binding StartTime, Mode=TwoWay}" Margin="0,0,15,0" ClockIdentifier="24HourClock" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
+						<TextBox Grid.Row="1" Grid.Column="0" Header="Description:" Text="{Binding Description, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" VerticalAlignment="Stretch" />
+
+						<StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
+							<TextBox Header="SwissGrid:" Text="{Binding SwissGridLocation, Mode=TwoWay, Converter={StaticResource sgConverter}}" />
+							<TextBox Header="Latitude / Longitude:" Text="{Binding Location, Mode=TwoWay, Converter={StaticResource locConverter}}" />
+						</StackPanel>
 					</Grid>
-					<TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Header="Description:" Text="{Binding Description, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" Height="100" Margin="0,0,0,10" HeaderTemplate="{ThemeResource DefaultHeaderTemplate}" />
-					<universalMapControl:Map Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Heading="0" ZoomLevel="4.5" MapCenter="47,15" ManipulationMode="Scale,TranslateX,TranslateY">
+					<umc:Map Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Heading="0" ZoomLevel="15" 
+											 ManipulationMode="Scale,TranslateX,TranslateY" Name="_map"
+											 DoubleTapped="MapOnDoubleTapped">
 						<interactivity:Interaction.Behaviors>
-							<behaviors:TouchMapBehavior />
+							<behaviors:TouchMapBehavior DoubleTapEnabled="False" />
 						</interactivity:Interaction.Behaviors>
-						<tiles:WebTileLayer />
-					</universalMapControl:Map>
+
+						<umc:Map.Resources>
+							<swissTopo:SwissTopoLayerConfig x:Key="SwissTopo" LayerName="SM1" LicenseKey="https://map.geo.admin.ch" />
+							<default:DefaultWebLayerConfig x:Key="OSM" LayerName="OSM1" />
+						</umc:Map.Resources>
+
+						<tiles:TileLayer />
+						
+						<Ellipse Width="20" Height="20" Stroke="Blue" HorizontalAlignment="Center" VerticalAlignment="Center" StrokeThickness="4" umc:MapLayerBase.Location="{Binding Location}"/>
+					</umc:Map>
 				</Grid>
 			</PivotItem>
 			<PivotItem DataContext="{Binding CallDetailsPivotModel}">
@@ -80,7 +104,6 @@
 							<RowDefinition Height="Auto" />
 							<RowDefinition Height="Auto" />
 						</Grid.RowDefinitions>
-						<!--<TextBlock Grid.Row="0" Grid.ColumnSpan="4" Text="Aufegzeichnete Rufe" TextAlignment="Center" Style="{ThemeResource LabelStyle}" Margin="0,0,0,15" />-->
 						<TextBlock Grid.Row="1" Grid.Column="0" Text="Nr." />
 						<TextBlock Grid.Row="1" Grid.Column="2" Text="Zeit" />
 						<TextBlock Grid.Row="1" Grid.Column="3" Text="Dauer" />
@@ -161,15 +184,18 @@
 						                           BarColor="DarkRed" BarPadding="0,0,0,0" ShowSecondary="False" HighlightBarColor="Yellow"
 						                           LabelSize="30,20" MinValue="100" />
 
-							<sf:SfChart Grid.Column="1" Margin="0" Padding="0">
-								<!--<sf:SfChart.PrimaryAxis>
+							<winRtLib:LineControl Grid.Column="1" Data="{Binding Power}"
+												  MaxValue="255"
+								/>
+							<!--<sf:SfChart Grid.Column="1" Margin="0" Padding="0">
+								--><!--<sf:SfChart.PrimaryAxis>
 									<sf:DateTimeAxis LabelFormat="HH:mm" Header="Uhrzeit" />
 								</sf:SfChart.PrimaryAxis>
 								<sf:SfChart.SecondaryAxis>
 									<sf:NumericalAxis Header="Spannung in Volt" Minimum="1.9" LabelFormat="0.0" />
-								</sf:SfChart.SecondaryAxis>-->
+								</sf:SfChart.SecondaryAxis>--><!--
 								<sf:LineSeries ItemsSource="{Binding Power}" XBindingPath="Key" YBindingPath="Value"></sf:LineSeries>
-							</sf:SfChart>
+							</sf:SfChart>-->
 
 						</Grid>
 						<TextBlock Grid.Row="4" Grid.ColumnSpan="6" Grid.Column="0" Text="kHz" TextAlignment="Center" />

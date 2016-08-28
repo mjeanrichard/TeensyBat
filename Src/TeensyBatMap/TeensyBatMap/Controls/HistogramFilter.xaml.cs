@@ -76,8 +76,7 @@ namespace TeensyBatMap.Controls
             set { histogramControl.SecondaryBarColor = value; }
         }
 
-        public static readonly DependencyProperty LabelSizeProperty = DependencyProperty.Register(
-            "LabelSize", typeof(Size), typeof(HistogramFilter), new PropertyMetadata(default(Size)));
+        public static readonly DependencyProperty LabelSizeProperty = DependencyProperty.Register("LabelSize", typeof(Size), typeof(HistogramFilter), new PropertyMetadata(default(Size)));
 
         public Size LabelSize
         {
