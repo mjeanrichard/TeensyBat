@@ -44,6 +44,8 @@ private:
 	byte _nodeId = 1;
 	BatLog _log;
 
+	bool _ledEnabled = true;
+	
 	void AddInfoLog();
 	void CheckLog();
 

@@ -55,11 +55,12 @@ void BatAnalog::process()
 	// Reset Data structures if new call
 	if (currentCall->sampleCount == 0)
 	{
-		_callDuration = 0;
+		_callDuration = _lastSampleDuration;
 		currentCall->startTimeMs = millis();
-#ifdef TB_ENABLE_CALL_LED
-		digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
-#endif
+		if (Config::CheckLedsEnabled())
+		{
+			digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
+		}
 
 		//Clear buffer
 		memset(binData, 0, sizeof(int16_t)*TB_HALF_FFT_SIZE);
@@ -74,6 +75,9 @@ void BatAnalog::process()
 
 	// Add FFT of the last sample to the call data.
 	ApplyFftSample(binData);
+
+	Serial.print(F("Adding Power Data: "));
+	Serial.println(powerBufferSize);
 
 	currentCall->AddPowerData(powerBuffer, powerBufferSize);
 	currentCall->sampleCount++;
@@ -107,15 +111,17 @@ void BatAnalog::process()
 			Serial.print(F("Clipped Samples: "));
 			Serial.println(currentCall->clippedSamples);
 		}
-		Serial.printf(F("Call end Detected (Initial P: %hhu, D: %u us, End P: %hhu (%u).\n"), currentCall->powerData[0], (uint32_t)tmpCallDuration, avgPower, currentCall->powerDataLength);
+		Serial.printf(F("Call end Detected (Initial P: %hhu, D: %u us, End P: %hhu (%u).\n"), currentCall->sampleCount, (uint32_t)tmpCallDuration, avgPower, currentCall->powerDataLength);
 #endif 
 #ifdef TB_DISPLAY
 		PrintPowerData(currentCall->powerData, currentCall->powerDataLength);
 #endif
 
-#ifdef TB_ENABLE_CALL_LED
-		digitalWriteFast(TB_PIN_LED_GREEN, LOW);
-#endif
+		if (Config::LedsEnabled)
+		{
+			digitalWriteFast(TB_PIN_LED_GREEN, LOW);
+		}
+
 		noInterrupts();
 		AdcHandler::MissedSamples = 0;
 		AdcHandler::ClippedSignalCount = 0;
