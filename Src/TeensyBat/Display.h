@@ -1,7 +1,6 @@
 #ifndef _DISPLAY_h
 #define _DISPLAY_h
 
-#include "Config.h"
 #include "ILI9341_t3.h"
 
 #define TFT_DC       15

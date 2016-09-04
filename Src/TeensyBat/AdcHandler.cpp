@@ -1,5 +1,5 @@
-#include "AdcHandler.h"
 #include "Config.h"
+#include "AdcHandler.h"
 
 ADC* AdcHandler::adc = new ADC();
 IntervalTimer AdcHandler::envelopeTimer;

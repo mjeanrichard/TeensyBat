@@ -2,11 +2,6 @@
 #ifndef CONFIGURATOR_h
 #define CONFIGURATOR_h
 
-#include "Config.h"
-#include <EEPROM.h>
-#include <Time.h>
-
-
 class Configurator
 {
 private:

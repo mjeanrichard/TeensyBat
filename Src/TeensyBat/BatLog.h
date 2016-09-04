@@ -1,10 +1,7 @@
 #ifndef BATLOG_h
 #define BATLOG_h
 
-#include "Config.h"
-#include <SPI.h>
 #include "SdFat/SdFat.h"
-#include <time/TimeLib.h>
 #include "BatCall.h"
 
 const int TB_ERROR_OPEN_CARD = 2;

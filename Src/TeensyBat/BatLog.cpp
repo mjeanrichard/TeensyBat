@@ -1,4 +1,5 @@
 #include "BatLog.h"
+#include <time/TimeLib.h>
 
 void BatLog::LogCalls(BatCall calls[], uint8_t callsLength, BatInfo infos[], uint8_t infoLength)
 {

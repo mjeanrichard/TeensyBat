@@ -1,3 +1,4 @@
+#include "Helpers.h"
 #include "Display.h"
 #include "Configurator.h"
 #include <Wire.h>

@@ -3,6 +3,7 @@
 #ifndef ADCHANDLER_h
 #define ADCHANDLER_h
 
+#include "WProgram.h"
 #include <ADC.h>
 #include "Config.h"
 

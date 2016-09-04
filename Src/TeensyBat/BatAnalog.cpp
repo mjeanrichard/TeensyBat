@@ -1,11 +1,16 @@
 #include "BatAnalog.h"
 
+#include "dspinst.h"
+#include "sqrt_integer.h"
+#include <EEPROM.h>
+#include "AdcHandler.h"
+#include "Helpers.h"
 
 void BatAnalog::process()
 {
 	noInterrupts();
-	int16_t * readyBuffer = AdcHandler::readyBuffer;
-	uint8_t * powerBuffer = AdcHandler::powerReadyBuffer;
+	int16_t* readyBuffer = AdcHandler::readyBuffer;
+	uint8_t* powerBuffer = AdcHandler::powerReadyBuffer;
 	uint16_t powerBufferSize = AdcHandler::powerReadyCount;
 	interrupts();
 
@@ -27,7 +32,8 @@ void BatAnalog::process()
 	// Calculate average Power of the last sample period; only use the last five samples...
 	uint8_t i = 0;
 	uint16_t avgPower = 0;
-	if (powerBufferSize > TB_AVG_POWER_COUNT) {
+	if (powerBufferSize > TB_AVG_POWER_COUNT)
+	{
 		i = powerBufferSize - TB_AVG_POWER_COUNT;
 	}
 	for (; i < powerBufferSize; i++)
@@ -37,7 +43,7 @@ void BatAnalog::process()
 	avgPower = avgPower / TB_AVG_POWER_COUNT;
 
 	// Check if the sample can be discarded
-	BatCall * currentCall = &_callLog[_currentCallIndex];
+	BatCall* currentCall = &_callLog[_currentCallIndex];
 	if (avgPower < TB_MIN_CALL_START_POWER && currentCall->sampleCount == 0)
 	{
 		// Power too low for a new call and no call in progress
@@ -50,20 +56,20 @@ void BatAnalog::process()
 		return;
 	}
 
-	uint32_t * binData = currentCall->data;
+	uint32_t* binData = currentCall->data;
 
 	// Reset Data structures if new call
 	if (currentCall->sampleCount == 0)
 	{
 		_callDuration = _lastSampleDuration;
 		currentCall->startTimeMs = millis();
-		if (Config::CheckLedsEnabled())
+		if (Helpers::CheckLedsEnabled())
 		{
 			digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
 		}
 
 		//Clear buffer
-		memset(binData, 0, sizeof(int16_t)*TB_HALF_FFT_SIZE);
+		memset(binData, 0, sizeof(int16_t) * TB_HALF_FFT_SIZE);
 	}
 
 
@@ -76,16 +82,14 @@ void BatAnalog::process()
 	// Add FFT of the last sample to the call data.
 	ApplyFftSample(binData);
 
-	Serial.print(F("Adding Power Data: "));
-	Serial.println(powerBufferSize);
-
 	currentCall->AddPowerData(powerBuffer, powerBufferSize);
 	currentCall->sampleCount++;
 	_msSinceLastCall = 0;
 
 
 	// Check if call has ended; only use the last five samples...
-	if (avgPower < TB_MIN_CALL_POWER) {
+	if (avgPower < TB_MIN_CALL_POWER)
+	{
 		currentCall->durationMicros = tmpCallDuration;
 
 		// Take sqrt of the FFT Samples.
@@ -117,7 +121,7 @@ void BatAnalog::process()
 		PrintPowerData(currentCall->powerData, currentCall->powerDataLength);
 #endif
 
-		if (Config::LedsEnabled)
+		if (Helpers::LedsEnabled)
 		{
 			digitalWriteFast(TB_PIN_LED_GREEN, LOW);
 		}
@@ -156,7 +160,7 @@ void BatAnalog::ApplyFftSample(uint32_t* binData)
 
 void BatAnalog::AddInfoLog()
 {
-	BatInfo * batInfo = &_infoLog[_currentInfoIndex];
+	BatInfo* batInfo = &_infoLog[_currentInfoIndex];
 	batInfo->time = Teensy3Clock.get();
 	batInfo->startTimeMs = millis();
 	batInfo->BatteryVoltage = AdcHandler::ReadBatteryVoltage();
@@ -174,12 +178,19 @@ void BatAnalog::AddInfoLog()
 
 void BatAnalog::CheckLog()
 {
-	if (_currentCallIndex >= TB_LOG_BUFFER_LENGTH || ((_currentCallIndex > 0 || _currentInfoIndex > 0) && _msSinceLastCall >= TB_TIME_BEFORE_AUTO_LOG_MS) || _currentInfoIndex >= TB_LOG_BUFFER_LENGTH)
+	uint8_t switch1 = digitalReadFast(TB_PIN_S1);
+	if (((_currentCallIndex > 0 || _currentInfoIndex > 0) && (switch1 == LOW || _msSinceLastCall >= TB_TIME_BEFORE_AUTO_LOG_MS)) ||
+		_currentCallIndex >= TB_LOG_BUFFER_LENGTH || 
+		_currentInfoIndex >= TB_LOG_BUFFER_LENGTH)
 	{
 		_log.LogCalls(_callLog, _currentCallIndex, _infoLog, _currentInfoIndex);
 		_currentInfoIndex = 0;
 		_currentCallIndex = 0;
 		_callLog[0].Clear();
+		while (switch1 == LOW)
+		{
+			switch1 = digitalReadFast(TB_PIN_S1);
+		}
 	}
 }
 
@@ -230,4 +241,3 @@ void BatAnalog::stop()
 {
 	AdcHandler::Stop();
 }
-

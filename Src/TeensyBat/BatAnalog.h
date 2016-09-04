@@ -4,14 +4,9 @@
 
 #define ARM_MATH_CM4
 #include <arm_math.h>
-#include <SPI.h>
 #include "Config.h"
 #include "BatCall.h"
 #include "BatLog.h"
-#include "dspinst.h"
-#include "sqrt_integer.h"
-#include "AdcHandler.h"
-#include <EEPROM.h>
 
 #ifdef TB_DISPLAY
 #include "Display.h"
@@ -47,6 +42,7 @@ private:
 	bool _ledEnabled = true;
 	
 	void AddInfoLog();
+	void FlushLog();
 	void CheckLog();
 
 public:

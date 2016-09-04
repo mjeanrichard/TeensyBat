@@ -9,10 +9,10 @@
 // User Config
 
 static const uint16_t TB_TIME_BEFORE_AUTO_LOG_MS = 1000;
-static const uint32_t TB_INFO_LOG_INTERVAL_MS = 5 * 60 * 1000;
+static const uint32_t TB_INFO_LOG_INTERVAL_MS = 5 * 1000;
 
 //Power required to start a logging of a Call
-static const uint16_t TB_MIN_CALL_START_POWER = 100;
+static const uint16_t TB_MIN_CALL_START_POWER = 60;
 
 //Power required for call recording
 static const uint16_t TB_MIN_CALL_POWER = 50;
@@ -21,7 +21,7 @@ static const uint16_t TB_MIN_CALL_POWER = 50;
 static const uint16_t TB_AVG_POWER_COUNT = 15;
 
 //Average Power required to write the call to the Card
-static const uint16_t TB_MIN_AVG_POWER = 160;
+static const uint16_t TB_MIN_AVG_POWER = 200;
 
 static const uint32_t TB_LOG_BUFFER_LENGTH = 10;
 static const uint16_t TB_POWER_DATA_COUNT = 1024;
@@ -46,29 +46,6 @@ static const uint8_t TB_PIN_S2 = 3;
 // SD Card Access
 const uint8_t TB_PIN_SDCS = SS;
 const uint8_t TB_PIN_CARD_PRESENT = 20;
-
-
-namespace Config
-{
-	static bool LedsEnabled = true;
-	static bool CheckLedsEnabled()
-	{
-#ifdef TB_DEBUG
-		return true;
-#endif
-		if (LedsEnabled)
-		{
-			if (millis() < TB_AUTO_SWITCH_OFF_MSECS)
-			{
-				return true;
-			}
-			LedsEnabled = false;
-		}
-		return false;
-	}
-}
-
-
 
 
 // Sample and FFT Size 
