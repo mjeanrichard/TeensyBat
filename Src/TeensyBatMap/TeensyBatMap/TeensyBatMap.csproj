@@ -110,6 +110,7 @@
     <Compile Include="Common\IBaseViewModel.cs" />
     <Compile Include="Common\NavigationHelper.cs" />
     <Compile Include="Common\ObservableDictionary.cs" />
+    <Compile Include="Common\OxyHelper.cs" />
     <Compile Include="Common\RelayCommand.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="Common\ValueConverters\LocationConverter.cs" />
@@ -258,11 +259,6 @@
       <Project>{1321e031-eae9-4be8-b10a-c53eaa2e70ac}</Project>
       <Name>WinRtLib</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <SDKReference Include="Syncfusion Controls for UWP XAML, Version=13.4.0.58">
-      <Name>Syncfusion Controls for UWP XAML</Name>
-    </SDKReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="swisstopo.data, Version=1.1.0.0, Culture=neutral, PublicKeyToken=ea90158b1bff6de6, processorArchitecture=MSIL">

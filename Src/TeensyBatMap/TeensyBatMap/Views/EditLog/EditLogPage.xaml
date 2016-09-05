@@ -17,6 +17,8 @@
 	xmlns:valueConverters="using:TeensyBatMap.Common.ValueConverters"
 	xmlns:default="using:UniversalMapControl.Tiles.Default"
 	xmlns:swissTopo="using:UniversalMapControl.Tiles.SwissTopo"
+	xmlns:oxy="using:OxyPlot.Windows"
+	xmlns:axes="using:OxyPlot.Axes"
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=editLog:EditLogViewModel, IsDesignTimeCreatable=True }">
 
 	<Page.Resources>
@@ -184,9 +186,12 @@
 						                           BarColor="DarkRed" BarPadding="0,0,0,0" ShowSecondary="False" HighlightBarColor="Yellow"
 						                           LabelSize="30,20" MinValue="100" />
 
-							<winRtLib:LineControl Grid.Column="1" Data="{Binding Power}"
+                            <oxy:PlotView Grid.Column="1" 
+                                          Background="{StaticResource AppBarBackgroundThemeBrush}"
+                                          Model="{Binding Power}" />
+							<!--<winRtLib:LineControl Grid.Column="1" Data="{Binding Power}"
 												  MaxValue="255"
-								/>
+								/>-->
 							<!--<sf:SfChart Grid.Column="1" Margin="0" Padding="0">
 								--><!--<sf:SfChart.PrimaryAxis>
 									<sf:DateTimeAxis LabelFormat="HH:mm" Header="Uhrzeit" />

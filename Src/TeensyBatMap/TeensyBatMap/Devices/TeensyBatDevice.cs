@@ -106,9 +106,12 @@ namespace TeensyBatMap.Devices
 
 		public async void Send(string command)
 		{
-			byte[] buffer = Encoding.ASCII.GetBytes(command);
-			_dataWriter.WriteBytes(buffer);
-			await _dataWriter.StoreAsync();
+		    if (_dataWriter != null)
+		    {
+		        byte[] buffer = Encoding.ASCII.GetBytes(command);
+		        _dataWriter.WriteBytes(buffer);
+		        await _dataWriter.StoreAsync();
+		    }
 		}
 
 		protected void ReadLines()

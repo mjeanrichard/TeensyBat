@@ -9,6 +9,7 @@
 	xmlns:logDetails="using:TeensyBatMap.Views.LogDetails"
 	xmlns:controls="using:TeensyBatMap.Controls"
 	xmlns:sf="using:Syncfusion.UI.Xaml.Charts"
+	xmlns:oxy="using:OxyPlot.Windows"
 	mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=logDetails:LogDetailsPageModel, IsDesignTimeCreatable=True }">
 
     <winRtLib:PageGrid Titel="{Binding Titel}" IsBusy="{Binding IsBusy}">
@@ -69,23 +70,20 @@
 							<RowDefinition Height="*" />
 						</Grid.RowDefinitions>
 						<TextBlock Grid.Row="0" TextAlignment="Center" Margin="0,0,0,10">Batteriespannung</TextBlock>
-						<sf:SfChart Grid.Row="1" Margin="0" Padding="0">
-							<sf:SfChart.PrimaryAxis>
-								<sf:DateTimeAxis LabelFormat="HH:mm" Header="Uhrzeit" />
-							</sf:SfChart.PrimaryAxis>
-							<sf:SfChart.SecondaryAxis>
-								<sf:NumericalAxis Header="Spannung in Volt" Minimum="1.9" LabelFormat="0.0" />
-							</sf:SfChart.SecondaryAxis>
-							<sf:LineSeries ItemsSource="{Binding Voltage}" XBindingPath="Key" YBindingPath="Value"></sf:LineSeries>
-						</sf:SfChart>
-					</Grid>
+                        <oxy:PlotView Grid.Row="1" 
+                                      Background="{StaticResource AppBarBackgroundThemeBrush}"
+                                      Model="{Binding Voltage}" />
+                    </Grid>
 					<Grid Grid.Row="1">
 						<Grid.RowDefinitions>
 							<RowDefinition Height="Auto" />
 							<RowDefinition Height="*" />
 						</Grid.RowDefinitions>
 						<TextBlock Grid.Row="0" TextAlignment="Center" Margin="0,0,0,10">Sample Dauer</TextBlock>
-						<sf:SfChart Grid.Row="1" Margin="0" Padding="0">
+                        <oxy:PlotView Grid.Row="1" 
+                                      Background="{StaticResource AppBarBackgroundThemeBrush}"
+                                      Model="{Binding SampleTime}" />
+                        <!--<sf:SfChart Grid.Row="1" Margin="0" Padding="0">
 							<sf:SfChart.PrimaryAxis>
 								<sf:DateTimeAxis LabelFormat="HH:mm" Header="Uhrzeit" />
 							</sf:SfChart.PrimaryAxis>
@@ -93,7 +91,7 @@
 								<sf:NumericalAxis Header="Dauer in &#x00B5;S" LabelFormat="0" />
 							</sf:SfChart.SecondaryAxis>
 							<sf:LineSeries ItemsSource="{Binding SampleTime}" XBindingPath="Key" YBindingPath="Value"></sf:LineSeries>
-						</sf:SfChart>
+						</sf:SfChart>-->
 					</Grid>
 				</Grid>
 			</PivotItem>

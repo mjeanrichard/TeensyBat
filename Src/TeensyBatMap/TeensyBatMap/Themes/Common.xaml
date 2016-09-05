@@ -1,6 +1,8 @@
 <ResourceDictionary
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:oxyAxes="using:OxyPlot.Axes"
+	xmlns:oxy="using:OxyPlot.Windows">
 
 	<Style TargetType="TextBlock" x:Key="LabelStyle">
 		<Setter Property="FontWeight" Value="Bold" />
@@ -21,7 +23,7 @@
 
 	<DataTemplate x:Key="NoHeaderTemplate" />
 
-	<Style TargetType="TextBox">
+    <Style TargetType="TextBox">
 		<Setter Property="Margin" Value="0,0,15,5" />
 		<Setter Property="VerticalAlignment" Value="Top" />
 		<Setter Property="HeaderTemplate" Value="{ThemeResource DefaultHeaderTemplate}" />

@@ -3,8 +3,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Syncfusion.Data.Extensions;
-
 using TeensyBatMap.Common;
 using TeensyBatMap.Domain;
 using TeensyBatMap.ViewModels;
@@ -38,7 +36,7 @@ namespace TeensyBatMap.Views.EditLog
 			{
 				batCalls = ParentViewModel.BatLog.Calls;
 			}
-			Calls = batCalls.Select((c, i) => new BatCallViewModel(ParentViewModel.BatLog, c, i)).ToObservableCollection();
+			Calls = new ObservableCollection<BatCallViewModel>(batCalls.Select((c, i) => new BatCallViewModel(ParentViewModel.BatLog, c, i)));
 			if (Calls.Any())
 			{
 				SelectedCall = Calls.First();
