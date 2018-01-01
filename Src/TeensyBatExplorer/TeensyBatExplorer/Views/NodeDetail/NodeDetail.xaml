@@ -1,0 +1,148 @@
+﻿<nodeDetail:CallDetailViewBase
+    x:Class="TeensyBatExplorer.Views.NodeDetail.NodeDetailView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TeensyBatExplorer.Views.NodeDetail"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:TeensyBatExplorer.Controls"
+    xmlns:batLog="using:TeensyBatExplorer.Core.BatLog"
+    xmlns:oxy="using:OxyPlot.Windows"
+    xmlns:map="using:UniversalMapControl"
+    xmlns:tiles="using:UniversalMapControl.Tiles"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:behaviors="using:UniversalMapControl.Behaviors"
+    xmlns:mapControls="using:UniversalMapControl.Controls"
+    xmlns:converters="using:Microsoft.Toolkit.Uwp.UI.Converters"
+    xmlns:nodeDetail="using:TeensyBatExplorer.Views.NodeDetail"
+    mc:Ignorable="d">
+    
+    <controls:PageViewControl BusyState="{x:Bind ViewModel.Busy, Mode=OneWay}">
+        <Pivot>
+            <PivotItem Header="Details">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0"
+                                Orientation="Vertical">
+                        <controls:HeaderControl Header="Geräte ID">
+                            <TextBlock Text="{x:Bind ViewModel.Node.NodeId, Mode=OneTime}" />
+                        </controls:HeaderControl>
+                        <controls:HeaderControl Header="Datum">
+                            <TextBlock Text="{x:Bind ViewModel.Node.LogStart, Mode=OneTime}" />
+                        </controls:HeaderControl>
+                        <TextBox Header="Name" Text="{x:Bind ViewModel.Node.Name, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="1"
+                                Orientation="Vertical">
+
+                        <controls:HeaderControl Header="Aktuelle Position:">
+                            <TextBlock Text="{x:Bind ViewModel.Location, Mode=OneWay}" />
+                        </controls:HeaderControl>
+
+                        <map:Map x:Name="map"
+                                 MapCenter="{x:Bind ViewModel.Location, Mode=OneTime}"
+                                 ManipulationMode="Scale, TranslateInertia, TranslateX, TranslateY"
+                                 DoubleTapped="MapDoubleTapped" IsDoubleTapEnabled="True">
+
+                            <interactivity:Interaction.Behaviors>
+                                <behaviors:TouchMapBehavior AutoUpdateMap="True"
+                                                            RotationEnabled="False"
+                                                            DoubleTapEnabled="False" />
+                            </interactivity:Interaction.Behaviors>
+                            <tiles:TileLayer />
+
+                            <Ellipse Width="20" Height="20"
+                                     StrokeThickness="2" Stroke="Red"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                     map:MapLayerBase.Location="{x:Bind ViewModel.Location, Mode=OneWay}" />
+
+                        </map:Map>
+                    </StackPanel>
+                </Grid>
+            </PivotItem>
+            <PivotItem Header="Rufe">
+                <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Style="{StaticResource PageHeader}" Text="Bat Map Explorer" />
+
+                    <ListView Grid.Column="0" Grid.Row="1" Grid.RowSpan="2"
+                              ItemsSource="{Binding Calls}" 
+                              Margin="0,0,0,0"
+                              SelectedItem="{Binding SelectedCall, Mode=TwoWay}" SelectionMode="Single">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:CallModel">
+                                <Grid Margin="0,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="20"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Date}" Margin="5,0" />
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Time}" Margin="5,0" />
+                                    
+                                    <TextBlock Grid.Column="1" Text="{Binding Call.Duration}" TextAlignment="Right" Margin="5,0" />
+                                    <TextBlock Grid.Column="2" Text="{Binding MainFrequency}" TextAlignment="Right" Margin="5,0" />
+                                    <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding Call.MergeCount}" TextAlignment="Right" Margin="5,0" />
+                                    
+                                    <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7BA;" 
+                                              Grid.Column="3" Grid.Row="0"
+                                              Visibility="{Binding HasWarnings, Converter={StaticResource boolToVis}}"
+                                              Foreground="OrangeRed">
+                                        <ToolTipService.ToolTip>
+                                            <ToolTip Content="{Binding Warnings}" />
+                                        </ToolTipService.ToolTip>
+                                    </FontIcon>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="MinHeight" Value="30" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+
+                    <oxy:PlotView Grid.Column="1" Grid.Row="1"
+                                  Background="{StaticResource AppBarBackgroundThemeBrush}"
+                                  Model="{Binding Power}" />
+                    
+                    <oxy:PlotView Grid.Column="1" Grid.Row="2"
+                                  Background="{StaticResource AppBarBackgroundThemeBrush}"
+                                  Model="{Binding Frequency}" />
+
+                </Grid>
+            </PivotItem>
+        </Pivot>
+    </controls:PageViewControl>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Command="{x:Bind ViewModel.ImportCommand, Mode=OneTime}" Icon="Add" />
+        </CommandBar>
+    </Page.BottomAppBar>
+</nodeDetail:CallDetailViewBase>

@@ -28,8 +28,9 @@ private:
 	elapsedMillis _msSinceLastInfoLog = 0;
 	elapsedMillis _msSinceLastCall = 0;
 
-	elapsedMicros _usSinceLastSample = 0;
-	uint32_t _lastSampleDuration = 0;
+    // This is the time it took to record the last ample.
+    elapsedMicros _usSinceLastSample = 0;
+    uint32_t _lastSampleDuration = 0;
 
 	//FFT
 	int16_t _complexBuffer[TB_DOUBLE_FFT_SIZE] __attribute__((aligned(4)));

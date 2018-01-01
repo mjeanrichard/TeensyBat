@@ -35,3 +35,4 @@ Src/TeensyBatMap/TeensyBatMap/AppPackages
 _pkginfo.txt
 BundleArtifacts/
 __vm/
+project.lock.json

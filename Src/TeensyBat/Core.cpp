@@ -4,7 +4,6 @@
 #include "AdcHandler.h"
 #include "BatAnalog.h"
 #include "Configurator.h"
-#include <SdFatUtil.h>
 #include <EEPROM.h>
 
 #ifdef TB_DISPLAY

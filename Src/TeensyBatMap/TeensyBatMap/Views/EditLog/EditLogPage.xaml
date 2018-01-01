@@ -213,6 +213,7 @@
 
 	<Page.BottomAppBar>
 		<CommandBar IsOpen="True" IsSticky="True">
+			<AppBarButton Label="Daten neu analysieren" Icon="Refresh" Command="{Binding UpdateDataCommand}" />
 			<AppBarButton Label="Abbrechen" Icon="Cancel" Command="{Binding CancelCommand}" />
 			<AppBarButton Label="Speichern" Icon="Save" Command="{Binding SaveCommand}" />
 		</CommandBar>

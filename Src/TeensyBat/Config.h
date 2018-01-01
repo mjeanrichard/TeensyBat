@@ -8,8 +8,8 @@
 
 // User Config
 
-static const uint16_t TB_TIME_BEFORE_AUTO_LOG_MS = 1000;
-static const uint32_t TB_INFO_LOG_INTERVAL_MS = 5 * 1000;
+static const uint16_t TB_TIME_BEFORE_AUTO_LOG_MS = 60 * 1000;
+static const uint32_t TB_INFO_LOG_INTERVAL_MS = 30 * 1000;
 
 //Power required to start a logging of a Call
 static const uint16_t TB_MIN_CALL_START_POWER = 60;
@@ -26,8 +26,8 @@ static const uint16_t TB_MIN_AVG_POWER = 200;
 static const uint32_t TB_LOG_BUFFER_LENGTH = 10;
 static const uint16_t TB_POWER_DATA_COUNT = 1024;
 
-// Seconds after startup for wich the LEDs are enbaled.
-static const uint32_t TB_AUTO_SWITCH_OFF_MSECS = 5 * 60 * 1000;
+// Seconds after startup for wich the LEDs are enabled.
+static const uint32_t TB_AUTO_SWITCH_OFF_MS = 5 * 60 * 1000;
 
 // END User Config
 

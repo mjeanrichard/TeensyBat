@@ -27,9 +27,11 @@ void BatAnalog::process()
 	// Sample duration measurement
 	_lastSampleDuration = _usSinceLastSample;
 	_usSinceLastSample = 0;
+    
+    // Save Call Duration here to prevent adding the time for FFT and other calculations to the call length
 	uint32_t tmpCallDuration = _callDuration;
 
-	// Calculate average Power of the last sample period; only use the last five samples...
+	// Calculate average Power of the last sample period; only use the last n samples...
 	uint8_t i = 0;
 	uint16_t avgPower = 0;
 	if (powerBufferSize > TB_AVG_POWER_COUNT)
@@ -62,7 +64,8 @@ void BatAnalog::process()
 	if (currentCall->sampleCount == 0)
 	{
 		_callDuration = _lastSampleDuration;
-		currentCall->startTimeMs = millis();
+        tmpCallDuration = _lastSampleDuration;
+	    currentCall->startTimeMs = millis();
 		if (Helpers::CheckLedsEnabled())
 		{
 			digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
@@ -145,12 +148,18 @@ void BatAnalog::process()
 
 void BatAnalog::ApplyFftSample(uint32_t* binData)
 {
+	// The amplitude of a frequency bin is sqrt(re^2 + img^2)
+	// multiply_16tx16t_add_16bx16b multiplies the lower and upper halfword of the parameters
+	// and adds them together.
+
+	// Do the DC-Offset (0 Hz) first. 
 	uint32_t tmp = *((uint32_t *)_complexBuffer);
 	binData[0] += multiply_16tx16t_add_16bx16b(tmp, tmp);
 
 	int index = 2;
-	for (int i = 1; i < TB_QUART_FFT_SIZE; i++)
+	for (int i = 0; i < TB_QUART_FFT_SIZE; i++)
 	{
+		// We are merging two bins together to get half the result set
 		tmp = *((uint32_t *)_complexBuffer + index++);
 		binData[i] += multiply_16tx16t_add_16bx16b(tmp, tmp) / 2;
 		tmp = *((uint32_t *)_complexBuffer + index++);
@@ -196,6 +205,8 @@ void BatAnalog::CheckLog()
 
 void BatAnalog::copy_to_fft_buffer(void* destination, const void* source)
 {
+	// The FFT Buffer (dst) must contain the real sample plus a 0 for the imaginary part.
+	// Hence it must be twice the size of the sample buffer.
 	const uint16_t* src = (const uint16_t *)source;
 	uint32_t* dst = (uint32_t *)destination;
 

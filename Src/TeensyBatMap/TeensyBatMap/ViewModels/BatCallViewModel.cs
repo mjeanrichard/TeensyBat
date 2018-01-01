@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 
 using OxyPlot;
+using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
@@ -144,8 +145,11 @@ namespace TeensyBatMap.ViewModels
             PlotModel pm = new PlotModel();
             LineSeries lineSeries = new LineSeries();
             pm.Series.Add(lineSeries);
+            pm.Axes.Add(new LinearAxis { Maximum = 260, Minimum = 0, Position = AxisPosition.Left, Title = "Intensität"});
+            pm.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Dauer [ms]"});
 
-            pm.Axes.Add(new LinearAxis { Maximum = 260, Minimum = 0, Position = AxisPosition.Left });
+            LineAnnotation lineAnnotation = new LineAnnotation {Color = OxyColors.DarkRed, LineStyle = LineStyle.Dash, Type = LineAnnotationType.Horizontal, Y = BatCall.MaxPower, Text = $"Ø {BatCall.MaxPower}"};
+            pm.Annotations.Add(lineAnnotation);
 
             if (_batCall.PowerData != null)
             {

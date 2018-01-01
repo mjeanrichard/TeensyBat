@@ -14,7 +14,7 @@ bool Helpers::CheckLedsEnabled()
 #endif
 	if (LedsEnabled)
 	{
-		if (millis() < TB_AUTO_SWITCH_OFF_MSECS)
+		if (millis() < TB_AUTO_SWITCH_OFF_MS)
 		{
 			return true;
 		}

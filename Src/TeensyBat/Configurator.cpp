@@ -1,7 +1,7 @@
 #include "Configurator.h"
 #include <EEPROM.h>
 #include "Config.h"
-#include <time/TimeLib.h>
+#include <TimeLib.h>
 
 void Configurator::SetTime()
 {

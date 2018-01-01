@@ -1,5 +1,4 @@
 ﻿using System;
-using TeensyBatMap.Database;
 
 namespace TeensyBatMap.Domain
 {
@@ -12,19 +11,19 @@ namespace TeensyBatMap.Domain
             MaxFrequency = maxFrequency;
             MaxPower = maxPower;
             AvgFrequency = avgFrequency;
-			DcOffset = dcOffset;
+            DcOffset = dcOffset;
             StartTime = log.LogStart.AddMilliseconds(startTimeMs);
-			FftData = data;
-			PowerData = powerData;
-	        Enabled = true;
+            FftData = data;
+            PowerData = powerData;
+            Enabled = true;
         }
 
-	    public BatCall()
-	    {
-		    Enabled = true;
-			PowerData = new byte[0];
-			FftData = new byte[0];
-	    }
+        public BatCall()
+        {
+            Enabled = true;
+            PowerData = new byte[0];
+            FftData = new byte[0];
+        }
 
         public int Id { get; set; }
 
@@ -36,9 +35,9 @@ namespace TeensyBatMap.Domain
 
         public int MissedSamples { get; set; }
 
-		/// <summary>
-		/// The Duration of the Call in MircoSeconds.
-		/// </summary>
+        /// <summary>
+        /// The Duration of the Call in MircoSeconds.
+        /// </summary>
         public uint Duration { get; set; }
 
         public uint MaxFrequency { get; set; }
@@ -51,10 +50,10 @@ namespace TeensyBatMap.Domain
 
         public int BatNodeLogId { get; set; }
 
-		public bool Enabled { get; set; }
+        public bool Enabled { get; set; }
 
-		public virtual byte[] FftData { get; set; }
+        public virtual byte[] FftData { get; set; }
 
-		public virtual byte[] PowerData { get; set; }
+        public virtual byte[] PowerData { get; set; }
     }
 }

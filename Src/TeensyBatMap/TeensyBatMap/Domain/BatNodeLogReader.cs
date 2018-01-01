@@ -128,27 +128,7 @@ namespace TeensyBatMap.Domain
 
 		private void AnalyzeFftData(BatCall call)
 		{
-			FftResult fftResult = _fftAnalyzer.Analyze(call);
-			call.DcOffset = fftResult.DcOffset;
-			uint maxPeak = 0;
-			int maxPeakIndex = -1;
-			foreach (int peakIndex in fftResult.Peaks)
-			{
-				uint peakValue = fftResult.FftData[peakIndex];
-				if (peakValue > maxPeak)
-				{
-					maxPeak = peakValue;
-					maxPeakIndex = peakIndex;
-				}
-			}
-			if (maxPeakIndex >= 0 && maxPeak > 10)
-			{
-				call.MaxFrequency = (uint)(maxPeakIndex / 2);
-			}
-			else
-			{
-				call.Enabled = false;
-			}
+            //_fftAnalyzer.Recalculate(call);
 		}
 
 		private RecordTypes GetNextRecordType(BinaryReader reader)
