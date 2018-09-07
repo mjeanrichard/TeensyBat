@@ -1,0 +1,89 @@
+﻿<devices:DevicesPageBase
+    x:Class="TeensyBatExplorer.Views.Devices.DevicesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Style="{StaticResource PageStyle}"
+    xmlns:converters="using:Microsoft.Toolkit.Uwp.UI.Converters"
+    xmlns:devices="using:TeensyBatExplorer.Views.Devices"
+    xmlns:controls="using:TeensyBatExplorer.Controls"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:StringFormatConverter x:Key="StringFormatConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisConverter" />
+        <converters:BoolToObjectConverter x:Key="InvertedBoolToVisConverter" TrueValue="Collapsed" FalseValue="Visible" />
+    </Page.Resources>
+
+
+    <Grid Margin="{StaticResource MediumLeftRightMargin}">
+        <StackPanel 
+            Orientation="Vertical"
+            Visibility="{x:Bind ViewModel.IsDeviceConnected, Mode=OneWay, Converter={StaticResource InvertedBoolToVisConverter}}">
+            <Image HorizontalAlignment="Center" 
+                   MaxWidth="500"
+                   Stretch="UniformToFill" 
+                   Source="../../Assets/Connect.svg" />
+            <TextBlock Margin="0 10 0 0" HorizontalAlignment="Center">Es wurde keine TeensyBat gefunden. Bitte schliessen Sie ein TeensyBat an.</TextBlock>
+        </StackPanel>
+        <Grid Visibility="{x:Bind ViewModel.IsDeviceConnected, Mode=OneWay, Converter={StaticResource BoolToVisConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Vertical" Grid.Column="0">
+                <controls:HeaderControl Header="Geräte Nummer:">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Bind ViewModel.NodeId, Mode=OneWay}"
+                                   MinWidth="40"
+                                   TextAlignment="Right"
+                                   VerticalAlignment="Bottom" />
+
+                        <controls:IconButton Symbol="Edit" 
+                                             VerticalAlignment="Bottom"
+                                             Margin="10,0,0,0"
+                                             Command="{x:Bind ViewModel.SetNodeIdCommand}" />
+                    </StackPanel>
+                </controls:HeaderControl>
+                <StackPanel Orientation="Horizontal">
+                    <controls:HeaderControl Header="Uhrzeit auf dem Gerät">
+                        <TextBlock Text="{x:Bind ViewModel.NodeTime, Mode=OneWay}"
+                                   VerticalAlignment="Center" />
+                    </controls:HeaderControl>
+                    <controls:HeaderControl Header="Delta" Margin="10,0,0,0">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{x:Bind ViewModel.TimeDiff, Mode=OneWay, Converter={StaticResource StringFormatConverter}}" />
+                    </controls:HeaderControl>
+
+                    <controls:IconButton Symbol="Clock" 
+                                         VerticalAlignment="Bottom"
+                                         Margin="10,0,0,0"
+                                         Command="{x:Bind ViewModel.SetTimeCommand}" />
+                </StackPanel>
+                <controls:HeaderControl Header="Versorgungsspannung:">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Bind ViewModel.Voltage, Mode=OneWay}"
+                                   MinWidth="40"
+                                   TextAlignment="Right"
+                                   VerticalAlignment="Bottom" />
+
+                        <controls:IconButton Symbol="Edit" 
+                                             VerticalAlignment="Bottom"
+                                             Margin="10,0,0,0"
+                                             Command="{x:Bind ViewModel.SetVoltageCommand}" />
+                    </StackPanel>
+                </controls:HeaderControl>
+            </StackPanel>
+            <Border BorderBrush="Black" BorderThickness="1" Grid.Column="1" Margin="0">
+                <ScrollViewer VerticalScrollMode="Auto" 
+                              VerticalScrollBarVisibility="Visible"
+                              HorizontalScrollBarVisibility="Auto"
+                              HorizontalScrollMode="Enabled"
+                              Margin="2">
+                    <TextBlock Text="{x:Bind ViewModel.SerialLog, Mode=OneWay}" />
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</devices:DevicesPageBase>

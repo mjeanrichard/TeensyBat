@@ -1,0 +1,28 @@
+﻿<ContentDialog
+    x:Class="TeensyBatExplorer.Views.Devices.SetVoltageDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TeensyBatExplorer.Views.Devices"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:TeensyBatExplorer.Controls"
+    mc:Ignorable="d"
+    Title="Versorgungsspannung kalibrieren"
+    PrimaryButtonText="Speichern"
+    CloseButtonText="Abbrechen"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    >
+
+    <StackPanel>
+        <controls:HeaderControl Header="Gemessene Versorgungsspannung:">
+            <StackPanel Orientation="Horizontal">
+                <TextBox x:Name="txtVoltage" 
+                         InputScope="Number" 
+                         TextAlignment="Right"
+                         KeyDown="TxtVoltage_OnKeyDown"/>
+                <TextBlock VerticalAlignment="Center"
+                           Margin="5,0,0,0">Volt</TextBlock>
+            </StackPanel>
+        </controls:HeaderControl>
+    </StackPanel>
+</ContentDialog>
