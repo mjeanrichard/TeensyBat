@@ -22,8 +22,20 @@ void setup() {
 	pinMode(TB_PIN_S1, INPUT_PULLUP);
 	pinMode(TB_PIN_S2, INPUT_PULLUP);
 
+	Serial.begin(57600 /* Rate does not matter on a Teensy... */);
+	elapsedMillis timeout;
+
+	bool hasUsbConfigured = !bitRead(USB0_OTGSTAT,5);
+	if (hasUsbConfigured){
+		digitalWrite(TB_PIN_LED_GREEN, HIGH);
+		Configurator *c = new Configurator();
+		c->Start();
+	}
+
+
+	while(true){}
+
 #ifdef TB_DEBUG
-	Serial.begin(57600);
 	delay(500);
 	Serial.println("Start!");
 #else

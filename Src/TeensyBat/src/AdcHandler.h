@@ -36,7 +36,8 @@ public:
 	static volatile uint16_t MissedSamples;
 	static volatile uint16_t ClippedSignalCount;
 
-	static uint16_t ReadBatteryVoltage();
+	static uint16_t ReadRawBatteryVoltage();
+	
 	static void InitAdc();
 	static void Start();
 	static void Stop();

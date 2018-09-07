@@ -64,28 +64,28 @@ void PrintPowerData(uint8_t * powerData, uint16_t length)
 	}
 }
 
-void PrintSpectrum() {
-	/*
+void PrintSpectrum(uint32_t data[TB_HALF_FFT_SIZE]) {
+	
 	tft.setTextSize(1);
 	tft.fillScreen(ILI9341_BLACK);
 
 	uint16_t m = 0;
 	uint16_t mas = 0;
-	uint16_t maC = bins[0];
-	uint16_t maN = bins[0];
+	uint16_t maC = data[0];
+	uint16_t maN = data[0];
 
 	bool prevUp = true;
 
-	for (int i = 1; i < QUART_FFT_SIZE-1; i++){
-	m = bins[i];
-	mas = mas + bins[i+1] - (mas >> 2);
-	maN = mas >> 2;
-	if (maC > 3 && prevUp && maC > maN){
-	tft.drawLine(0, i, m, i, ILI9341_GREEN);
-	tft.setCursor(210, i);
-	tft.print((i*452)/1000);
+	for (int i = 1; i < TB_HALF_FFT_SIZE-1; i++){
+	    m = data[i];
+	    mas = mas + data[i+1] - (mas >> 2);
+	    maN = mas >> 2;
+	    if (maC > 3 && prevUp && maC > maN){
+	    tft.drawLine(0, i, m, i, ILI9341_GREEN);
+	    tft.setCursor(210, i);
+	    tft.print((i*452)/1000);
 	} else {
-	tft.drawLine(0, i, m, i, ILI9341_WHITE);
+	    tft.drawLine(0, i, m, i, ILI9341_WHITE);
 	}
 	//tft.drawLine(m, i, 200, i, ILI9341_BLACK);
 	tft.drawLine(maC+1, i, maC, i, ILI9341_RED);
@@ -102,6 +102,6 @@ void PrintSpectrum() {
 	//tft.print(":");
 	//tft.print((uint16_t)sqrt_uint32_approx(maxPower));
 	//Serial.println();
-	*/
+	
 }
 

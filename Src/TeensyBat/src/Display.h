@@ -2,6 +2,7 @@
 #define _DISPLAY_h
 
 #include "ILI9341_t3.h"
+#include "Config.h"
 
 #define TFT_DC       15
 #define TFT_CS       9
@@ -12,7 +13,7 @@
 
 void InitDisplay();
 void PrintPowerData(uint8_t * powerData, uint16_t length);
-
+void PrintSpectrum(uint32_t data[TB_HALF_FFT_SIZE]);
 
 #endif
 

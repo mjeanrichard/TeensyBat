@@ -14,7 +14,7 @@ class BatLog
 {
 private:
 	SdFat _sd;
-	File _file;
+	SdFile _file;
 
 	char _filename[21];
 

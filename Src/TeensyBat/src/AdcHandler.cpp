@@ -44,20 +44,20 @@ void AdcHandler::InitAdc()
 	// ADC_0 is used for sampling the Audio
 	adc->setAveraging(0, ADC_0);
 	adc->setResolution(12, ADC_0);
-	adc->setConversionSpeed(ADC_MED_SPEED, ADC_0);
-	adc->setSamplingSpeed(ADC_MED_SPEED, ADC_0);
+	adc->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED, ADC_0);
+	adc->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED, ADC_0);
 	adc->enableInterrupts(ADC_0);
 
 	// ADC_1 is used for everthing else.
 	adc->setAveraging(8, ADC_1);
 	adc->setResolution(8, ADC_1);
-	adc->setConversionSpeed(ADC_MED_SPEED, ADC_1);
-	adc->setSamplingSpeed(ADC_MED_SPEED, ADC_1);
+	adc->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED, ADC_1);
+	adc->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED, ADC_1);
 	adc->enableInterrupts(ADC_1);
 }
 
 
-uint16_t AdcHandler::ReadBatteryVoltage()
+uint16_t AdcHandler::ReadRawBatteryVoltage()
 {
 	adc->disableInterrupts(ADC_1);
 	noInterrupts();
@@ -69,7 +69,7 @@ uint16_t AdcHandler::ReadBatteryVoltage()
 	interrupts();
 	adc->enableInterrupts(ADC_1);
 
-	return (voltage * 2550) / 1000;
+	return voltage;
 }
 
 void AdcHandler::HandleAdc0Isr()

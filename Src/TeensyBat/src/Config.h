@@ -4,7 +4,7 @@
 #include "WProgram.h"
 
 // #define TB_DEBUG = 1;
-// #define TB_DISPLAY = 1;
+ #define TB_DISPLAY = 1;
 
 // User Config
 

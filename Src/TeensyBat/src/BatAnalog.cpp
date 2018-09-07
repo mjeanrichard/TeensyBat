@@ -121,7 +121,8 @@ void BatAnalog::process()
 		Serial.printf(F("Call end Detected (Initial P: %hhu, D: %u us, End P: %hhu (%u).\n"), currentCall->sampleCount, (uint32_t)tmpCallDuration, avgPower, currentCall->powerDataLength);
 #endif 
 #ifdef TB_DISPLAY
-		PrintPowerData(currentCall->powerData, currentCall->powerDataLength);
+		//PrintPowerData(currentCall->powerData, currentCall->powerDataLength);
+		PrintSpectrum(currentCall->data);
 #endif
 
 		if (Helpers::LedsEnabled)
@@ -172,7 +173,7 @@ void BatAnalog::AddInfoLog()
 	BatInfo* batInfo = &_infoLog[_currentInfoIndex];
 	batInfo->time = Teensy3Clock.get();
 	batInfo->startTimeMs = millis();
-	batInfo->BatteryVoltage = AdcHandler::ReadBatteryVoltage();
+	batInfo->BatteryVoltage = AdcHandler::ReadRawBatteryVoltage();
 	batInfo->LastBufferDuration = _lastSampleDuration;
 #ifdef TB_DEBUG
 	Serial.printf("Adding Info: Bat: %u mV, Sample Duration: %u ms, Time: %lu, MS: %lu\n", batInfo->BatteryVoltage, batInfo->LastBufferDuration, batInfo->time, batInfo->startTimeMs);
