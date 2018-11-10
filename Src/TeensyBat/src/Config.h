@@ -3,7 +3,7 @@
 
 #include "WProgram.h"
 
- #define TB_DEBUG = 1;
+// #define TB_DEBUG = 1;
 // #define TB_DISPLAY = 1;
 
 // User Config
@@ -44,9 +44,14 @@ static const uint8_t TB_PIN_S1 = 2;
 static const uint8_t TB_PIN_S2 = 3;
 
 // SD Card Access
-const uint8_t TB_PIN_SDCS = SS;
-const uint8_t TB_PIN_CARD_PRESENT = 20;
+static const uint8_t TB_PIN_SDCS = SS;
+static const uint8_t TB_PIN_CARD_PRESENT = 20;
 
+// EEPROM
+static const uint8_t TB_EEPROM_NODE_ID = 0; // Node Id
+static const uint8_t TB_EEPROM_V_FACT = 1;  // Voltage Calibration Factor
+static const uint8_t TB_EEPROM_TIME = 2;    // Timestamp of last set time (can be used to calibrate the clock). Uses 4 bytes!
+// Adress 3, 4, 5 are also used by TB_EEPROM_TIME!
 
 // Sample and FFT Size 
 static const int TB_FFT_SIZE = 1024;

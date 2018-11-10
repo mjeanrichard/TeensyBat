@@ -26,14 +26,12 @@ void setup() {
 	elapsedMillis timeout;
 
 	bool hasUsbConfigured = !bitRead(USB0_OTGSTAT,5);
-	if (hasUsbConfigured){
+	if (hasUsbConfigured && digitalReadFast(TB_PIN_S1) == HIGH){
 		digitalWrite(TB_PIN_LED_GREEN, HIGH);
 		Configurator *c = new Configurator();
 		c->Start();
+		delete c;
 	}
-
-
-	while(true){}
 
 #ifdef TB_DEBUG
 	delay(500);
@@ -46,19 +44,8 @@ void setup() {
 	InitDisplay();
 #endif
 
-	if (digitalReadFast(TB_PIN_S1) == LOW)
-	{
-		Configurator *c = new Configurator();
-		c->Start();
-	}
-
 	ba->init();
 	ba->start();
-
-#ifdef TB_DEBUG
-	Serial.print("Free MEM: ");
-	Serial.println(FreeRam());
-#endif
 }
 
 

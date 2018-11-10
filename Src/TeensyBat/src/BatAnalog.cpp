@@ -173,7 +173,11 @@ void BatAnalog::AddInfoLog()
 	BatInfo* batInfo = &_infoLog[_currentInfoIndex];
 	batInfo->time = Teensy3Clock.get();
 	batInfo->startTimeMs = millis();
-	batInfo->BatteryVoltage = AdcHandler::ReadRawBatteryVoltage();
+
+	uint16_t voltageFactor;
+	EEPROM.get(TB_EEPROM_V_FACT, voltageFactor);
+	batInfo->BatteryVoltage = AdcHandler::ReadRawBatteryVoltage() * voltageFactor;
+
 	batInfo->LastBufferDuration = _lastSampleDuration;
 #ifdef TB_DEBUG
 	Serial.printf("Adding Info: Bat: %u mV, Sample Duration: %u ms, Time: %lu, MS: %lu\n", batInfo->BatteryVoltage, batInfo->LastBufferDuration, batInfo->time, batInfo->startTimeMs);

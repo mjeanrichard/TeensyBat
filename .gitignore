@@ -36,3 +36,4 @@ _pkginfo.txt
 BundleArtifacts/
 __vm/
 project.lock.json
+.vscode/

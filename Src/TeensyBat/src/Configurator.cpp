@@ -10,6 +10,7 @@ void Configurator::SetTime(byte buffer[USB_BUF_SIZE])
 	if (ms >= 3000){
 		Serial.println(F("Error waiting for Offset!"));
 	}
+	EEPROM.put(TB_EEPROM_TIME, time);
 	Serial.print(F("OK: Die neue Zeit wurde gesetzt: "));
 	Serial.print(time);
 	Serial.print(F(" Offset: "));
@@ -22,7 +23,7 @@ void Configurator::SetVoltage(byte buffer[USB_BUF_SIZE])
 	uint16_t newVoltage = (buffer[1] << 8) | buffer[2];
 	uint16_t rawVoltage = AdcHandler::ReadRawBatteryVoltage();
 	uint16_t factor = (newVoltage * 1000) / rawVoltage;
-  	EEPROM.put(1, factor);
+  	EEPROM.put(TB_EEPROM_V_FACT, factor);
 	_voltageFactor = factor;
 
 	Serial.print(F("OK: Setze Spannungsfaktor: "));
@@ -38,13 +39,13 @@ uint16_t Configurator::ReadVoltage()
 void Configurator::SetNodeId(byte buffer[USB_BUF_SIZE])
 {
 	uint8_t newNodeId = buffer[1];
-	EEPROM.write(0, newNodeId);
+	EEPROM.write(TB_EEPROM_NODE_ID, newNodeId);
 	Serial.printf(F("OK: NodeId %hhu gesetzt."), newNodeId);
 }
 
 void Configurator::SendConfig(byte buffer[USB_BUF_SIZE])
 {
-	uint8_t nodeId = EEPROM.read(0);
+	uint8_t nodeId = EEPROM.read(TB_EEPROM_NODE_ID);
 	buffer[0] = DATA_DEVICE_INFO;
 	buffer[1] = nodeId;
 
@@ -75,7 +76,7 @@ void Configurator::Start()
 #endif
 	Serial.println(F("OK: Entering Configuration Mode..."));
 	
-	EEPROM.get(1, _voltageFactor);
+	EEPROM.get(TB_EEPROM_V_FACT, _voltageFactor);
 
 	byte outBuffer[64];
 	byte inBuffer[64];
@@ -105,6 +106,9 @@ void Configurator::Start()
 				case CMD_SET_NODEID:
 					SetNodeId(inBuffer);
 					break;
+				case CMD_EXIT_CONFIG:
+					Serial.println(F("OK: Exiting Configuration Mode..."));
+					return;
 			}
 		}
 		if (sendBuffer){

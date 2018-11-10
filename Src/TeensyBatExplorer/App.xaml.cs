@@ -48,7 +48,7 @@ namespace TeensyBatExplorer
             EnteredBackground += App_EnteredBackground;
 
             // TODO WTS: Add your app in the app center and set your secret here. More at https://docs.microsoft.com/en-us/appcenter/sdk/getting-started/uwp
-            AppCenter.Start("{Your App Secret}", typeof(Analytics), typeof(Crashes));
+            //AppCenter.Start("{Your App Secret}", typeof(Analytics), typeof(Crashes));
 
             _activationService = new Lazy<ActivationService>(() => DependencyContainer.Current.Resolve<ActivationService>());
             _suspendAndResumeService = DependencyContainer.Current.Resolve<SuspendAndResumeService>();

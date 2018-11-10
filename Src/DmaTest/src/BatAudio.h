@@ -7,6 +7,7 @@
 #include <ADC.h>
 #include "sqrt_integer.h"
 #include "dspinst.h"
+#include "SdFat.h"
 
 
 #define AUDIO_SAMPLE_BUFFER_SIZE 128
@@ -28,10 +29,15 @@ static const uint8_t TB_PIN_SDCS = 10;
 static const uint16_t FFT_RESULT_SIZE = AUDIO_SAMPLE_BUFFER_SIZE / 2;
 static const uint16_t CALL_DATA_SIZE = FFT_RESULT_SIZE + 4;
 
-static const uint16_t PRE_CALL_BUFFER_COUNT = 3;
+static const uint8_t PRE_CALL_BUFFER_COUNT = 4;
+static const uint8_t AFTER_CALL_SAMPLES = 4;
+
+static const uint16_t CALL_START_THRESHOLD = 500;
+static const uint16_t CALL_STOP_THRESHOLD = 100;
 
 static const uint16_t CALL_BUFFER_COUNT = 600;
 static const uint16_t CALL_POINTER_COUNT = 50;
+
 
 
 // END TEMP
@@ -78,6 +84,10 @@ public:
 	void start();
 	void stop();
 
+	bool hasDataAvailable();
+
 	void debug();
+	void sendOverUsb();
+	void writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockCount);
 };
 #endif

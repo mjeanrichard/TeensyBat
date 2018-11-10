@@ -14,8 +14,14 @@
 #define CMD_SET_NODEID 1
 #define CMD_SET_TIME 2
 #define CMD_SET_VOLTAGE 3
+#define CMD_EXIT_CONFIG 250
 
 #define DATA_DEVICE_INFO 1
+#define DATA_CALL 2
+
+#define DATA_CALL_HEADER 1
+#define DATA_CALL_DATA1 2
+#define DATA_CALL_DATA2 3
 
 
 class Configurator
