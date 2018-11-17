@@ -145,7 +145,6 @@ void software_isr(void)
 void BatAudio::sample_complete_isr()
 {
     digitalWriteFast(TB_PIN_LED_RED, callBufferEntries >= CALL_BUFFER_COUNT-2);
-    digitalWriteFast(TB_PIN_LED_YELLOW, HIGH);
 
     sampleCounter++;
 
@@ -157,8 +156,7 @@ void BatAudio::sample_complete_isr()
         if (nextCallPointerIndex == callPointerIndexTail)
         {
             //Serial.println("Call Pointer Buffer Full!");
-            //digitalWriteFast(TB_PIN_LED_YELLOW, HIGH);
-            digitalWriteFast(TB_PIN_LED_YELLOW, LOW);
+            digitalWriteFast(TB_PIN_LED_YELLOW, HIGH);
             return;
         }
         //digitalWriteFast(TB_PIN_LED_YELLOW, LOW);

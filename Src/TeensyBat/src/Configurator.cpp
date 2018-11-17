@@ -128,6 +128,11 @@ void Configurator::Start()
 			RawHID.send(outBuffer, 0);
 			timeTimer = 0;
 		}
+
+		if (digitalReadFast(TB_PIN_S2) == LOW){
+			exitConfigurator = true;
+			Serial.print(F("Exiting Config mode..."));
+		}
 	}
 
 

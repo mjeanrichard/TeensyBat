@@ -31,6 +31,8 @@ void setup() {
 		Configurator *c = new Configurator();
 		c->Start();
 		delete c;
+		analogWrite(TB_PIN_LED_GREEN, LOW);
+		analogWrite(TB_PIN_LED_YELLOW, LOW);
 	}
 
 #ifdef TB_DEBUG
