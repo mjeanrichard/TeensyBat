@@ -1,5 +1,6 @@
 #include "BatAudio.h"
 #include "SdFat.h"
+#include "RamMonitor.h"
 
 BatAudio b;
 
@@ -42,32 +43,34 @@ uint32_t endBlock = 0;
 
 const uint16_t BLOCK_COUNT = 50000;
 
+RamMonitor ram;
+
 void loop() {
 
   if (bgnBlock == 0 && endBlock == 0){
     _sd.remove("test.dat");
     if (!_file.createContiguous("test.dat", 512UL * BLOCK_COUNT)) {
-      Serial.println("createContiguous failed");
+      Serial.println(F("createContiguous failed"));
       err();
     }
     if (!_file.contiguousRange(&bgnBlock, &endBlock)) {
-      Serial.println("contiguousRange failed");
+      Serial.println(F("contiguousRange failed"));
       err();
     }
-    Serial.println("Ok, new file open.");
+    Serial.println(F("Ok, new file open."));
 
     if (_sd.card()->eraseSingleBlockEnable()){
-      Serial.println("Ok, erasing...");
+      Serial.println(F("Ok, erasing..."));
       if (!_sd.card()->erase(bgnBlock, endBlock))
       {
-        Serial.println("Err erasing...");
+        Serial.println(F("Err erasing..."));
         err();
       }
-      Serial.println("Done.");
+      Serial.println(F("Done."));
     } else {
-      Serial.println("Ok, erasing manually...");
+      Serial.println(F("Ok, erasing manually..."));
       if (!_sd.card()->writeStart(bgnBlock, BLOCK_COUNT)){
-        Serial.println("Block Start failed!");
+        Serial.println(F("Block Start failed!"));
         err();
       }
 
@@ -76,21 +79,21 @@ void loop() {
       }
 
       if (!_sd.card()->writeStop()){
-        Serial.println("Block Stop failed!");
+        Serial.println(F("Block Stop failed!"));
         err();
       }
-      Serial.println("Ok, done.");
+      Serial.println(F("Ok, done."));
     }
 
   }
 
   if (b.hasDataAvailable())
   {
-    if (!_sd.card()->writeStart(bgnBlock+blocksWritten, BLOCK_COUNT)){
+    if (!_sd.card()->writeStart(bgnBlock+blocksWritten, BLOCK_COUNT))
+    {
       Serial.println("Block Start failed!");
       err();
     }
-
     while(b.hasDataAvailable())
     {
       b.writeToCard(&blocksWritten, &_sd, BLOCK_COUNT);
@@ -104,6 +107,9 @@ void loop() {
 
   //b.debug();
   //b.sendOverUsb();
+
+  Serial.println(ram.free());
+  
 }
 
 
