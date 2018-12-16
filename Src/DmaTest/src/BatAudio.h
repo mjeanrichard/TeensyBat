@@ -1,6 +1,7 @@
 #ifndef BATAUDIO_h
 #define BATAUDIO_h
 
+#include "Config.h"
 #include "DMAChannel.h"
 #include "arm_math.h"
 #include "arm_const_structs.h"
@@ -9,38 +10,6 @@
 #include "dspinst.h"
 #include "SdFat.h"
 
-
-#define AUDIO_SAMPLE_BUFFER_SIZE 128
-
-
-// TEMP
-static const uint8_t TB_PIN_LED_GREEN = 6;
-static const uint8_t TB_PIN_LED_YELLOW = 5;
-static const uint8_t TB_PIN_LED_RED = 4;
-
-static const uint8_t TB_PIN_AUDIO = A9;
-static const uint8_t TB_PIN_ENVELOPE = A3;
-static const uint8_t TB_PIN_BATTERY = A2;
-
-static const uint8_t TB_PIN_SDCS = 10;
-
-
-static const uint16_t FFT_RESULT_SIZE = AUDIO_SAMPLE_BUFFER_SIZE;
-static const uint16_t CALL_DATA_SIZE = FFT_RESULT_SIZE + 4;
-
-static const uint8_t PRE_CALL_BUFFER_COUNT = 4;
-static const uint8_t AFTER_CALL_SAMPLES = 4;
-
-static const uint16_t CALL_START_THRESHOLD = 500;
-static const uint16_t CALL_STOP_THRESHOLD = 100;
-
-static const uint16_t CALL_BUFFER_COUNT = 400;
-static const uint16_t CALL_POINTER_COUNT = 20;
-
-
-
-// END TEMP
-
 struct CallPointer
 {
 	uint8_t * startOfData;
@@ -48,34 +17,69 @@ struct CallPointer
 	uint32_t startTime;
 };
 
-
 class BatAudio
 {
 private:
-	static BatAudio * _self;
-
-	ADC _adc;
-
+	static BatAudio * _instance;
 	static DMAChannel _dma;
+	static ADC _adc;
 
-	const arm_cfft_instance_q15 * _cfftData;
-	int16_t _fftBuffer[FFT_RESULT_SIZE*4] __attribute__((aligned(4)));
+	static void adc0_isr();
+	friend void software_isr(void);
+	friend void adc1_isr(void);
+
+	volatile uint16_t _lastEnvelopeValue;
+
+	// 3 Sample Buffers, configured as circular Buffer, to mangage the 50% overlap for the FFT
+	// _currentSamplingBuffer is being filled by DMA while the other two are used for FFT
+	uint16_t _sampleBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE*3] __attribute__((aligned(4)));
+	uint16_t * volatile _currentSamplingBuffer = _sampleBuffer;
+	uint16_t * volatile _completedSamplingBuffer = &(_sampleBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE]);
+	uint16_t * volatile _lastSamplingBuffer = &_sampleBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE * 2];
+	void rotateSamplingBuffer();
+
+	// The PreCallBuffer is a circular Buffer for computed FFT results.
+	// It is used to record a few samples bevor the actuall call started.
+	uint8_t _preCallBuffer[TB_CALL_DATA_SIZE * TB_PRE_CALL_BUFFER_COUNT] __attribute__((aligned(4)));
+	uint8_t _preCallBufferIndex = 0;
+	uint8_t _preCallBufferCount = 0;
+	uint8_t _afterCallSampleCount = 0;
+
+	// A counter that is increased for every sample (AUDIO_SAMPLE_BUFFER_SIZE) taken (will overflow).
+	uint16_t _sampleCounter = 0;
+
+	// Ring Buffer with the recorded calls. Each CallPointer point to a section in the following 
+	// _callBuffer for its raw FFT Data.
+	CallPointer _callPointers[TB_CALL_POINTER_COUNT];
+	CallPointer * _currentCall;
+	volatile uint8_t _callPointerIndexHead = 0;
+	volatile uint8_t _callPointerIndexTail = 0;
+
+	// Ring Buffer for the raw call data waiting to be written to the sd card.
+	uint8_t _callBuffer[TB_CALL_DATA_SIZE * TB_CALL_BUFFER_COUNT];
+	const uint8_t * _callBufferEnd = &_callBuffer[TB_CALL_DATA_SIZE * TB_CALL_BUFFER_COUNT - 1];
+	uint8_t * volatile _callBufferNextByte = &_callBuffer[0];
+	uint8_t * volatile _callBufferFirstByte = &_callBuffer[0];
+	volatile uint16_t _callBufferEntries = 0;
+
+	// Indicates if we are currently recording a call
+	volatile uint8_t _isCallInProgress = false;
+
+	// True if the Software interrupt routine is busy processing the last sample. If so,
+	// the next softwre interrupt will not be fired.
+	volatile bool _isProcessingSample = false;
+
+	int16_t _fftBuffer[TB_FFT_RESULT_SIZE*4] __attribute__((aligned(4)));
 	void computeFFT(uint8_t * dest);
 	void copyToCallBuffer(uint8_t * src);
 	void increaseCallBuffer();
 
-	volatile uint16_t _lastEnvelopeValue;
-
-	static void adc0_isr();
 	void sample_complete_isr();
-
-	friend void software_isr(void);
-	friend void adc1_isr(void);
 
 public:
 	BatAudio()
 	{
-		_self = this;
+		_instance = this;
 	}
 
 	void init();
@@ -86,7 +90,7 @@ public:
 
 	void debug();
 	void sendOverUsb();
-	void writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockCount);
+	void writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockCount, uint8_t * sdBuffer);
 };
 
 const uint16_t AudioWindowHanning256[] __attribute__ ((aligned (4))) = {

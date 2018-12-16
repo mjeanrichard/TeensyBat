@@ -1,70 +1,15 @@
 #include "BatAudio.h"
 
 DMAChannel BatAudio::_dma(false);
-DMAMEM static uint16_t dmaSampleBuffer[AUDIO_SAMPLE_BUFFER_SIZE];
+DMAMEM static uint16_t dmaSampleBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE];
 
-// int16_t BatAudio::_fftBuffer[AUDIO_SAMPLE_BUFFER_SIZE*2] __attribute__((aligned(4)));
-// int16_t BatAudio::_outBuf[AUDIO_SAMPLE_BUFFER_SIZE];
-
-// const arm_cfft_instance_q15 * BatAudio::_cfftData;
-
-volatile bool busy = false;
-
-BatAudio * BatAudio::_self;
-
-
-uint8_t preCallBuffer[CALL_DATA_SIZE * PRE_CALL_BUFFER_COUNT] __attribute__((aligned(4)));
-uint8_t preCallBufferIndex = 0;
-uint8_t preCallBufferCount = 0;
-uint8_t afterCallSampleCount = 0;
-uint16_t sampleCounter = 0;
-
-// Definition for the Call Ring Buffer
-static uint8_t callBuffer[CALL_DATA_SIZE * CALL_BUFFER_COUNT] __attribute__((aligned(4)));
-static const uint8_t * callBufferEnd = &callBuffer[CALL_DATA_SIZE * CALL_BUFFER_COUNT - 1];
-
-static uint8_t * volatile callBufferNextByte = &callBuffer[0];
-static uint8_t * volatile callBufferFirstByte = &callBuffer[0];
-static volatile uint8_t isCallInProgress = false;
-static volatile uint16_t callBufferEntries = 0;
-
-
-static uint16_t sampleBuffer[AUDIO_SAMPLE_BUFFER_SIZE*3] __attribute__((aligned(4)));
-static uint16_t * volatile currentSamplingBuffer = sampleBuffer;
-static uint16_t * volatile completedSamplingBuffer = &(sampleBuffer[AUDIO_SAMPLE_BUFFER_SIZE]);
-static uint16_t * volatile lastSamplingBuffer = &sampleBuffer[AUDIO_SAMPLE_BUFFER_SIZE*2];
-
-static CallPointer * currentCall;
-
-static CallPointer callPointers[CALL_POINTER_COUNT];
-static volatile uint8_t callPointerIndexHead = 0;
-static volatile uint8_t callPointerIndexTail = 0;
-
-static uint8_t sdBuf[512];
-
+ADC BatAudio::_adc;
+BatAudio * BatAudio::_instance;
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
-uint32_t FreeRam(){ // for Teensy 3.0
-    uint32_t stackTop;
-    uint32_t heapTop;
-
-    // current position of the stack.
-    stackTop = (uint32_t) &stackTop;
-
-    // current position of heap.
-    void* hTop = malloc(1);
-    heapTop = (uint32_t) hTop;
-    free(hTop);
-
-    // The difference is the free, available ram.
-    return stackTop - heapTop;
-}
-
 void BatAudio::init()
 {
-    _cfftData = &arm_cfft_sR_q15_len128;
-
     _adc.setAveraging(4, ADC_0);
     _adc.setResolution(12, ADC_0);
     _adc.setConversionSpeed(ADC_CONVERSION_SPEED::VERY_HIGH_SPEED, ADC_0);
@@ -109,11 +54,20 @@ void BatAudio::init()
     _dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR;
 
     _dma.triggerAtHardwareEvent(DMAMUX_SOURCE_ADC0);
-    _dma.enable();
     _dma.attachInterrupt(BatAudio::adc0_isr);
 
     NVIC_SET_PRIORITY(IRQ_SOFTWARE, 208); // 255 = lowest priority
     NVIC_ENABLE_IRQ(IRQ_SOFTWARE);
+}
+
+void BatAudio::start()
+{
+    _dma.enable();
+}
+
+void BatAudio::stop()
+{
+    _dma.disable();
 }
 
 void BatAudio::adc0_isr()
@@ -121,7 +75,7 @@ void BatAudio::adc0_isr()
     uint32_t daddr = (uint32_t)(_dma.TCD->DADDR);
     _dma.clearInterrupt();
 
-    _self->_adc.adc1->startSingleRead(TB_PIN_ENVELOPE);
+    _adc.adc1->startSingleRead(TB_PIN_ENVELOPE);
 
     uint16_t *dst;
     const uint16_t *src, *end;
@@ -129,31 +83,28 @@ void BatAudio::adc0_isr()
     if (daddr < (uint32_t)dmaSampleBuffer + sizeof(dmaSampleBuffer) / 2) {
         // DMA is receiving to the first half of the buffer
         // need to remove data from the second half
-        src = (uint16_t *)&dmaSampleBuffer[AUDIO_SAMPLE_BUFFER_SIZE/2];
-        dst = (uint16_t *)&(currentSamplingBuffer[AUDIO_SAMPLE_BUFFER_SIZE/2]);
-        end = (uint16_t *)&dmaSampleBuffer[AUDIO_SAMPLE_BUFFER_SIZE];
+        src = (uint16_t *)&dmaSampleBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE / 2];
+        dst = (uint16_t *)&(_instance->_currentSamplingBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE / 2]);
+        end = (uint16_t *)&dmaSampleBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE];
 
         do {
             *dst++ = *src++;
         } while (src < end);
 
-        if (!busy){
-            uint16_t * tmp = lastSamplingBuffer;
-            lastSamplingBuffer = completedSamplingBuffer;
-            completedSamplingBuffer = currentSamplingBuffer;
-            currentSamplingBuffer = tmp;
+        if (!_instance->_isProcessingSample){
+            _instance->rotateSamplingBuffer();
             NVIC_SET_PENDING(IRQ_SOFTWARE);
-            digitalWriteFast(TB_PIN_LED_RED, LOW);
+            //digitalWriteFast(TB_PIN_LED_RED, LOW);
         } else {
-            digitalWriteFast(TB_PIN_LED_RED, HIGH);
+            //digitalWriteFast(TB_PIN_LED_RED, HIGH);
         }
         digitalWriteFast(TB_PIN_LED_YELLOW, LOW);
     } else {
         // DMA is receiving to the second half of the buffer
         // need to remove data from the first half
         src = (uint16_t *)dmaSampleBuffer;
-        dst = (uint16_t *)currentSamplingBuffer;
-        end = (uint16_t *)&dmaSampleBuffer[AUDIO_SAMPLE_BUFFER_SIZE/2];
+        dst = (uint16_t *)_instance->_currentSamplingBuffer;
+        end = (uint16_t *)&dmaSampleBuffer[TB_AUDIO_SAMPLE_BUFFER_SIZE / 2];
         digitalWriteFast(TB_PIN_LED_YELLOW, HIGH);
 
         do {
@@ -162,62 +113,68 @@ void BatAudio::adc0_isr()
     }
 }
 
+void BatAudio::rotateSamplingBuffer()
+{
+    uint16_t * tmp = _instance->_lastSamplingBuffer;
+    _instance->_lastSamplingBuffer = _instance->_completedSamplingBuffer;
+    _instance->_completedSamplingBuffer = _instance->_currentSamplingBuffer;
+    _instance->_currentSamplingBuffer = tmp;
+}
+
 void adc1_isr(void)
 {
-    BatAudio::_self->_lastEnvelopeValue = BatAudio::_self->_adc.adc1->readSingle();
+    BatAudio::_instance->_lastEnvelopeValue = BatAudio::_adc.adc1->readSingle();
 }
 
 void software_isr(void)
 {
-    busy = true;
-    BatAudio::_self->sample_complete_isr();
-    busy = false;
+    BatAudio::_instance->_isProcessingSample = true;
+    BatAudio::_instance->sample_complete_isr();
+    BatAudio::_instance->_isProcessingSample = false;
 }
 
 void BatAudio::sample_complete_isr()
 {
-    digitalWriteFast(TB_PIN_LED_RED, callBufferEntries >= CALL_BUFFER_COUNT-2);
-    // digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
+    digitalWriteFast(TB_PIN_LED_RED, _callBufferEntries >= TB_CALL_BUFFER_COUNT-2);
+    digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
 
     // prepare fftBuffer
-    uint16_t * s = (uint16_t*)lastSamplingBuffer;
+    uint16_t * s = (uint16_t*)_lastSamplingBuffer;
     uint32_t * d = (uint32_t*)this->_fftBuffer;
     const uint16_t * window = AudioWindowHanning256;
-    for(uint8_t i=0;i<AUDIO_SAMPLE_BUFFER_SIZE;i++){
+    for(uint8_t i=0; i < TB_AUDIO_SAMPLE_BUFFER_SIZE; i++){
       uint32_t v = *s * *window++;
       *d = v >> 15;
       s++;
       d++;
     }
-    s = (uint16_t*)completedSamplingBuffer;
-    for(uint8_t i=0;i<AUDIO_SAMPLE_BUFFER_SIZE;i++){
+    s = (uint16_t*)_completedSamplingBuffer;
+    for(uint8_t i=0; i < TB_AUDIO_SAMPLE_BUFFER_SIZE; i++){
       uint32_t v = *s * *window++;
       *d = v >> 15;
       s++;
       d++;
     }
 
-    sampleCounter++;
+    _sampleCounter++;
 
     // For a new Call to start we need at least 3 free entries in the Buffer.
-    if (!isCallInProgress && _lastEnvelopeValue > CALL_START_THRESHOLD && callBufferEntries < CALL_BUFFER_COUNT - 2)
+    if (!_isCallInProgress && _lastEnvelopeValue > TB_CALL_START_THRESHOLD && _callBufferEntries < TB_CALL_BUFFER_COUNT - 2)
     {
-        uint8_t nextCallPointerIndex = (callPointerIndexHead + 1) % CALL_POINTER_COUNT;
-        if (nextCallPointerIndex == callPointerIndexTail)
+        uint8_t nextCallPointerIndex = (_callPointerIndexHead + 1) % TB_CALL_POINTER_COUNT;
+        if (nextCallPointerIndex == _callPointerIndexTail)
         {
-            //Serial.println(F("Call Pointer Buffer Full!"));
-            digitalWriteFast(TB_PIN_LED_YELLOW, HIGH);
-            //digitalWriteFast(TB_PIN_LED_GREEN, LOW);
+            Serial.println(F("Call Pointer Buffer Full!"));
+            digitalWriteFast(TB_PIN_LED_GREEN, LOW);
             return;
         }
-        digitalWriteFast(TB_PIN_LED_YELLOW, LOW);
-        isCallInProgress = true;
-        currentCall = &callPointers[nextCallPointerIndex];
-        currentCall->startOfData = callBufferNextByte;
-        currentCall->startTime = millis();
-        currentCall->length = 0;
+        _isCallInProgress = true;
+        _currentCall = &_callPointers[nextCallPointerIndex];
+        _currentCall->startOfData = _callBufferNextByte;
+        _currentCall->startTime = millis();
+        _currentCall->length = 0;
         
-        afterCallSampleCount = 0;
+        _afterCallSampleCount = 0;
 
         // new call started, get calls from pre call buffer
         // preCallBufferCount will be equal to PRE_CALL_BUFFER_COUNT in most cases
@@ -225,60 +182,64 @@ void BatAudio::sample_complete_isr()
         // We need to get the oldest item in the buffer first. If the Buffer is full, this is
         // the current item, if not, this is the preCallBufferIndex - preCallBufferCount.
         // Add PRE_CALL_BUFFER_COUNT to ensure that modulus is positive
-        uint8_t p = preCallBufferIndex + PRE_CALL_BUFFER_COUNT - preCallBufferCount;
+        uint8_t p = _preCallBufferIndex + TB_PRE_CALL_BUFFER_COUNT - _preCallBufferCount;
 
-        for(int i=0; i < preCallBufferCount;i++){
-            copyToCallBuffer(&preCallBuffer[((p + i) % 4) * CALL_DATA_SIZE]);
-            currentCall->length++;
+        for(int i=0; i < _preCallBufferCount;i++){
+            copyToCallBuffer(&_preCallBuffer[((p + i) % 4) * TB_CALL_DATA_SIZE]);
+            _currentCall->length++;
         }
+        _preCallBufferCount = 0;
 
         // add the current call
-        computeFFT(callBufferNextByte);
+        computeFFT(_callBufferNextByte);
         increaseCallBuffer();
-        currentCall->length++;
+        _currentCall->length++;
     }
-    else if (isCallInProgress && (_lastEnvelopeValue > CALL_STOP_THRESHOLD || afterCallSampleCount < AFTER_CALL_SAMPLES) && callBufferEntries < CALL_BUFFER_COUNT)
+    else if (_isCallInProgress // Continue recording if there is a call already in progress
+             && (_lastEnvelopeValue > TB_CALL_STOP_THRESHOLD // and sound level high enough
+                 || _afterCallSampleCount < TB_AFTER_CALL_SAMPLES)  // or not enough "after" samples collected yet
+             && _callBufferEntries < TB_CALL_BUFFER_COUNT // and enough memory available
+             && _currentCall->length < 200) // Max Call length not yet reached 
     {
-        if (_lastEnvelopeValue <= CALL_STOP_THRESHOLD)
+        if (_lastEnvelopeValue <= TB_CALL_STOP_THRESHOLD)
         {
-            afterCallSampleCount++;
+            _afterCallSampleCount++;
         }
-        else if (_lastEnvelopeValue > CALL_START_THRESHOLD) 
+        else if (_lastEnvelopeValue > TB_CALL_START_THRESHOLD) 
         {
-            afterCallSampleCount = 0;
+            _afterCallSampleCount = 0;
         }
         // call in progress, record FFT
-        computeFFT(callBufferNextByte);
+        computeFFT(_callBufferNextByte);
         increaseCallBuffer();
-        currentCall->length++;
+        _currentCall->length++;
     }
-    else if (isCallInProgress)
+    else if (_isCallInProgress)
     {
         // Either no more space in buffer or call has ended
         // add the last call to the buffer if there is enough space
-        if (callBufferEntries < CALL_BUFFER_COUNT)
+        if (_callBufferEntries < TB_CALL_BUFFER_COUNT)
         {
-            computeFFT(callBufferNextByte);
+            computeFFT(_callBufferNextByte);
             increaseCallBuffer();
-            currentCall->length++;
+            _currentCall->length++;
         }
 
-        callPointerIndexHead = (callPointerIndexHead + 1) % CALL_POINTER_COUNT;
-        isCallInProgress = false;
-        currentCall = nullptr;
+        _callPointerIndexHead = (_callPointerIndexHead + 1) % TB_CALL_POINTER_COUNT;
+        _isCallInProgress = false;
+        _currentCall = nullptr;
     } else {
         // No call yet -> buffer in case we need it later
-        computeFFT(&preCallBuffer[preCallBufferIndex * CALL_DATA_SIZE]);
-        preCallBufferIndex++;
-        if (preCallBufferIndex >= PRE_CALL_BUFFER_COUNT){
-            preCallBufferIndex = 0;
+        computeFFT(&_preCallBuffer[_preCallBufferIndex * TB_CALL_DATA_SIZE]);
+        _preCallBufferIndex++;
+        if (_preCallBufferIndex >= TB_PRE_CALL_BUFFER_COUNT){
+            _preCallBufferIndex = 0;
         }
-        if (preCallBufferCount < PRE_CALL_BUFFER_COUNT){
-            preCallBufferCount++;
+        if (_preCallBufferCount < TB_PRE_CALL_BUFFER_COUNT){
+            _preCallBufferCount++;
         }
     }
-    digitalWriteFast(TB_PIN_LED_YELLOW, LOW);
-    //digitalWriteFast(TB_PIN_LED_GREEN, LOW);
+    digitalWriteFast(TB_PIN_LED_GREEN, LOW);
 }
 
 void BatAudio::computeFFT(uint8_t * dest)
@@ -287,13 +248,13 @@ void BatAudio::computeFFT(uint8_t * dest)
     dest++;
 	*dest = (byte)(_lastEnvelopeValue>>8);
     dest++;
-    *dest = (byte)(sampleCounter);
+    *dest = (byte)(_sampleCounter);
     dest++;
-    *dest = (byte)(sampleCounter>>8);
+    *dest = (byte)(_sampleCounter>>8);
     dest++;
    
     arm_cfft_q15(&arm_cfft_sR_q15_len256, (q15_t *)_fftBuffer, 0, 1);
-    for (int i=0; i < FFT_RESULT_SIZE; i++) {
+    for (int i=0; i < TB_FFT_RESULT_SIZE; i++) {
         uint32_t tmp = *((uint32_t *)_fftBuffer + i); // real & imag
         uint32_t magsq = multiply_16tx16t_add_16bx16b(tmp, tmp);
         *dest = (uint8_t)(sqrt_uint32_approx(magsq) / 2);
@@ -302,48 +263,42 @@ void BatAudio::computeFFT(uint8_t * dest)
 }
 
 void BatAudio::copyToCallBuffer(uint8_t * src){
-    uint32_t * s = (uint32_t*)src;
-    uint32_t * d = (uint32_t*)callBufferNextByte;
-    for(uint8_t i=0;i<CALL_DATA_SIZE/4;i++){
-      *d = *s;
-      s++;
-      d++;
-    }
+    memcpy(src, _callBufferNextByte, TB_CALL_DATA_SIZE);
     increaseCallBuffer();
 }
 
 void BatAudio::increaseCallBuffer()
 {
-    callBufferNextByte += CALL_DATA_SIZE;
-    if (callBufferNextByte >= callBufferEnd)
+    _callBufferNextByte += TB_CALL_DATA_SIZE;
+    if (_callBufferNextByte >= _callBufferEnd)
     {
-        callBufferNextByte = &callBuffer[0];
+        _callBufferNextByte = &_callBuffer[0];
     }
-    callBufferEntries++;
+    _callBufferEntries++;
 }
 
 void BatAudio::debug()
 {
-    if (callPointerIndexHead == callPointerIndexTail){
+    if (_callPointerIndexHead == _callPointerIndexTail){
         return;
     }
 
     cli();
-    callPointerIndexTail = (callPointerIndexTail + 1) % CALL_POINTER_COUNT;
+    _callPointerIndexTail = (_callPointerIndexTail + 1) % TB_CALL_POINTER_COUNT;
     sei();
-    CallPointer * c = &callPointers[callPointerIndexTail];
+    CallPointer * c = &_callPointers[_callPointerIndexTail];
 
     //Serial.print(F("A: "));
     //Serial.print(c->length);
     //Serial.print(F(" / "));
-    //Serial.println(callBufferEntries);
+    //Serial.println(_callBufferEntries);
     uint8_t * data = c->startOfData;
     for (uint16_t b = 0; b < c->length; b++)
     {
         //Serial.print(*(uint16_t *)(data));
         //Serial.print(F(","));
         data += 4;
-        for(uint8_t i = 0; i < CALL_DATA_SIZE-4; i++)
+        for(uint8_t i = 0; i < TB_CALL_DATA_SIZE-4; i++)
         {
             //Serial.print(*data);
             //Serial.print(F(","));
@@ -351,28 +306,28 @@ void BatAudio::debug()
         }
         //Serial.println();
         cli();
-        callBufferEntries--;
-        if (data >= callBufferEnd){
-            data = &callBuffer[0];
+        _callBufferEntries--;
+        if (data >= _callBufferEnd){
+            data = &_callBuffer[0];
         }
-        callBufferFirstByte = data;
+        _callBufferFirstByte = data;
         sei();
     }
     //Serial.print(F("B: "));
-    //Serial.println(callBufferEntries);
+    //Serial.println(_callBufferEntries);
 }
 
 
 void BatAudio::sendOverUsb()
 {
-    if (callPointerIndexHead == callPointerIndexTail){
+    if (_callPointerIndexHead == _callPointerIndexTail){
         return;
     }
 
     cli();
-    callPointerIndexTail = (callPointerIndexTail + 1) % CALL_POINTER_COUNT;
+    _callPointerIndexTail = (_callPointerIndexTail + 1) % TB_CALL_POINTER_COUNT;
     sei();
-    CallPointer * c = &callPointers[callPointerIndexTail];
+    CallPointer * c = &_callPointers[_callPointerIndexTail];
 
     uint8_t usbBuf[64];
 
@@ -416,24 +371,24 @@ void BatAudio::sendOverUsb()
             d++;
         }
         RawHID.send(usbBuf, 10);
-        data += CALL_DATA_SIZE-4;
+        data += TB_CALL_DATA_SIZE-4;
 
         cli();
-        callBufferEntries--;
-        if (data >= callBufferEnd){
-            data = &callBuffer[0];
+        _callBufferEntries--;
+        if (data >= _callBufferEnd){
+            data = &_callBuffer[0];
         }
-        callBufferFirstByte = data;
+        _callBufferFirstByte = data;
         sei();
     }
 }
 
 bool BatAudio::hasDataAvailable()
 {
-    return callPointerIndexHead != callPointerIndexTail;
+    return _callPointerIndexHead != _callPointerIndexTail;
 }
 
-void BatAudio::writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockCount)
+void BatAudio::writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockCount, uint8_t * sdBuffer)
 {
     /*
        Record (512 bytes):
@@ -453,39 +408,39 @@ void BatAudio::writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockC
         || xFF | xFD |   Index   || Loudness  | SampleNr. ||   0  |   FFT  ||
     */
 
-    if (callPointerIndexHead == callPointerIndexTail){
+    if (_callPointerIndexHead == _callPointerIndexTail){
         return;
     }
-digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
+//digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
 
     cli();
-    callPointerIndexTail = (callPointerIndexTail + 1) % CALL_POINTER_COUNT;
+    _callPointerIndexTail = (_callPointerIndexTail + 1) % TB_CALL_POINTER_COUNT;
     sei();
-    CallPointer * c = &callPointers[callPointerIndexTail];
+    CallPointer * c = &_callPointers[_callPointerIndexTail];
 
-    memset(sdBuf, 0, sizeof(sdBuf));
+    memset(sdBuffer, 0, TB_SD_BUFFER_SIZE);
 
     uint8_t * data = c->startOfData;
-    sdBuf[0] = 0xFF;
-    sdBuf[1] = 0xFE;
-	sdBuf[2] = (byte)(c->length);
-	sdBuf[3] = (byte)(c->length>>8);
+    sdBuffer[0] = 0xFF;
+    sdBuffer[1] = 0xFE;
+	sdBuffer[2] = (byte)(c->length);
+	sdBuffer[3] = (byte)(c->length>>8);
 
-    uint32_t * d = (uint32_t*)(sdBuf + 4);
+    uint32_t * d = (uint32_t*)(sdBuffer + 4);
     *d = c->startTime;
 
     // skip to end of header
-    d = (uint32_t*)(sdBuf + 32);
+    d = (uint32_t*)(sdBuffer + 32);
     for (uint16_t b = 0; b < c->length; b++)
     {
         if (b > 0 && b % 3 == 0)
         {
-            sd->card()->writeData(sdBuf);
+            sd->card()->writeData(sdBuffer);
             (*blocksWritten)++;
-            memset(sdBuf, 0, sizeof(sdBuf));
-            sdBuf[0] = 0xFF;
-            sdBuf[1] = 0xFC;
-            d = (uint32_t*)(sdBuf + 32);
+            memset(sdBuffer, 0, TB_SD_BUFFER_SIZE);
+            sdBuffer[0] = 0xFF;
+            sdBuffer[1] = 0xFC;
+            d = (uint32_t*)(sdBuffer + 32);
         }
 
         // Marker (xFFFD) and Index
@@ -497,24 +452,24 @@ digitalWriteFast(TB_PIN_LED_GREEN, HIGH);
         d += 6;
 
         uint32_t * s = (uint32_t*)(data);
-        for(uint8_t i=0;i<CALL_DATA_SIZE/4;i++){
+        for(uint8_t i=0; i < TB_CALL_DATA_SIZE / 4; i++){
             *d = *s;
             s++;
             d++;
         }
-        data += CALL_DATA_SIZE;
+        data += TB_CALL_DATA_SIZE;
 
         cli();
-        callBufferEntries--;
-        if (data >= callBufferEnd){
-            data = &callBuffer[0];
+        _callBufferEntries--;
+        if (data >= _callBufferEnd){
+            data = &_callBuffer[0];
         }
-        callBufferFirstByte = data;
+        _callBufferFirstByte = data;
         sei();
     }
-    sd->card()->writeData(sdBuf);
+    sd->card()->writeData(sdBuffer);
     (*blocksWritten)++;
     Serial.println(*blocksWritten);
-    digitalWriteFast(TB_PIN_LED_GREEN, LOW);
+    //digitalWriteFast(TB_PIN_LED_GREEN, LOW);
 
 }
