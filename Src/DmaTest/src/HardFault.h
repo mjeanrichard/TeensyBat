@@ -6,6 +6,8 @@
 #include "core_pins.h"
 #include "elapsedMillis.h"
 
+#include "Config.h"
+
 #define SCB_SHCSR_USGFAULTENA (uint32_t)1<<18
 #define SCB_SHCSR_BUSFAULTENA (uint32_t)1<<17
 #define SCB_SHCSR_MEMFAULTENA (uint32_t)1<<16
@@ -76,11 +78,11 @@ void __attribute__((naked)) hard_fault_isr(void){
 
         if (cnt > 125)
         {
-            digitalWrite(6, LOW);
+            digitalWrite(TB_PIN_LED_RED, LOW);
         } 
         else 
         {
-            digitalWrite(6, HIGH);
+            digitalWrite(TB_PIN_LED_RED, HIGH);
         }
 
 		// keep polling some communication while in fault

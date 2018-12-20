@@ -3,7 +3,7 @@
 
 #include "WProgram.h"
 
-// #define TB_DEBUG = 1;
+#define TB_DEBUG = 1;
 // #define TB_DISPLAY = 1;
 
 // Seconds after startup for wich the LEDs are enabled.
@@ -49,6 +49,8 @@ static const uint8_t TB_EEPROM_TIME = 2;    // Timestamp of last set time (can b
 
 // SD Card Write Buffer Size
 #define TB_SD_BUFFER_SIZE 512UL
+#define TB_FILE_BLOCK_COUNT 50000
+
 
 
 #define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
