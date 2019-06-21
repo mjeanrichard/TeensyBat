@@ -8,6 +8,7 @@
     xmlns:converters="using:Microsoft.Toolkit.Uwp.UI.Converters"
     xmlns:devices="using:TeensyBatExplorer.Views.Devices"
     xmlns:controls="using:TeensyBatExplorer.Controls"
+    xmlns:oxy="using:OxyPlot.Windows"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -74,6 +75,8 @@
                                              Command="{x:Bind ViewModel.SetVoltageCommand}" />
                     </StackPanel>
                 </controls:HeaderControl>
+                <oxy:PlotView Model="{x:Bind ViewModel.PlotModel, Mode=OneWay}" Height="200" Width="200">
+                </oxy:PlotView>
             </StackPanel>
             <Border BorderBrush="Black" BorderThickness="1" Grid.Column="1" Margin="0">
                 <ScrollViewer VerticalScrollMode="Auto" 

@@ -6,6 +6,8 @@
 #include "Helpers.h"
 #include "LogWriter.h"
 
+#include "Configurator.h"
+
 #include "CardFormatter.h"
 
 elapsedMillis d;
@@ -40,9 +42,22 @@ void checkFormatRequested()
   }
 }
 
+void startConfiguratorIfReqested()
+{
+  bool hasUsbConfigured = !bitRead(USB0_OTGSTAT, 5);
+  if (hasUsbConfigured && digitalReadFast(TB_PIN_S1) == HIGH)
+  {
+    digitalWrite(TB_PIN_LED_GREEN, HIGH);
+    Configurator *c = new Configurator(_b);
+    c->Start();
+    delete c;
+    analogWrite(TB_PIN_LED_GREEN, LOW);
+    analogWrite(TB_PIN_LED_YELLOW, LOW);
+  }
+}
+
 void setup()
 {
-
   pinMode(TB_PIN_AUDIO, INPUT);
   pinMode(TB_PIN_LED_GREEN, OUTPUT);
   pinMode(TB_PIN_LED_YELLOW, OUTPUT);
@@ -67,12 +82,22 @@ void setup()
   _b = new BatAudio();
 
   _logWriter = new LogWriter(1, _b);
-  _logWriter->InitializeCard();
+  _logWriter->InitializeCard(false);
 
+  startConfiguratorIfReqested();
   checkFormatRequested();
 
   _b->init();
+
   _b->start();
+
+  // digitalWrite(TB_PIN_LED_GREEN, HIGH);
+  // digitalWrite(TB_PIN_LED_RED, HIGH);
+  // digitalWrite(TB_PIN_LED_YELLOW, HIGH);
+  
+  // while (1)
+  // {
+  // }
 }
 
 void loop()
@@ -80,7 +105,7 @@ void loop()
 
   _logWriter->Process();
 
-  //b.debug();
+  //_b->debug();
   //b.sendOverUsb();
 
   //Serial.println(ram.free());

@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using TeensyBatExplorer.Helpers;
+using OxyPlot;
+
 using TeensyBatExplorer.Helpers.ViewModels;
 
 namespace TeensyBatExplorer.ViewModels
@@ -24,5 +25,6 @@ namespace TeensyBatExplorer.ViewModels
         public MainViewModel()
         {
         }
+
     }
 }

@@ -29,6 +29,8 @@ private:
 	friend void adc1_isr(void);
 
 	volatile uint16_t _lastEnvelopeValue;
+	
+	bool _isEnabled = false;
 
 	// 3 Sample Buffers, configured as circular Buffer, to mangage the 50% overlap for the FFT
 	// _currentSamplingBuffer is being filled by DMA while the other two are used for FFT
@@ -87,6 +89,10 @@ public:
 	void stop();
 
 	bool hasDataAvailable();
+
+	// This Method can only be used if this object is stopped.
+	int16_t readRawBatteryVoltage();
+	int16_t readTempC();
 
 	void debug();
 	void sendOverUsb();

@@ -20,6 +20,10 @@ using System.Threading.Tasks;
 
 using Microsoft.Toolkit.Uwp.Helpers;
 
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
+
 using TeensyBatExplorer.Helpers.DependencyInjection;
 using TeensyBatExplorer.Helpers.ViewModels;
 using TeensyBatExplorer.Models;
@@ -44,6 +48,8 @@ namespace TeensyBatExplorer.Views.Devices
         private string _timeDiff;
 
         private StringBuilder _logBuilder = new StringBuilder();
+        private PlotModel _plotModel;
+        private HeatMapSeries _heatMapSeries;
 
         public DevicesViewModel(TeensyBatDevice teensyBatDevice)
         {
@@ -127,7 +133,55 @@ namespace TeensyBatExplorer.Views.Devices
             TeensyBat = _teensyBatDevice;
             TeensyBat.DeviceUpdated += TeensyBatOnDeviceUpdated;
             TeensyBat.SerialReceived += SerialReceived;
+            TeensyBat.DataReceived += DataReceived;
+
+
+            _heatMapSeries = new HeatMapSeries
+            {
+                X0 = 0,
+                X1 = 470,
+                Y0 = 0,
+                Y1 = 70,
+                Data = new double[1,1],
+                Interpolate = false,
+                //RenderMethod = HeatMapRenderMethod.Bitmap,
+            };
+
+            _plotModel = new PlotModel();
+            _plotModel.Axes.Add(new LinearColorAxis
+            {
+                Palette = OxyPalettes.Rainbow(100)
+            });
+            _plotModel.Series.Add(_heatMapSeries);
+
+
             return Task.CompletedTask;
+        }
+
+        private void DataReceived(object sender, CallData e)
+        {
+            double[,] data = new double[e.Length,64];
+            int i = 0;
+            foreach (byte[] row in e.Data)
+            {
+                for (int j = 0; j < 64; j++)
+                {
+                    data[i, j] = row[j];
+                }
+                i++;
+            }
+
+            _heatMapSeries.Data = data;
+            _heatMapSeries.X1 = e.Length;
+            _plotModel.InvalidatePlot(true);
+
+            OnPropertyChanged(nameof(PlotModel));
+        }
+
+        public PlotModel PlotModel
+        {
+            get { return _plotModel; }
+            set { Set(ref _plotModel, value); }
         }
 
         private void SerialReceived(object sender, string e)

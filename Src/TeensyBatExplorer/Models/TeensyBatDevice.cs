@@ -15,6 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,6 +36,11 @@ namespace TeensyBatExplorer.Models
         private const byte CMD_SET_VOLTAGE = 3;
 
         private const byte DATA_DEVICE_INFO = 1;
+        private const byte DATA_CALL = 2;
+
+        private const byte DATA_CALL_HEADER = 1;
+        private const byte DATA_CALL_DATA1 = 2;
+        private const byte DATA_CALL_DATA2 = 3;
 
         private readonly HidDeviceHandler _teensyBatDeviceHandler;
         private readonly HidDeviceHandler _serialEmulatorDeviceHandler;
@@ -60,10 +67,15 @@ namespace TeensyBatExplorer.Models
         public event EventHandler DeviceUpdated;
         public event EventHandler SerialUpdated;
         public event EventHandler<string> SerialReceived;
+        public event EventHandler<CallData> DataReceived;
 
         private void OnTeensyBatDeviceClosing(HidDeviceHandler sender, DeviceInformation args)
         {
-            sender.Device.InputReportReceived -= InputReceived;
+            if (sender.Device != null)
+            {
+                sender.Device.InputReportReceived -= InputReceived;
+            }
+
             IsDeviceConnected = false;
             NodeId = null;
             NodeTime = null;
@@ -74,21 +86,31 @@ namespace TeensyBatExplorer.Models
 
         private void OnTeensyBatDeviceConnected(HidDeviceHandler sender, OnDeviceConnectedEventArgs args)
         {
-            sender.Device.InputReportReceived += InputReceived;
-            IsDeviceConnected = true;
+            if (sender.Device != null)
+            {
+                sender.Device.InputReportReceived += InputReceived;
+                IsDeviceConnected = true;
+            }
         }
 
         private void OnSerEmuDeviceClosing(HidDeviceHandler sender, DeviceInformation args)
         {
-            sender.Device.InputReportReceived -= SerialInputReceived;
+            if (sender.Device != null)
+            {
+                sender.Device.InputReportReceived -= SerialInputReceived;
+            }
+
             IsSerialConnected = false;
             SerialUpdated?.Invoke(this, null);
         }
 
         private void OnSerEmuDeviceConnected(HidDeviceHandler sender, OnDeviceConnectedEventArgs args)
         {
-            sender.Device.InputReportReceived += SerialInputReceived;
-            IsSerialConnected = true;
+            if (sender.Device != null)
+            {
+                sender.Device.InputReportReceived += SerialInputReceived;
+                IsSerialConnected = true;
+            }
         }
 
         private async Task SendData(Command command)
@@ -110,8 +132,9 @@ namespace TeensyBatExplorer.Models
             }
 
             byte lastByte = reader.ReadByte();
+
             StringBuilder sb = new StringBuilder();
-            while (lastByte != 0)
+            while (lastByte != 0 && reader.UnconsumedBufferLength > 0)
             {
                 sb.Append((char)lastByte);
                 lastByte = reader.ReadByte();
@@ -143,8 +166,89 @@ namespace TeensyBatExplorer.Models
                     UpdateTime = updateTime;
                     InputVoltage = reader.ReadUInt16() / 1000d;
                     break;
+
+                case DATA_CALL:
+                    ReadCall(reader);
+                    break;
+
             }
             DeviceUpdated?.Invoke(this, null);
+        }
+
+        private CallData _callData = new CallData();
+
+        private byte[] _tempData = new byte[64];
+
+        private void ReadCall(DataReader reader)
+        {
+            byte dataPart = reader.ReadByte();
+            switch (dataPart)
+            {
+                case DATA_CALL_HEADER:
+                    if (_callData.LastDataPart != 0)
+                    {
+                        _callData = new CallData();
+                        Debug.WriteLine("Ups 1");
+                        break;
+                    }
+                    _callData.Length = reader.ReadInt16();
+                    _callData.LastDataPart = DATA_CALL_HEADER;
+                    Debug.WriteLine("Length: " + _callData.Length);
+                    break;
+                case DATA_CALL_DATA1:
+                    if (_callData.LastDataPart != DATA_CALL_HEADER && _callData.LastDataPart != DATA_CALL_DATA2)
+                    {
+                        _callData = new CallData();
+                        Debug.WriteLine("Ups 2");
+                        break;
+                    }
+
+                    short idx = reader.ReadInt16();
+                    short s = reader.ReadInt16();
+                    for (int i = 6; i < 32; i++) // Skip bytes 6 to 32
+                    {
+                        reader.ReadByte();
+                    }
+
+                    for (int i = 0; i < 32; i++)
+                    {
+                        _tempData[i] = reader.ReadByte();
+                    }
+
+                    _callData.LastDataPart = DATA_CALL_DATA1;
+
+                    break;
+                case DATA_CALL_DATA2:
+                    if (_callData.LastDataPart != DATA_CALL_DATA1)
+                    {
+                        _callData = new CallData();
+                        Debug.WriteLine("Ups 3");
+                        break;
+                    }
+
+                    short idx2 = reader.ReadInt16();
+                    for (int i = 4; i < 32; i++) // Skip bytes 6 to 32
+                    {
+                        reader.ReadByte();
+                    }
+                    for (int i = 32; i < 64; i++)
+                    {
+                        _tempData[i] = reader.ReadByte();
+                    }
+
+                    _callData.Data.Add(_tempData);
+                    _tempData = new byte[64];
+
+                    _callData.LastDataPart = DATA_CALL_DATA2;
+                    if (idx2 == _callData.Length - 1)
+                    {
+                        DataReceived?.Invoke(this, _callData);
+                        _callData = new CallData();
+                        Debug.WriteLine("Done!");
+                    }
+                    
+                    break;
+            }
         }
 
         public async Task SetTime()
@@ -231,4 +335,12 @@ namespace TeensyBatExplorer.Models
             }
         }
     }
+    public class CallData
+    {
+        public byte LastDataPart { get; set; }
+        public int Length { get; set; }
+
+        public List<byte[]> Data { get; private set; } = new List<byte[]>();
+    }
+
 }

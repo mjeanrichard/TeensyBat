@@ -44,7 +44,7 @@ void LogWriter::GenerateFilename(char *filename)
     FatalError(TB_ERR_SD_NO_FILENAME, F("Could not find a free filename."));
 }
 
-void LogWriter::InitializeCard()
+void LogWriter::InitializeCard(bool openFile)
 {
     if (!IsCardAvailable())
     {
@@ -68,6 +68,11 @@ void LogWriter::InitializeCard()
         FatalError(TB_ERR_SD_INIT, F("Could not initialize Card."));
     }
     MESSAGE("Card initialized successfully.\n")
+    
+    if (openFile)
+    {
+        OpenNewFile();
+    }
 }
 
 void LogWriter::OpenNewFile()
