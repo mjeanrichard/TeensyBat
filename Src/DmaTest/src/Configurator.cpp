@@ -22,7 +22,6 @@ void Configurator::SetTime(uint8_t buffer[USB_BUF_SIZE])
 
 void Configurator::SetVoltage(uint8_t buffer[USB_BUF_SIZE])
 {
-	elapsedMillis ms = 0;
 	uint16_t newVoltage = (buffer[1] << 8) | buffer[2];
 	uint16_t rawVoltage = _batAudio->readRawBatteryVoltage();
 	uint16_t factor = (newVoltage * 1000) / rawVoltage;
@@ -70,7 +69,7 @@ void Configurator::SendConfig(uint8_t buffer[USB_BUF_SIZE])
 	buffer[10] = (uint8_t)(temp >> 8);
 	buffer[11] = (uint8_t)(temp);
 
-	DEBUG_F("Id: %hhu, V: %hu mV, %hi C, %lu\n", nodeId, voltage, temp, time)
+	DEBUG_F("Id: %hhu, V: %hu mV, %.1f C, %lu\n", nodeId, voltage, temp/10.0, time)
 }
 
 void Configurator::Start()
@@ -90,11 +89,8 @@ void Configurator::Start()
 		9, 8, 7, 6, 5, 4, 3, 2, 2, 1};
 	elapsedMillis fadeTimer = 0;
 
-#ifndef TB_DEBUG
-	//Start Serial if it was not already enabled.
-	Serial.begin(57600);
-	delay(500);
-#endif
+	EnableSerial();
+
 	Serial.println(F("OK: Entering Configuration Mode..."));
 
 	EEPROM.get(TB_EEPROM_V_FACT, _voltageFactor);

@@ -70,16 +70,21 @@ void setup()
   pinMode(TB_PIN_S2, INPUT_PULLUP);
   pinMode(TB_PIN_CARD_PRESENT, INPUT_PULLUP);
 
-  Serial.begin(115200);
+  #ifdef TB_DEBUG
+  EnableSerial();
+  #endif
 
-  delay(500);
+  #ifdef TB_DEBUG
+  // This delay is needed somehow. Otherwise a Hardfault is generated
+  // delay(500);
+  // ram.initialize();
+  // DEBUG_LN(ram.free());
+  #endif
 
-  ram.initialize();
-
-  Serial.println("Start!");
-  Serial.println(ram.free());
+  DEBUG_LN("Start!");
 
   _b = new BatAudio();
+  _b->init();
 
   _logWriter = new LogWriter(1, _b);
   _logWriter->InitializeCard(false);
@@ -87,26 +92,13 @@ void setup()
   startConfiguratorIfReqested();
   checkFormatRequested();
 
-  _b->init();
-
   _b->start();
-
-  // digitalWrite(TB_PIN_LED_GREEN, HIGH);
-  // digitalWrite(TB_PIN_LED_RED, HIGH);
-  // digitalWrite(TB_PIN_LED_YELLOW, HIGH);
-  
-  // while (1)
-  // {
-  // }
 }
 
 void loop()
 {
-
   _logWriter->Process();
 
   //_b->debug();
   //b.sendOverUsb();
-
-  //Serial.println(ram.free());
 }

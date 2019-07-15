@@ -1,6 +1,16 @@
 #include "Helpers.h"
 
-bool SerialEnabled = true;
+bool SerialEnabled = false;
+
+void EnableSerial()
+{
+    if (!SerialEnabled)
+    {
+        Serial.begin(115200);
+        delay(500);
+    }
+    SerialEnabled = true;
+}
 
 void FatalError(uint8_t errorCode, const __FlashStringHelper *f)
 {

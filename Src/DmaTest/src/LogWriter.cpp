@@ -85,7 +85,6 @@ void LogWriter::OpenNewFile()
         MESSAGE("Ups!")
         _file.close();
         _sd.card()->spiStop();
-        Serial.println(_sd.card()->isBusy());
         delay(100);
         if (!_sd.begin(TB_PIN_SDCS, SPI_FULL_SPEED))
         {

@@ -9,6 +9,8 @@
 #include "sqrt_integer.h"
 #include "dspinst.h"
 #include "SdFat.h"
+#include "Helpers.h"
+#include "EEPROM.h"
 
 struct CallPointer
 {
@@ -23,6 +25,12 @@ private:
 	static BatAudio * _instance;
 	static DMAChannel _dma;
 	static ADC _adc;
+
+	elapsedMillis _msSinceBatteryRead = 0;
+	elapsedMillis _msSinceTempRead = TB_MS_BETWEEN_TEMP_READS / 2;
+	uint16_t _lastReadVoltage = 0;
+	int16_t _lastReadTemp = 0;
+	uint16_t _voltageFactor = 0;
 
 	static void adc0_isr();
 	friend void software_isr(void);
@@ -78,6 +86,9 @@ private:
 
 	void sample_complete_isr();
 
+	void readRawBatteryVoltageInternal();
+	void readTempInternal();
+
 public:
 	BatAudio()
 	{
@@ -90,7 +101,6 @@ public:
 
 	bool hasDataAvailable();
 
-	// This Method can only be used if this object is stopped.
 	int16_t readRawBatteryVoltage();
 	int16_t readTempC();
 

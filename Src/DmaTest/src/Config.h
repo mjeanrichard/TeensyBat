@@ -3,7 +3,7 @@
 
 #include "WProgram.h"
 
-#define TB_DEBUG = 1;
+//#define TB_DEBUG = 1;
 // #define TB_DISPLAY = 1;
 
 // Seconds after startup for wich the LEDs are enabled.
@@ -18,12 +18,14 @@ static const uint16_t TB_CALL_DATA_SIZE = TB_FFT_RESULT_SIZE + 4;
 static const uint8_t TB_PRE_CALL_BUFFER_COUNT = 4;
 static const uint8_t TB_AFTER_CALL_SAMPLES = 4;
 
-static const uint16_t TB_CALL_START_THRESHOLD = 500;
+static const uint16_t TB_CALL_START_THRESHOLD = 1024; // Max Value is 4095
 static const uint16_t TB_CALL_STOP_THRESHOLD = 100;
 
 static const uint16_t TB_CALL_BUFFER_COUNT = 350;
 static const uint16_t TB_CALL_POINTER_COUNT = 10;
 
+static const uint16_t TB_MS_BETWEEN_BATTERY_READS = 60000;
+static const uint16_t TB_MS_BETWEEN_TEMP_READS = 60000;
 
 // PIN Assignment
 static const uint8_t TB_PIN_AUDIO = A9;

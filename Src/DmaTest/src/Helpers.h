@@ -13,6 +13,7 @@
 void FatalError(uint8_t errorCode, const __FlashStringHelper *f);
 
 extern bool SerialEnabled;
+extern void EnableSerial();
 
 #define MESSAGE(m) if (SerialEnabled) Serial.print(F(m));
 #define MESSAGEF(m, ...) if (SerialEnabled) Serial.printf(F(m), __VA_ARGS__);
