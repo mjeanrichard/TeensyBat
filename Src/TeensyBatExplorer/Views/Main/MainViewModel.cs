@@ -23,7 +23,7 @@ using Windows.Storage.Pickers;
 
 using Microsoft.Toolkit.Uwp.Helpers;
 
-using TeensyBatExplorer.Commands;
+using TeensyBatExplorer.Business.Commands;
 using TeensyBatExplorer.Helpers.ViewModels;
 using TeensyBatExplorer.Services;
 using TeensyBatExplorer.Services.Project;
@@ -54,7 +54,11 @@ namespace TeensyBatExplorer.ViewModels
                 savePicker.DefaultFileExtension = ".batproj";
                 savePicker.FileTypeChoices.Add("Bat Project", new List<string>() { ".batproj" });
                 StorageFile storageFile = await DispatcherHelper.ExecuteOnUIThreadAsync(async () => await savePicker.PickSaveFileAsync());
-                await new CreateProjectCommand().ExecuteAsyc(storageFile);
+                if (storageFile != null)
+                {
+                    await new CreateProjectCommand().ExecuteAsyc(storageFile);
+                    await _navigationService.NavigateToProjectPage(storageFile);
+                }
             }
         }
 
@@ -67,7 +71,10 @@ namespace TeensyBatExplorer.ViewModels
                 openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
                 openPicker.FileTypeFilter.Add(".batproj");
                 StorageFile file = await DispatcherHelper.ExecuteOnUIThreadAsync(async () => await openPicker.PickSingleFileAsync());
-                //_navigationService.
+                if (file != null)
+                {
+                    await _navigationService.NavigateToProjectPage(file);
+                }
             }
         }
 

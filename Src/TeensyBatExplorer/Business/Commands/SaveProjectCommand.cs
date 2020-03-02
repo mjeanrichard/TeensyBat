@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2019 Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -26,17 +25,16 @@ using TeensyBatExplorer.Business.Models;
 
 namespace TeensyBatExplorer.Business.Commands
 {
-    public class CreateProjectCommand
+    public class SaveProjectCommand
     {
-        public async Task ExecuteAsyc(StorageFile storageFile)
+        public async Task ExecuteAsyc(BatProject batProject, IStorageFile storageFile)
         {
             using (Stream stream = await storageFile.OpenStreamForWriteAsync())
             {
                 using (LiteDatabase db = new LiteDatabase(stream))
                 {
                     LiteCollection<BatProject> projectCollection = db.GetCollection<BatProject>();
-                    BatProject batProject = new BatProject() { CreatedOn = DateTime.Now, Name = "New Project" };
-                    projectCollection.Insert(batProject);
+                    projectCollection.Update(batProject);
                 }
             }
         }

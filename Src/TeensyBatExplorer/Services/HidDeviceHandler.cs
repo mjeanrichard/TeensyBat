@@ -27,8 +27,6 @@ using Windows.UI.Xaml;
 
 using Microsoft.Toolkit.Uwp.Helpers;
 
-using TeensyBatExplorer.Models;
-
 namespace TeensyBatExplorer.Services
 {
     public class HidDeviceHandler

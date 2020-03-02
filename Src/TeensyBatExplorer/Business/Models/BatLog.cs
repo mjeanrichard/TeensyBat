@@ -15,34 +15,32 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
+
+using LiteDB;
 
 using TeensyBatExplorer.Helpers.ViewModels;
 
 namespace TeensyBatExplorer.Business.Models
 {
-    public class BatProject : Observable
+    public class BatLog : Observable
     {
-        private int _id;
-        private string _name;
-        private DateTime _createdOn;
+        public int Id { get; set; }
+        public DateTime StartTime { get; set; }
 
-        public int Id
-        {
-            get => _id;
-            set => Set(ref _id, value);
-        }
+        [BsonRef(nameof(BatCall))]
+        public List<BatCall> Calls { get; set; } = new List<BatCall>();
 
-        public string Name
-        {
-            get => _name;
-            set => Set(ref _name, value);
-        }
+        [BsonRef(nameof(Models.BatteryData))]
+        public List<BatteryData> BatteryData { get; set; } = new List<BatteryData>();
 
-        public DateTime CreatedOn
+        [BsonRef(nameof(Models.TemperatureData))]
+        public List<TemperatureData> TemperatureData { get; set; } = new List<TemperatureData>();
 
-        {
-            get => _createdOn;
-            set => Set(ref _createdOn, value);
-        }
+        public int ErrorCountCallBuffFull { get; set; }
+        public int ErrorCountPointerBufferFull { get; set; }
+        public int ErrorCountDataBufferFull { get; set; }
+        public int ErrorCountProcessOverlap { get; set; }
+
     }
 }

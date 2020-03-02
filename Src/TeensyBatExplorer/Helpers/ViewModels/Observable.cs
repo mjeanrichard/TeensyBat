@@ -39,10 +39,7 @@ namespace TeensyBatExplorer.Helpers.ViewModels
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChangedEventHandler onPropertyChanged = PropertyChanged;
-            if (onPropertyChanged != null)
-            {
-                DispatcherHelper.ExecuteOnUIThreadAsync(() => onPropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName)));
-            }
+            onPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

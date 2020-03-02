@@ -15,30 +15,26 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.IO;
-using System.Threading.Tasks;
-
-using Windows.Storage;
+using System.Collections.Generic;
 
 using LiteDB;
 
-using TeensyBatExplorer.Business.Models;
-
-namespace TeensyBatExplorer.Business.Commands
+namespace TeensyBatExplorer.Business.Models
 {
-    public class CreateProjectCommand
+    public class BatCall
     {
-        public async Task ExecuteAsyc(StorageFile storageFile)
-        {
-            using (Stream stream = await storageFile.OpenStreamForWriteAsync())
-            {
-                using (LiteDatabase db = new LiteDatabase(stream))
-                {
-                    LiteCollection<BatProject> projectCollection = db.GetCollection<BatProject>();
-                    BatProject batProject = new BatProject() { CreatedOn = DateTime.Now, Name = "New Project" };
-                    projectCollection.Insert(batProject);
-                }
-            }
-        }
+        public int Id { get; set; }
+        public int FftCount { get; set; }
+        public long StartTimeMS { get; set; }
+        public double MaxPeakFrequency { get; set; }
+        public double AvgPeakFrequency { get; set; }
+        public DateTime StartTime { get; set; }
+        public bool IsBat { get; set; }
+
+        public List<FftBlock> FftData { get; set; } = new List<FftBlock>();
+        
+        public int HighFreqSampleCount { get; set; }
+        public int HighPowerSampleCount { get; set; }
+        public int MaxLevel { get; set; }
     }
 }

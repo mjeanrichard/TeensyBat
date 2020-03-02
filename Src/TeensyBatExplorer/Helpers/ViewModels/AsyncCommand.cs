@@ -21,47 +21,47 @@ using TeensyBatExplorer.Helpers.DependencyInjection;
 
 namespace TeensyBatExplorer.Helpers.ViewModels
 {
-    public class NonAsyncCommand : RelayCommand
-    {
-        private readonly BaseViewModel _viewModel;
-        private readonly Action _action;
-        private readonly string _busyMessage;
+    //public class NonAsyncCommand : RelayCommand
+    //{
+    //    private readonly BaseViewModel _viewModel;
+    //    private readonly Action _action;
+    //    private readonly string _busyMessage;
 
-        public NonAsyncCommand(Action action, string busyMessage, Func<bool> canExecute, BaseViewModel viewModel)
-            : base(null, canExecute)
-        {
-            _action = action;
-            _busyMessage = busyMessage;
-            _viewModel = viewModel;
-        }
+    //    public NonAsyncCommand(Action action, string busyMessage, Func<bool> canExecute, BaseViewModel viewModel)
+    //        : base(null, canExecute)
+    //    {
+    //        _action = action;
+    //        _busyMessage = busyMessage;
+    //        _viewModel = viewModel;
+    //    }
 
-        public NonAsyncCommand(Action action, Func<bool> canExecute, BaseViewModel viewModel)
-            : this(action, null, canExecute, viewModel)
-        {
-        }
+    //    public NonAsyncCommand(Action action, Func<bool> canExecute, BaseViewModel viewModel)
+    //        : this(action, null, canExecute, viewModel)
+    //    {
+    //    }
 
-        public NonAsyncCommand(Action action, string busyMessage, BaseViewModel viewModel)
-            : this(action, busyMessage, null, viewModel)
-        {
-        }
+    //    public NonAsyncCommand(Action action, string busyMessage, BaseViewModel viewModel)
+    //        : this(action, busyMessage, null, viewModel)
+    //    {
+    //    }
 
-        public NonAsyncCommand(Action action, BaseViewModel viewModel)
-            : this(action, null, null, viewModel)
-        {
-        }
+    //    public NonAsyncCommand(Action action, BaseViewModel viewModel)
+    //        : this(action, null, null, viewModel)
+    //    {
+    //    }
 
-        public override async void Execute(object parameter = null)
-        {
-            if (_viewModel != null)
-            {
-                await _viewModel.RunBusy(_action, _busyMessage);
-            }
-            else
-            {
-                await Task.Run(() => _action()).ConfigureAwait(false);
-            }
-        }
-    }
+    //    public override async void Execute(object parameter = null)
+    //    {
+    //        if (_viewModel != null)
+    //        {
+    //            await _viewModel.RunBusy(_action, _busyMessage);
+    //        }
+    //        else
+    //        {
+    //            await Task.Run(() => _action()).ConfigureAwait(false);
+    //        }
+    //    }
+    //}
 
     public class AsyncCommand : RelayCommand
     {

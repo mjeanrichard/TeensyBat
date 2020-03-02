@@ -6,8 +6,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Style="{StaticResource PageStyle}"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:model="using:TeensyBatExplorer.Models"
     xmlns:views="using:TeensyBatExplorer.Views"
+    xmlns:models="using:TeensyBatExplorer.Business.Models"
     mc:Ignorable="d">
     <Page.Transitions>
         <TransitionCollection>
@@ -15,7 +15,7 @@
         </TransitionCollection>
     </Page.Transitions>
     <Page.Resources>
-        <DataTemplate x:Key="ItemTemplate" x:DataType="model:SampleOrder">
+        <DataTemplate x:Key="ItemTemplate" x:DataType="models:SampleOrder">
             <Grid Height="64" Padding="0,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />

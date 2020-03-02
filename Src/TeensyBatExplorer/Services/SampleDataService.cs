@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
-using TeensyBatExplorer.Models;
+using TeensyBatExplorer.Business.Models;
 
 namespace TeensyBatExplorer.Services
 {

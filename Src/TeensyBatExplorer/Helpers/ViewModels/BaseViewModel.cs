@@ -46,8 +46,8 @@ namespace TeensyBatExplorer.Helpers.ViewModels
             {
                 return;
             }
-            await InitializeInternalAsync().ConfigureAwait(false);
-            DataLoaderTask = Task.Run(async () => await RunBusy(LoadData, string.Empty));
+            await InitializeInternalAsync();
+            await RunBusy(LoadData, string.Empty);
             IsInitialized = true;
         }
 
@@ -61,7 +61,7 @@ namespace TeensyBatExplorer.Helpers.ViewModels
             return Task.CompletedTask;
         }
 
-        public IDisposable MarkBusy(string message = null)
+        public BusyState MarkBusy(string message = null)
         {
             return new BusyState(this, message);
         }
@@ -70,15 +70,7 @@ namespace TeensyBatExplorer.Helpers.ViewModels
         {
             using (MarkBusy(message))
             {
-                await Task.Run(async () => await action().ConfigureAwait(false)).ConfigureAwait(false);
-            }
-        }
-
-        public async Task RunBusy(Action action, string message)
-        {
-            using (MarkBusy(message))
-            {
-                await Task.Run(action).ConfigureAwait(false);
+                await action();
             }
         }
 

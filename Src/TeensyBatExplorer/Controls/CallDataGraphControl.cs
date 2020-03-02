@@ -31,6 +31,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 
+using TeensyBatExplorer.Business.Models;
 using TeensyBatExplorer.Services;
 
 namespace TeensyBatExplorer.Controls

@@ -27,7 +27,7 @@ using Windows.Storage.Streams;
 
 using TeensyBatExplorer.Services;
 
-namespace TeensyBatExplorer.Models
+namespace TeensyBatExplorer.Business.Models
 {
     public class TeensyBatDevice
     {

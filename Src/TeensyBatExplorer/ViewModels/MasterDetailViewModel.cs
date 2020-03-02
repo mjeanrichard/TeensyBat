@@ -20,9 +20,9 @@ using System.Threading.Tasks;
 
 using Microsoft.Toolkit.Uwp.UI.Controls;
 
+using TeensyBatExplorer.Business.Models;
 using TeensyBatExplorer.Helpers;
 using TeensyBatExplorer.Helpers.ViewModels;
-using TeensyBatExplorer.Models;
 using TeensyBatExplorer.Services;
 
 namespace TeensyBatExplorer.ViewModels

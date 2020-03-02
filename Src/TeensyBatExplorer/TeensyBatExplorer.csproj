@@ -126,6 +126,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Activation\ActivationHandler.cs" />
+    <Compile Include="Business\Commands\AddLogsCommand.cs" />
+    <Compile Include="Business\Commands\SaveProjectCommand.cs" />
+    <Compile Include="Business\Models\AdditionalData.cs" />
+    <Compile Include="Business\Models\BatCall.cs" />
+    <Compile Include="Business\Models\BatteryData.cs" />
+    <Compile Include="Business\Models\FftBlock.cs" />
+    <Compile Include="Business\Models\TemperatureData.cs" />
     <Compile Include="Controls\ColorPalettes.cs" />
     <Compile Include="Controls\EditableTextBox.xaml.cs">
       <DependentUpon>EditableTextBox.xaml</DependentUpon>
@@ -157,6 +164,7 @@
     <Compile Include="Business\Queries\GetProjectQuery.cs" />
     <Compile Include="Services\ActivationService.cs" />
     <Compile Include="Activation\LaunchActivationHandler.cs" />
+    <Compile Include="Business\Models\BatLog.cs" />
     <Compile Include="Services\HidDeviceHandler.cs" />
     <Compile Include="Services\LogReader.cs" />
     <Compile Include="Services\NavigationService.cs" />

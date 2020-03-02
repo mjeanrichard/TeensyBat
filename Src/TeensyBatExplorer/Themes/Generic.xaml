@@ -5,6 +5,37 @@
     xmlns:controls="using:TeensyBatExplorer.Controls"
     xmlns:xaml="using:Microsoft.Graphics.Canvas.UI.Xaml">
 
+    <Style TargetType="controls:PageViewControl">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:PageViewControl">
+                    <Grid>
+                        <ContentPresenter Margin="12" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" />
+                        <Popup x:Name="PART_Popup" IsLightDismissEnabled="False">
+                            <Grid x:Name="PART_PopupGrid">
+                                <Grid.Background>
+                                    <SolidColorBrush Color="Black" Opacity="0.75" />
+                                </Grid.Background>
+                                <Border VerticalAlignment="Center" 
+                                        HorizontalAlignment="Center"
+                                        Padding="10"
+                                        CornerRadius="10"
+                                        Background="White"
+                                        Opacity="0.7">
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <ProgressBar x:Name="PART_Progress" MaxWidth="400" />
+                                        <TextBlock x:Name="PART_Message" HorizontalAlignment="Center" TextWrapping="WrapWholeWords" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
     <Style TargetType="controls:IconButton">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{ThemeResource SystemControlForegroundBaseHighBrush}" />

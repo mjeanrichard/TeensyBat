@@ -21,6 +21,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
+using TeensyBatExplorer.Business.Models;
 using TeensyBatExplorer.Services;
 
 namespace TeensyBatExplorer.Views.Project

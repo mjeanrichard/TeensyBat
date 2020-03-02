@@ -65,8 +65,8 @@ namespace TeensyBatExplorer.ViewModels
                 return;
             }
 
-            var item = _navigationView.MenuItems.OfType<NavigationViewItem>().First(menuItem => (string)menuItem.Content == (string)args.InvokedItem);
-            var pageType = item.GetValue(NavHelper.NavigateToProperty) as Type;
+            NavigationViewItem item = _navigationView.MenuItems.OfType<NavigationViewItem>().First(menuItem => (string)menuItem.Content == (string)args.InvokedItem);
+            Type pageType = item.GetValue(NavHelper.NavigateToProperty) as Type;
             _navigationService.Navigate(pageType);
         }
 
@@ -83,7 +83,7 @@ namespace TeensyBatExplorer.ViewModels
 
         private bool IsMenuItemForPageType(NavigationViewItem menuItem, Type sourcePageType)
         {
-            var pageType = menuItem.GetValue(NavHelper.NavigateToProperty) as Type;
+            Type pageType = menuItem.GetValue(NavHelper.NavigateToProperty) as Type;
             return pageType == sourcePageType;
         }
     }

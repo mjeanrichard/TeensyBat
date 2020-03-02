@@ -23,14 +23,16 @@ using System.Threading.Tasks;
 
 using Windows.Storage;
 
+using TeensyBatExplorer.Business.Models;
+
 namespace TeensyBatExplorer.Services
 {
     public class LogReader
     {
 
-        public async Task Load(StorageFile file, BatLog log)
+        public async Task Load(IStorageFile file, BatLog log)
         {
-            using (var logStream = await file.OpenStreamForReadAsync())
+            using (Stream logStream = await file.OpenStreamForReadAsync())
             {
                 using (BinaryReader reader = new BinaryReader(logStream))
                 {
@@ -41,9 +43,6 @@ namespace TeensyBatExplorer.Services
 
         private void ReadData(BinaryReader reader, BatLog log)
         {
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            StreamWriter writer = File.AppendText($"{storageFolder.Path}\\test.csv");
-            Debug.WriteLine(storageFolder.Path);
             Stream stream = reader.BaseStream;
             while (stream.Position < stream.Length)
             {
@@ -53,7 +52,7 @@ namespace TeensyBatExplorer.Services
                     {
                         BatCall call = new BatCall();
                         ReadCall(call, reader, log);
-                        ProcessCall(call, log, writer);
+                        ProcessCall(call, log);
                         log.Calls.Add(call);
                     }
                 }
@@ -65,7 +64,6 @@ namespace TeensyBatExplorer.Services
                     stream.Seek(512 - offset, SeekOrigin.Current);
                 }
             }
-            writer.Close();
         }
 
         /// <summary>
@@ -90,7 +88,15 @@ namespace TeensyBatExplorer.Services
                 call.StartTime = batLog.StartTime.AddMilliseconds(call.StartTimeMS);
 
                 // Error Counters
-                reader.SkipBytes(8);
+                batLog.ErrorCountCallBuffFull = reader.ReadByte();
+                batLog.ErrorCountPointerBufferFull = reader.ReadByte();
+                batLog.ErrorCountDataBufferFull = reader.ReadByte();
+                batLog.ErrorCountProcessOverlap = reader.ReadByte();
+
+                call.HighFreqSampleCount = reader.ReadByte();
+                call.HighPowerSampleCount = reader.ReadByte();
+                call.MaxLevel = reader.ReadByte();
+                reader.ReadByte();
 
                 ReadAdditionalData(reader, batLog);
                 ReadAdditionalData(reader, batLog);
@@ -135,7 +141,7 @@ namespace TeensyBatExplorer.Services
         private void ReadAdditionalData(BinaryReader reader, BatLog log)
         {
             AdditionalDataType type = (AdditionalDataType)reader.ReadByte();
-            int timestamp = reader.ReadInt32();
+            long timestamp = reader.ReadUInt32();
             switch (type)
             {
                 case AdditionalDataType.None:
@@ -160,7 +166,7 @@ namespace TeensyBatExplorer.Services
             }
         }
 
-        private void ProcessCall(BatCall call, BatLog log, StreamWriter writer)
+        private void ProcessCall(BatCall call, BatLog log)
         {
             int noisiness = 0;
             bool[] check = new bool[40];
@@ -363,53 +369,5 @@ namespace TeensyBatExplorer.Services
                 }
             }
         }
-    }
-
-    public class BatLog
-    {
-        public DateTime StartTime { get; set; }
-        public List<BatCall> Calls { get; set; } = new List<BatCall>();
-        public List<BatteryData> BatteryData { get; set; } = new List<BatteryData>();
-        public List<TemperatureData> TemperatureData { get; set; } = new List<TemperatureData>();
-
-        public int[] _dist = new int[255];
-
-    }
-
-    public class BatCall
-    {
-        public int FftCount { get; set; }
-        public long StartTimeMS { get; set; }
-        public List<FftBlock> FftData { get; set; } = new List<FftBlock>();
-        public double MaxPeakFrequency { get; set; }
-        public double AvgPeakFrequency { get; set; }
-        public DateTime StartTime { get; set; }
-        public bool IsBat { get; set; }
-    }
-
-    public class FftBlock
-    {
-        public int Index { get; set; }
-        public int Loudness { get; set; }
-        public int SampleNr { get; set; }
-        public byte[] Data { get; set; }
-    }
-
-    [DebuggerDisplay("{" + nameof(Voltage) + "}V")]
-    public class BatteryData : AdditionalData
-    {
-        public double Voltage { get; set; }
-    }
-
-    [DebuggerDisplay("{" + nameof(Temperature) + "}°C")]
-    public class TemperatureData : AdditionalData
-    {
-        public double Temperature { get; set; }
-    }
-
-    public class AdditionalData
-    {
-        public long Timestamp { get; set; }
-        public DateTime DateTime { get; set; }
     }
 }

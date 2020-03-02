@@ -25,6 +25,7 @@ using Windows.Media.Audio;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Navigation;
 
 using Microsoft.Toolkit.Uwp.Helpers;
 
@@ -32,6 +33,8 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
+using TeensyBatExplorer.Business.Models;
+using TeensyBatExplorer.Business.Queries;
 using TeensyBatExplorer.Helpers.ViewModels;
 using TeensyBatExplorer.Services;
 using TeensyBatExplorer.Views.Project;
@@ -44,38 +47,135 @@ namespace TeensyBatExplorer.Views.Log
         private BatLog _log;
         private CallModel _selectedCall;
         private List<CallModel> _calls;
+        private IStorageFile _projectFile;
+        
+        public AsyncCommand AnalyzeCallsCommand { get; }
 
-        public LogViewModel(LogReader logReader)
+        public LogViewModel(NavigationEventArgs navigationEventArgs, LogReader logReader)
         {
+            _projectFile = (IStorageFile)navigationEventArgs.Parameter;
             _logReader = logReader;
-            OpenFileCommand = new AsyncCommand(OpenFile, this);
+            AnalyzeCallsCommand = new AsyncCommand(AnalyzeCalls, this);
             BatteryData = new BatteryViewModel();
             TemperatureData = new TemperatureViewModel();
         }
 
-        private async Task OpenFile()
+        private async Task AnalyzeCalls()
         {
-            using (MarkBusy())
+            using (BusyState busyState = MarkBusy("SDF"))
             {
-                FileOpenPicker openPicker = new FileOpenPicker();
-                openPicker.ViewMode = PickerViewMode.List;
-                openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-                openPicker.FileTypeFilter.Add(".dat");
-                IReadOnlyList<StorageFile> files = await DispatcherHelper.ExecuteOnUIThreadAsync(async () => await openPicker.PickMultipleFilesAsync());
-                if (files.Count > 0)
+                GetLogDetailsQuery query = new GetLogDetailsQuery();
+                IEnumerable<BatCall> calls = await query.Execute(_projectFile);
+                //foreach (BatCall call in calls)
+                //{
+                //    int maxLen = 0;
+                //    int count = 0;
+                //    foreach (FftBlock fftBlock in call.FftData)
+                //    {
+                //        if (fftBlock.Loudness > 2400)
+                //        {
+                //            count++;
+                //        }
+                //        else
+                //        {
+                //            if (count > 0)
+                //            {
+                //                if (maxLen < count)
+                //                {
+                //                    maxLen = count;
+                //                }
+
+                //                count = 0;
+                //            }
+                //        }
+                //    }
+                //    //call.HighPowerSampleCount = call.FftData.Count(f => f.Loudness > 2400);
+                //    call.HighPowerSampleCount = maxLen;
+                //    call.IsBat = (call.HighPowerSampleCount >= 2 && call.HighPowerSampleCount < 5) && call.HighFreqSampleCount < 1;
+                //}
+
+                foreach (BatCall call in calls)
                 {
-                    _log = new BatLog();
-                    foreach (StorageFile file in files)
+                    int noisiness = 0;
+                    bool[] check = new bool[40];
+                    int[] values = new int[40];
+                    int lastVal = 0;
+                    bool lastDeltaPositive = true;
+                    for (int i = 0; i < call.FftData.Count; i++)
                     {
-                        await _logReader.Load(file, _log);
+                        int value = call.FftData[i].Loudness;
+                        int delta = value - lastVal;
+                        if (delta > 0 && !lastDeltaPositive)
+                        {
+                            noisiness++;
+                        }
+                        else if (delta < 0 && lastDeltaPositive)
+                        {
+                            noisiness++;
+                        }
+
+                        lastVal = value;
+                        lastDeltaPositive = delta > 0;
                     }
-                    _calls = _log.Calls.OrderBy(l => l.StartTimeMS).Where(c => c.IsBat).Select(l => new CallModel(l)).ToList();
+                    //for (int i = 0; i < call.FftData.Count; i++)
+                    //{
+                    //    FftBlock fftBlock = call.FftData[i];
+                    //    for (int j = 10; j < 25; j++)
+                    //    {
+                    //        byte value = fftBlock.Data[j];
+                    //        if (i == 0)
+                    //        {
+                    //            values[j] = value;
+                    //        }
+                    //        else
+                    //        {
+                    //            int delta = values[j] - value;
+                    //            if (delta > 10)
+                    //            {
+                    //                noisiness++;
+                    //            }
+                    //            else if (delta < -10)
+                    //            {
+                    //                noisiness++;
+                    //            }
 
-                    await BatteryData.Update(_log);
-                    await TemperatureData.Update(_log);
+                    //            values[j] = value;
+                    //            check[j] = delta < 0;
+                    //        }
+                    //    }
+                    //}
 
-                    OnPropertyChanged(nameof(Calls));
+                    int maxLen = 0;
+                    int count = 0;
+                    foreach (FftBlock fftBlock in call.FftData)
+                    {
+                        if (fftBlock.Loudness > 2400)
+                        {
+                            count++;
+                        }
+                        else
+                        {
+                            if (count > 0)
+                            {
+                                if (maxLen < count)
+                                {
+                                    maxLen = count;
+                                }
+
+                                count = 0;
+                            }
+                        }
+                    }
+
+
+                    call.AvgPeakFrequency = noisiness;
+                    call.HighPowerSampleCount = maxLen;
+                    call.IsBat = (call.HighPowerSampleCount >= 2 && call.HighPowerSampleCount < 5) && call.HighFreqSampleCount < 1;
+
                 }
+
+                _calls = calls.OrderBy(l => l.StartTimeMS).Where(c => c.IsBat).Select(l => new CallModel(l)).ToList();
+                OnPropertyChanged(nameof(Calls));
             }
         }
 
@@ -83,12 +183,21 @@ namespace TeensyBatExplorer.Views.Log
         {
             get { return _calls; }
         }
-        public CallModel SelectedCall { get{return _selectedCall;} set{Set(ref _selectedCall, value);} }
 
-        public AsyncCommand OpenFileCommand { get; set; }
+        public CallModel SelectedCall { get{return _selectedCall;} set{Set(ref _selectedCall, value);} }
 
         public BatteryViewModel BatteryData { get; set; }
         public TemperatureViewModel TemperatureData { get; set; }
+
+        protected override async Task LoadData()
+        {
+            GetLogDetailsQuery query = new GetLogDetailsQuery();
+            IEnumerable<BatCall> calls = await query.Execute(_projectFile);
+            _calls = calls.OrderBy(l => l.StartTimeMS).Where(c => c.IsBat).Select(l => new CallModel(l)).ToList();
+            OnPropertyChanged(nameof(Calls));
+            //await BatteryData.Update(_log);
+            //await TemperatureData.Update(_log);
+        }
     }
 
     public class BatteryViewModel : Observable

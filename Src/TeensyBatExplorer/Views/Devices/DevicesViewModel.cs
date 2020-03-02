@@ -24,9 +24,9 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
+using TeensyBatExplorer.Business.Models;
 using TeensyBatExplorer.Helpers.DependencyInjection;
 using TeensyBatExplorer.Helpers.ViewModels;
-using TeensyBatExplorer.Models;
 
 namespace TeensyBatExplorer.Views.Devices
 {
@@ -187,21 +187,23 @@ namespace TeensyBatExplorer.Views.Devices
         private void SerialReceived(object sender, string e)
         {
             _logBuilder.Append(e);
-            SerialLog = _logBuilder.ToString();
+            DispatcherHelper.ExecuteOnUIThreadAsync(() => SerialLog = _logBuilder.ToString());
         }
 
         private void TeensyBatOnDeviceUpdated(object sender, EventArgs e)
         {
-            NodeId = TeensyBat.NodeId;
-            NodeTime = TeensyBat.NodeTime.HasValue ? TeensyBat.NodeTime.Value.ToString("dd.MM.yyyy HH:mm:ss") : "--.--.-- --:--:--";
-
-            if (TeensyBat.UpdateTime.HasValue && TeensyBat.NodeTime.HasValue)
+            DispatcherHelper.ExecuteOnUIThreadAsync(() =>
             {
-                TimeDiff = (TeensyBat.NodeTime.Value - TeensyBat.UpdateTime.Value).ToString("hh\\:mm\\:ss\\.fff");
-            }
-            Voltage = TeensyBat.InputVoltage != null ? $"{Math.Round(TeensyBat.InputVoltage.Value, 1)} V" : "-- V";
+                if (TeensyBat.UpdateTime.HasValue && TeensyBat.NodeTime.HasValue)
+                {
+                    TimeDiff = (TeensyBat.NodeTime.Value - TeensyBat.UpdateTime.Value).ToString("hh\\:mm\\:ss\\.fff");
+                }
 
-            IsDeviceConnected = TeensyBat.IsDeviceConnected;
+                Voltage = TeensyBat.InputVoltage != null ? $"{Math.Round(TeensyBat.InputVoltage.Value, 1)} V" : "-- V";
+                NodeId = TeensyBat.NodeId;
+                NodeTime = TeensyBat.NodeTime.HasValue ? TeensyBat.NodeTime.Value.ToString("dd.MM.yyyy HH:mm:ss") : "--.--.-- --:--:--";
+                IsDeviceConnected = TeensyBat.IsDeviceConnected;
+            });
         }
     }
 }

@@ -1,62 +1,73 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2018 Meinrad Jean-Richard
-//  
+// Teensy Bat Explorer - Copyright(C) 2019 Meinrad Jean-Richard
+// 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//  
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-using Windows.Media.Audio;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.UI.Xaml;
+using Windows.UI.Xaml.Navigation;
 
 using Microsoft.Toolkit.Uwp.Helpers;
 
-using OxyPlot;
-using OxyPlot.Axes;
-using OxyPlot.Series;
-
+using TeensyBatExplorer.Business.Commands;
+using TeensyBatExplorer.Business.Models;
+using TeensyBatExplorer.Business.Queries;
 using TeensyBatExplorer.Helpers.ViewModels;
-using TeensyBatExplorer.Models;
 using TeensyBatExplorer.Services;
-using TeensyBatExplorer.Services.Project;
 
 namespace TeensyBatExplorer.Views.Project
 {
     public class ProjectViewModel : BaseViewModel
     {
-        private readonly LogReader _logReader;
-        private BatLog _log;
-        private CallModel _selectedCall;
-        private List<CallModel> _calls;
+        private readonly Func<AddLogsCommand> _addLogCommandFactory;
+        private readonly NavigationService _navigationService;
+        private readonly IStorageFile _projectFile;
+        private BatProject _batProject;
 
-        public ProjectViewModel(LogReader logReader)
+        public ProjectViewModel(NavigationEventArgs navigationEventArgs, Func<AddLogsCommand> addLogCommandFactory, NavigationService navigationService)
         {
-            _logReader = logReader;
-            OpenFileCommand = new AsyncCommand(OpenFile, this);
-            BatteryData = new BatteryViewModel();
-            TemperatureData = new TemperatureViewModel();
+            _addLogCommandFactory = addLogCommandFactory;
+            _navigationService = navigationService;
+            _projectFile = (IStorageFile)navigationEventArgs.Parameter;
+            SaveCommand = new AsyncCommand(SaveProject, this);
+            AddLogCommand = new AsyncCommand(AddLog, this);
+            OpenLogCommand = new AsyncCommand(OpenLog, this);
         }
 
-        private async Task OpenFile()
+        private async Task OpenLog()
         {
-            using (MarkBusy())
+            await _navigationService.NavigateToLogPage(_projectFile);
+        }
+
+        public AsyncCommand OpenLogCommand { get; set; }
+
+        public AsyncCommand SaveCommand { get; }
+        public AsyncCommand AddLogCommand { get; }
+
+        public BatProject BatProject
+        {
+            get => _batProject;
+            set => Set(ref _batProject, value);
+        }
+
+        private async Task AddLog()
+        {
+            using (BusyState busyState = MarkBusy())
             {
                 FileOpenPicker openPicker = new FileOpenPicker();
                 openPicker.ViewMode = PickerViewMode.List;
@@ -65,142 +76,22 @@ namespace TeensyBatExplorer.Views.Project
                 IReadOnlyList<StorageFile> files = await DispatcherHelper.ExecuteOnUIThreadAsync(async () => await openPicker.PickMultipleFilesAsync());
                 if (files.Count > 0)
                 {
-                    _log = new BatLog();
-                    foreach (StorageFile file in files)
-                    {
-                        await _logReader.Load(file, _log);
-                    }
-                    _calls = _log.Calls.OrderBy(l => l.StartTimeMS).Where(c => c.IsBat).Select(l => new CallModel(l)).ToList();
-
-                    BatteryData.Update(_log);
-                    TemperatureData.Update(_log);
-
-                    OnPropertyChanged(nameof(Calls));
+                    AddLogsCommand command = _addLogCommandFactory();
+                    await command.ExecuteAsync(_projectFile, files, busyState);
                 }
             }
         }
 
-        public IList<CallModel> Calls
+        private async Task SaveProject()
         {
-            get { return _calls; }
-        }
-        public CallModel SelectedCall { get{return _selectedCall;} set{Set(ref _selectedCall, value);} }
-
-        public AsyncCommand OpenFileCommand { get; set; }
-
-        public BatteryViewModel BatteryData { get; set; }
-        public TemperatureViewModel TemperatureData { get; set; }
-    }
-
-    public class BatteryViewModel : Observable
-    {
-        private BatLog _log;
-        private PlotModel _voltage;
-
-        public PlotModel Voltage
-        {
-            get => _voltage;
-            set => Set(ref _voltage, value);
+            SaveProjectCommand command = new SaveProjectCommand();
+            await command.ExecuteAsyc(BatProject, _projectFile);
         }
 
-        public async Task Update(BatLog log)
+        protected override async Task LoadData()
         {
-            _log = log;
-
-            PlotModel pm = new PlotModel();
-            LineSeries lineSeries = new LineSeries();
-            pm.Series.Add(lineSeries);
-
-            pm.Axes.Add(new LinearAxis { Minimum = 0, Maximum = 6, Position = AxisPosition.Left, Title = "Spannung [V]" });
-            //pm.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Zeit" });
-            pm.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Zeit" });
-
-            lineSeries.Points.AddRange(_log.BatteryData.Select((b, i) => new DataPoint(DateTimeAxis.ToDouble(b.DateTime), b.Voltage / 100.0)));
-
-            pm.PlotMargins = new OxyThickness(50, double.NaN, double.NaN, double.NaN);
-            ApplicationTheme applicationTheme = await DispatcherHelper.ExecuteOnUIThreadAsync(() => Application.Current.RequestedTheme);
-            Voltage = pm.AddStyles(applicationTheme);
-        }
-
-    }
-
-    public class TemperatureViewModel : Observable
-    {
-        private BatLog _log;
-        private PlotModel _temp;
-
-        public PlotModel Temp
-        {
-            get => _temp;
-            set => Set(ref _temp, value);
-        }
-
-        public async Task Update(BatLog log)
-        {
-            _log = log;
-            PlotModel pm = new PlotModel();
-            LineSeries lineSeries = new LineSeries();
-            pm.Series.Add(lineSeries);
-
-            pm.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Temperatur [°C]" });
-            pm.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Zeit" });
-
-            lineSeries.Points.AddRange(_log.TemperatureData.Select((b, i) => new DataPoint(DateTimeAxis.ToDouble(b.DateTime), b.Temperature)));
-
-            pm.PlotMargins = new OxyThickness(50, double.NaN, double.NaN, double.NaN);
-
-            ApplicationTheme applicationTheme = await DispatcherHelper.ExecuteOnUIThreadAsync(() => Application.Current.RequestedTheme);
-            Temp = pm.AddStyles(applicationTheme);
-        }
-
-    }
-
-    public static class OxyHelper
-    {
-        public static PlotModel AddStyles(this PlotModel plotModel, ApplicationTheme applicationTheme)
-        {
-            OxyColor background;
-            OxyColor foreground;
-            OxyColor softForeground;
-            if (applicationTheme == ApplicationTheme.Dark)
-            {
-                background = OxyColors.Black;
-                foreground = OxyColors.LightGray;
-                softForeground = OxyColors.Gray;
-            }
-            else
-            {
-                background = OxyColors.White;
-                foreground = OxyColors.Black;
-                softForeground = OxyColors.Gray;
-            }
-            plotModel.Background = background;
-            plotModel.LegendBackground = background;
-            plotModel.PlotAreaBackground = background;
-
-            plotModel.PlotAreaBorderThickness = new OxyThickness(1);
-            plotModel.PlotAreaBorderColor = foreground;
-
-            plotModel.TextColor = foreground;
-            plotModel.LegendTextColor = foreground;
-            plotModel.SubtitleColor = foreground;
-            plotModel.TitleColor = foreground;
-
-            foreach (Axis axis in plotModel.Axes)
-            {
-                axis.AxislineColor = foreground;
-                axis.ExtraGridlineColor = softForeground;
-                axis.MajorGridlineColor = softForeground;
-                axis.MinorGridlineColor = softForeground;
-                axis.TicklineColor = foreground;
-                axis.TitleColor = foreground;
-                axis.TextColor = foreground;
-
-                axis.AxisTitleDistance = 10;
-                axis.MajorGridlineStyle = LineStyle.Solid;
-            }
-            return plotModel;
+            GetProjectQuery query = new GetProjectQuery();
+            BatProject = await query.Execute(_projectFile);
         }
     }
-
 }

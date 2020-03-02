@@ -6,9 +6,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:TeensyBatExplorer.Views"
     xmlns:main="using:TeensyBatExplorer.Views.Main"
+    xmlns:controls="using:TeensyBatExplorer.Controls"
     Style="{StaticResource PageStyle}"
     mc:Ignorable="d">
 
+    <controls:PageViewControl BusyState="{Binding Busy}">
     <Grid
         x:Name="ContentArea"
         Margin="{StaticResource MediumLeftRightMargin}">
@@ -17,10 +19,12 @@
             
         </Grid>
     </Grid>
+    </controls:PageViewControl>
 
     <Page.BottomAppBar>
         <CommandBar IsOpen="True" IsSticky="True">
             <AppBarButton Label="New Project" Icon="Add" Command="{x:Bind ViewModel.CreateNewProjectCommand}" />
+            <AppBarButton Label="Open Project" Icon="OpenFile" Command="{x:Bind ViewModel.OpenProjectCommand}" />
         </CommandBar>
     </Page.BottomAppBar>
 </main:MainPageBase>

@@ -17,7 +17,7 @@
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-using TeensyBatExplorer.Models;
+using TeensyBatExplorer.Business.Models;
 
 namespace TeensyBatExplorer.Views
 {

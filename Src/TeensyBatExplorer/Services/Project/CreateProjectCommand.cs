@@ -9,7 +9,7 @@ using Windows.Storage;
 
 using LiteDB;
 
-using TeensyBatExplorer.Models;
+using TeensyBatExplorer.Business.Models;
 
 namespace TeensyBatExplorer.Services.Project
 {
