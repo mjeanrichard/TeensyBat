@@ -8,29 +8,48 @@ void LogWriter::Process()
     }
     if (_batAudio->hasDataAvailable())
     {
+        if (_blocksWritten > TB_FILE_BLOCK_COUNT)
+        {
+            FatalError(TB_ERR_SD_WRITE_BLOCK, F("Ups, should have opened new file..."));
+        }
         if (!_sd.card()->writeStart(_firstBlock + _blocksWritten, TB_FILE_BLOCK_COUNT))
         {
             FatalError(TB_ERR_SD_WRITE_BLOCK, F("Could not write Block (writeStart failed)."));
         }
+
+        bool lastResult = true;
         while (_batAudio->hasDataAvailable())
         {
             uint8_t *pCache = (uint8_t *)_sd.vol()->cacheClear();
-            _batAudio->writeToCard(&_blocksWritten, &_sd, TB_FILE_BLOCK_COUNT, pCache);
-            DEBUG_LN(".")
+            lastResult = _batAudio->writeToCard(&_blocksWritten, &_sd, TB_FILE_BLOCK_COUNT, pCache);
+            if (!lastResult){
+                break;
+            }
+            DEBUG_F(". %u\n", _blocksWritten)
         }
 
         if (!_sd.card()->writeStop())
         {
             FatalError(TB_ERR_SD_WRITE_BLOCK, F("Could not write Block (writeStop failed)."));
         }
+        if (!lastResult)
+        {
+            CloseFile();
+        }
     }
 }
 
-void LogWriter::GenerateFilename(char *filename)
+void LogWriter::CloseFile()
 {
-    tmElements_t time;
-    breakTime(Teensy3Clock.get(), time);
+    if (_isFileOpen)
+    {
+        _file.close();
+        _isFileOpen = false;
+    }
+}
 
+void LogWriter::GenerateFilename(char *filename, tmElements_t time)
+{
     for (uint8_t i = 0; i < 10; i++)
     {
         sprintf(filename, "TB%03hhu-%04u%02hhu%02hhu%02hhu%02hhu-%01hhu.DAT", _nodeId, 1970 + time.Year, time.Month, time.Day, time.Hour, time.Minute, i);
@@ -78,7 +97,10 @@ void LogWriter::InitializeCard(bool openFile)
 void LogWriter::OpenNewFile()
 {
     char filename[TB_FILENAME_LEN];
-    GenerateFilename(filename);
+
+    tmElements_t time;
+    breakTime(Teensy3Clock.get(), time);
+    GenerateFilename(filename, time);
 
     if (!_file.createContiguous(filename, TB_SD_BUFFER_SIZE * TB_FILE_BLOCK_COUNT))
     {
@@ -101,9 +123,42 @@ void LogWriter::OpenNewFile()
     {
         FatalError(TB_ERR_SD_CREATE_FILE, F("Could not create contiguous range."));
     }
-    DEBUG("Created File.\n");
+    
+    _file.timestamp(T_CREATE | T_ACCESS | T_WRITE, 1970 + time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second);
+    
     EraseFile();
+    WriteFileHeader();
+    _blocksWritten = 1;
     _isFileOpen = true;
+    DEBUG("Created File.\n");
+}
+
+void LogWriter::WriteFileHeader()
+{
+    uint8_t *pBuffer = (uint8_t *)_sd.vol()->cacheClear();
+    
+    pBuffer[0] = 0xFF;
+    pBuffer[1] = 0xCC;
+    pBuffer[2] = TB_HW_VERSION;
+    pBuffer[3] = TB_FW_VERSION;
+    
+    pBuffer[4] = _nodeId;
+    pBuffer[5] = TB_DEBUG;
+    pBuffer[6] = TB_PRE_CALL_BUFFER_COUNT;
+    pBuffer[7] = TB_AFTER_CALL_SAMPLES;
+
+    WriteInt16(pBuffer + 8, TB_CALL_START_THRESHOLD);
+    WriteInt16(pBuffer + 10, TB_CALL_STOP_THRESHOLD);
+
+    pBuffer[13] = 0;
+    pBuffer[14] = 0;
+    pBuffer[15] = 0;
+    pBuffer[16] = 0;
+
+  	uint32_t time = Teensy3Clock.get();
+    uint32_t offset = micros();
+    WriteInt32(pBuffer + 16, time);
+    WriteInt32(pBuffer + 24, offset);
 }
 
 void LogWriter::CardError()
@@ -139,7 +194,6 @@ void LogWriter::CardError()
             FormatCard();
             s1Pressed = false;
         }
-        uint8_t s1 = digitalReadFast(TB_PIN_S1);
     }
 }
 
@@ -158,17 +212,18 @@ bool LogWriter::IsCardAvailable()
 
 void LogWriter::EraseFile()
 {
-    if (_sd.card()->eraseSingleBlockEnable())
-    {
-        DEBUG("Block-Erasing File...")
-        if (!_sd.card()->erase(_firstBlock, _lastBlock))
-        {
-            FatalError(TB_ERR_SD_CREATE_FILE, F("Failed to erase file."));
-        }
-        DEBUG(" done.\n");
-    }
-    else
-    {
+    SD_ACTIVE_ON()
+    // if (_sd.card()->eraseSingleBlockEnable())
+    // {
+    //     DEBUG("Block-Erasing File...")
+    //     if (!_sd.card()->erase(_firstBlock, _lastBlock))
+    //     {
+    //         FatalError(TB_ERR_SD_CREATE_FILE, F("Failed to erase file."));
+    //     }
+    //     DEBUG(" done.\n");
+    // }
+    // else
+    // {
         DEBUG("Erasing manually...");
         if (!_sd.card()->writeStart(_firstBlock, TB_FILE_BLOCK_COUNT))
         {
@@ -188,5 +243,6 @@ void LogWriter::EraseFile()
         }
 
         DEBUG(" done.\n");
-    }
+    // }
+    SD_ACTIVE_OFF()
 }

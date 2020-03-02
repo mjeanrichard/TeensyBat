@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2018 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2018 Meinrad Jean-Richard
 //  
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,19 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using Windows.UI.Xaml.Controls;
-
+using TeensyBatExplorer.Helpers.ViewModels;
 using TeensyBatExplorer.ViewModels;
 
-namespace TeensyBatExplorer.Views
+namespace TeensyBatExplorer.Views.Main
 {
-    public sealed partial class MainPage : Page
+    public class MainPageBase : AppPage<MainViewModel>
+    {
+    }
+
+    public sealed partial class MainPage : MainPageBase
     {
         public MainPage()
         {
             InitializeComponent();
         }
-
-        public MainViewModel ViewModel { get; } = new MainViewModel();
     }
 }

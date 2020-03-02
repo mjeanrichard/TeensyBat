@@ -16,16 +16,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI;
+using Windows.UI.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 
 using TeensyBatExplorer.Services;
@@ -34,11 +37,17 @@ namespace TeensyBatExplorer.Controls
 {
     public sealed class CallDataGraphControl : UserControl
     {
-        public static readonly DependencyProperty CallDataProperty = DependencyProperty.Register("CallData", typeof(BatLog2), typeof(CallDataGraphControl), new PropertyMetadata(default(BatLog2)));
+        const int RowHeight = 4;
+        const int ColWidth = 4;
 
-        public BatLog2 CallData
+        const int FftLowerBound = 128 * ColWidth;
+        const int LoudnessLowerBound = FftLowerBound + 200;
+
+        public static readonly DependencyProperty CallDataProperty = DependencyProperty.Register("CallData", typeof(BatCall), typeof(CallDataGraphControl), new PropertyMetadata(default(BatCall)));
+
+        public BatCall CallData
         {
-            get { return (BatLog2)GetValue(CallDataProperty); }
+            get { return (BatCall)GetValue(CallDataProperty); }
             set
             {
                 SetValue(CallDataProperty, value);
@@ -55,6 +64,28 @@ namespace TeensyBatExplorer.Controls
             IsTabStop = true;
             Loaded += UserControl_Loaded;
             Unloaded += UserControl_Unloaded;
+            PointerPressed += OnPointerPressed;
+        }
+
+        private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            if (_canvas == null)
+            {
+                return;
+            }
+
+            Point position = e.GetCurrentPoint(_canvas).Position;
+            int x = (int)(position.X / ColWidth);
+            int y = 128 - (int)(position.Y / RowHeight);
+
+            List<FftBlock> fftData = CallData.FftData;
+            if (fftData.Count <= x || x < 0 || y < 0 || y > 127)
+            {
+                Debug.WriteLine($"{x}/{y} -> XXX");
+                return;
+            }
+
+            Debug.WriteLine($"{x}/{y} -> {fftData[x].Data[y]}");
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -62,6 +93,7 @@ namespace TeensyBatExplorer.Controls
             _canvas = new CanvasControl();
             _canvas.IsTabStop = false;
             _canvas.Draw += CanvasOnDraw;
+            _canvas.PointerPressed += OnPointerPressed;
             Content = _canvas;
         }
 
@@ -91,6 +123,7 @@ namespace TeensyBatExplorer.Controls
             return availableSize;
         }
 
+
         protected override void OnPointerPressed(PointerRoutedEventArgs pointerRoutedEventArgs)
         {
             Focus(FocusState.Programmatic);
@@ -111,6 +144,7 @@ namespace TeensyBatExplorer.Controls
             }
         }
 
+
         private void CanvasOnDraw(CanvasControl sender, CanvasDrawEventArgs args)
         {
             if (CallData == null)
@@ -120,38 +154,44 @@ namespace TeensyBatExplorer.Controls
 
             CanvasDrawingSession session = args.DrawingSession;
             session.Antialiasing = CanvasAntialiasing.Aliased;
-
-            const int rowHeight = 4;
-            const int colWidth = 4;
-            
-            const int fftLowerBound = 128 * colWidth;
-            const int loudnessLowerBound = fftLowerBound + 200;
-            
-            
+            CanvasStrokeStyle hairlineStrokeStyle = new CanvasStrokeStyle()
+            {
+                TransformBehavior = CanvasStrokeTransformBehavior.Hairline
+            };
             List<FftBlock> fftData = CallData.FftData;
             for (int iCol = 0; iCol < fftData.Count; iCol++)
             {
-                int columnCenter = iCol * colWidth;
+                int columnCenter = iCol * ColWidth;
 
                 FftBlock fftBlock = fftData[iCol];
                 for (int i = 0; i < fftBlock.Data.Length; i++)
                 {
-                    Color pixelColor = ColorPalettes.BlueVioletRed[Math.Min(127, fftBlock.Data[i] * 2)];
-                    session.FillRectangle(columnCenter - colWidth / 2, fftLowerBound - i * rowHeight, colWidth, rowHeight, pixelColor);
+                    Color pixelColor = ColorPalettes.BlueVioletRed[Math.Min(127, (int)(fftBlock.Data[i]))];
+                    session.FillRectangle(columnCenter - ColWidth / 2, FftLowerBound - i * RowHeight, ColWidth, RowHeight, pixelColor);
                 }
 
                 if (iCol < fftData.Count - 1)
                 {
                     int scaledLoudness = fftData[iCol + 1].Loudness / 21;
-                    session.DrawLine(columnCenter, loudnessLowerBound - (fftBlock.Loudness/21), columnCenter + colWidth, loudnessLowerBound - scaledLoudness, Colors.Black);
+                    session.DrawLine(columnCenter, LoudnessLowerBound - (fftBlock.Loudness/21), columnCenter + ColWidth, LoudnessLowerBound - scaledLoudness, Colors.Black);
                 }
 
                 if (iCol % 2 == 0)
                 {
                     // Draw bottom Tick
-                    session.DrawLine(columnCenter, fftLowerBound, columnCenter, fftLowerBound + 5, Colors.Black);
+                    session.DrawLine(columnCenter, FftLowerBound, columnCenter, FftLowerBound + 5, Colors.Black);
                 }
             }
+
+            float width = 1f;
+            for (int i = 0; i < 10; i++)
+            {
+                int y = FftLowerBound - i * 10 * RowHeight;
+                session.DrawLine(0f, y, fftData.Count * ColWidth, y, Colors.White, 1f, hairlineStrokeStyle);
+            }
+
+            session.DrawLine(0f, LoudnessLowerBound-2400/21, fftData.Count * ColWidth, LoudnessLowerBound - 2400 / 21, Colors.Green, width);
+
         }
     }
 }

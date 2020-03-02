@@ -3,8 +3,13 @@
 
 #include "WProgram.h"
 
-//#define TB_DEBUG = 1;
-// #define TB_DISPLAY = 1;
+#define TB_HW_VERSION 5
+#define TB_FW_VERSION 1
+
+#define TB_DEBUG 1
+#define TB_CALL_LED TB_PIN_LED_GREEN
+#define TB_SD_LED TB_PIN_LED_YELLOW
+#define TB_CALL_BUFFER_FULL_LED TB_PIN_LED_RED
 
 // Seconds after startup for wich the LEDs are enabled.
 static const uint32_t TB_AUTO_SWITCH_OFF_MS = 5 * 60 * 1000;
@@ -15,17 +20,23 @@ static const uint32_t TB_AUTO_SWITCH_OFF_MS = 5 * 60 * 1000;
 static const uint16_t TB_FFT_RESULT_SIZE = TB_AUDIO_SAMPLE_BUFFER_SIZE;
 static const uint16_t TB_CALL_DATA_SIZE = TB_FFT_RESULT_SIZE + 4;
 
-static const uint8_t TB_PRE_CALL_BUFFER_COUNT = 4;
+static const uint8_t TB_PRE_CALL_BUFFER_COUNT = 8;
 static const uint8_t TB_AFTER_CALL_SAMPLES = 4;
 
-static const uint16_t TB_CALL_START_THRESHOLD = 1024; // Max Value is 4095
-static const uint16_t TB_CALL_STOP_THRESHOLD = 100;
+static const uint16_t TB_CALL_START_THRESHOLD = 2400; // Max Value is 4095
+static const uint16_t TB_CALL_STOP_THRESHOLD = 1000;
 
-static const uint16_t TB_CALL_BUFFER_COUNT = 350;
+static const uint8_t TB_CALL_MIN_FREQ_BIN = 21; // Min FFT Bin to include in measurement
+static const uint8_t TB_CALL_MIN_POWER = 50; // Min Power in a bin above TB_CALL_MIN_FREQ_BIN for a Call to be logged
+static const uint16_t TB_CALL_POWERCOUNTER_THRESHOLD = 2400;
+
+static const uint16_t TB_CALL_BUFFER_COUNT = 340;
 static const uint16_t TB_CALL_POINTER_COUNT = 10;
 
-static const uint16_t TB_MS_BETWEEN_BATTERY_READS = 60000;
-static const uint16_t TB_MS_BETWEEN_TEMP_READS = 60000;
+static const uint32_t TB_MS_BETWEEN_BATTERY_READS = 2 * 60 * 1000;
+static const uint32_t TB_MS_BETWEEN_TEMP_READS = 2 * 60 * 1000;
+
+static const uint8_t TB_ADDITIONAL_DATA_COUNT = 128;
 
 // PIN Assignment
 static const uint8_t TB_PIN_AUDIO = A9;
@@ -51,7 +62,7 @@ static const uint8_t TB_EEPROM_TIME = 2;    // Timestamp of last set time (can b
 
 // SD Card Write Buffer Size
 #define TB_SD_BUFFER_SIZE 512UL
-#define TB_FILE_BLOCK_COUNT 50000
+#define TB_FILE_BLOCK_COUNT 5000
 
 
 

@@ -11,6 +11,7 @@
     xmlns:xaml="using:TeensyBatExplorer.Helpers.Xaml"
     xmlns:devices="using:TeensyBatExplorer.Views.Devices"
     xmlns:project="using:TeensyBatExplorer.Views.Project"
+    xmlns:main="using:TeensyBatExplorer.Views.Main"
     mc:Ignorable="d">
 
     <NavigationView
@@ -26,7 +27,7 @@
             Or to use an IconElement instead of a Symbol see https://github.com/Microsoft/WindowsTemplateStudio/blob/master/docs/projectTypes/navigationpane.md
             Edit String/en-US/Resources.resw: Add a menu item title for each page
             -->
-            <NavigationViewItem x:Uid="Shell_Main" Icon="Document" xaml:NavHelper.NavigateTo="views:MainPage" />
+            <NavigationViewItem x:Uid="Shell_Main" Icon="Document" xaml:NavHelper.NavigateTo="main:MainPage" />
             <NavigationViewItem x:Uid="Shell_Devices" Icon="Repair" xaml:NavHelper.NavigateTo="devices:DevicesPage" />
             <NavigationViewItem x:Uid="Shell_Project" Icon="Document" xaml:NavHelper.NavigateTo="project:ProjectPage" />
             <NavigationViewItem x:Uid="Shell_MasterDetail" Icon="Document" xaml:NavHelper.NavigateTo="views:MasterDetailPage" />

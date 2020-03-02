@@ -1,5 +1,5 @@
 // 
-// Teensy Bat Explorer - Copyright(C) 2018 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2018 Meinrad Jean-Richard
 //  
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ using Windows.UI.Xaml.Navigation;
 using TeensyBatExplorer.Helpers.DependencyInjection;
 
 using Unity;
+using Unity.Resolution;
 
 namespace TeensyBatExplorer.Helpers.ViewModels
 {
@@ -53,7 +54,7 @@ namespace TeensyBatExplorer.Helpers.ViewModels
             }
 
             _pageContainer = DependencyContainer.Current.CreateChildContainer();
-            ViewModel = _pageContainer.Resolve<TModel>(new TypedParameterOverride<NavigationEventArgs>(e));
+            ViewModel = _pageContainer.Resolve<TModel>(new ParameterOverride(typeof(NavigationEventArgs), e));
 
             await ViewModel.Initialize();
             InitializeCompleted();

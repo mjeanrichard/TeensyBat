@@ -37,3 +37,4 @@ BundleArtifacts/
 __vm/
 project.lock.json
 .vscode/
+.pio/

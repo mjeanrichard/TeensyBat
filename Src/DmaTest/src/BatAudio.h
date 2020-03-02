@@ -17,6 +17,20 @@ struct CallPointer
 	uint8_t * startOfData;
 	uint16_t length;
 	uint32_t startTime;
+	uint8_t maxLevel;
+	// This counter indicates how often a call has readings above a certain frequency
+	uint8_t highFreqSampleCount;
+	// This counter indicates how many Samples have a Power avboe a specified threshold.
+	uint8_t highPowerSampleCount;
+};
+
+enum AdditionalDataType : uint8_t { Temp = 1, Battery = 2 };
+
+struct AdditionalData
+{
+	AdditionalDataType type;
+	uint32_t timeMs;
+	uint8_t data[3];
 };
 
 class BatAudio
@@ -28,8 +42,6 @@ private:
 
 	elapsedMillis _msSinceBatteryRead = 0;
 	elapsedMillis _msSinceTempRead = TB_MS_BETWEEN_TEMP_READS / 2;
-	uint16_t _lastReadVoltage = 0;
-	int16_t _lastReadTemp = 0;
 	uint16_t _voltageFactor = 0;
 
 	static void adc0_isr();
@@ -66,7 +78,7 @@ private:
 	volatile uint8_t _callPointerIndexTail = 0;
 
 	// Ring Buffer for the raw call data waiting to be written to the sd card.
-	uint8_t _callBuffer[TB_CALL_DATA_SIZE * TB_CALL_BUFFER_COUNT];
+	uint8_t _callBuffer[TB_CALL_DATA_SIZE * TB_CALL_BUFFER_COUNT] __attribute__((aligned(4)));
 	const uint8_t * _callBufferEnd = &_callBuffer[TB_CALL_DATA_SIZE * TB_CALL_BUFFER_COUNT - 1];
 	uint8_t * volatile _callBufferNextByte = &_callBuffer[0];
 	uint8_t * volatile _callBufferFirstByte = &_callBuffer[0];
@@ -79,15 +91,33 @@ private:
 	// the next softwre interrupt will not be fired.
 	volatile bool _isProcessingSample = false;
 
+	// Ring-Buffer for Additional Data to Log
+	// If Tail and Head are Equal the buffer is empty, 
+	AdditionalData _additionalData[TB_ADDITIONAL_DATA_COUNT];
+	// points to last written element in the ring
+	volatile uint8_t _additionalDataHead = 0;
+	// points to the last read element in the ring
+	volatile uint8_t _additionalDataTail = 0;
+	void AddAdditionalData(AdditionalDataType type, uint16_t data);
+	void WriteAdditionalDataToBuffer(byte * buffer);
+
+	// Error Counters
+	volatile uint8_t _errProcessOverlap = 0;
+	volatile uint8_t _errCallBufferFull = 0;
+	volatile uint8_t _errCallPointerBufferFull = 0;
+	volatile uint8_t _errDataBufferFull = 0;
+	volatile uint8_t _errSkippedCalls = 0;
+	
+
 	int16_t _fftBuffer[TB_FFT_RESULT_SIZE*4] __attribute__((aligned(4)));
-	void computeFFT(uint8_t * dest);
+	void computeFFT(uint8_t * dest, CallPointer * callPointer);
 	void copyToCallBuffer(uint8_t * src);
 	void increaseCallBuffer();
 
 	void sample_complete_isr();
 
-	void readRawBatteryVoltageInternal();
-	void readTempInternal();
+	int16_t readRawBatteryVoltageInternal();
+	int16_t readTempInternal();
 
 public:
 	BatAudio()
@@ -106,7 +136,7 @@ public:
 
 	void debug();
 	void sendOverUsb();
-	void writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockCount, uint8_t * sdBuffer);
+	bool writeToCard(uint16_t * blocksWritten, SdFat * sd, uint16_t blockCount, uint8_t * sdBuffer);
 };
 
 const uint16_t AudioWindowHanning256[] __attribute__ ((aligned (4))) = {

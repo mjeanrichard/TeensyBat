@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2018 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2018 Meinrad Jean-Richard
 //  
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ namespace TeensyBatExplorer.Views.Project
         private HeatMapSeries _heatMapSeries;
         private PlotModel _plotModel;
 
-        public CallModel(BatLog2 batLog)
+        public CallModel(BatCall batLog)
         {
             Count = batLog.FftCount;
             Data = batLog;
@@ -64,7 +64,7 @@ namespace TeensyBatExplorer.Views.Project
                 Y0 = 0,
                 Y1 = 70,
                 Data = new double[1,1],
-                RenderMethod = HeatMapRenderMethod.Bitmap,
+                //RenderMethod = HeatMapRenderMethod.Bitmap,
                 Interpolate = false,
             };
 
@@ -92,7 +92,7 @@ namespace TeensyBatExplorer.Views.Project
 
         public int Count { get; set; }
 
-        public BatLog2 Data { get; private set; }
+        public BatCall Data { get; private set; }
 
         public PlotModel PlotModel
         {

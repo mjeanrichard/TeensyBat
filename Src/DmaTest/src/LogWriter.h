@@ -25,10 +25,12 @@ private:
 
     bool _isFileOpen;
 
-    void GenerateFilename(char * filename);
+    void GenerateFilename(char * filename, tmElements_t time);
     void EraseFile();
     void CardError();
     void OpenNewFile();
+    void WriteFileHeader();
+    void CloseFile();
 public:
     LogWriter(uint8_t nodeId, BatAudio * b) : 
         _sd(),

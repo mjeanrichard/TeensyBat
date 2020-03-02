@@ -70,27 +70,34 @@ void setup()
   pinMode(TB_PIN_S2, INPUT_PULLUP);
   pinMode(TB_PIN_CARD_PRESENT, INPUT_PULLUP);
 
-  #ifdef TB_DEBUG
+  #if TB_DEBUG > 0
   EnableSerial();
   #endif
 
-  #ifdef TB_DEBUG
+  #if TB_DEBUG > 0
   // This delay is needed somehow. Otherwise a Hardfault is generated
   // delay(500);
   // ram.initialize();
-  // DEBUG_LN(ram.free());
+  // Serial.println(ram.free());
   #endif
 
   DEBUG_LN("Start!");
 
+  byte nodeId = 0;
+  EEPROM.get(TB_EEPROM_NODE_ID, nodeId);
+
   _b = new BatAudio();
   _b->init();
 
-  _logWriter = new LogWriter(1, _b);
+  _logWriter = new LogWriter(nodeId, _b);
   _logWriter->InitializeCard(false);
 
   startConfiguratorIfReqested();
   checkFormatRequested();
+
+  #if TB_DEBUG > 0
+  // Serial.println(ram.free());
+  #endif
 
   _b->start();
 }

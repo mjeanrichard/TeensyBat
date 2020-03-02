@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2018 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2018 Meinrad Jean-Richard
 //  
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Activation;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.Core.Preview;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -29,6 +30,7 @@ using Windows.UI.Xaml.Navigation;
 
 using TeensyBatExplorer.Activation;
 using TeensyBatExplorer.Helpers.DependencyInjection;
+using TeensyBatExplorer.Services.Project;
 using TeensyBatExplorer.Views;
 
 using Unity;
@@ -41,12 +43,14 @@ namespace TeensyBatExplorer.Services
         public readonly KeyboardAccelerator BackKeyboardAccelerator;
 
         private readonly Lazy<ShellPage> _shell;
+        private readonly ProjectManager _projectManager;
         private readonly NavigationService _navigationService;
 
-        public ActivationService(NavigationService navigationService, Lazy<ShellPage> shell = null)
+        public ActivationService(NavigationService navigationService, ProjectManager projectManager, Lazy<ShellPage> shell = null)
         {
             _navigationService = navigationService;
             _shell = shell;
+            _projectManager = projectManager;
 
             AltLeftKeyboardAccelerator = BuildKeyboardAccelerator(VirtualKey.Left, VirtualKeyModifiers.Menu);
             BackKeyboardAccelerator = BuildKeyboardAccelerator(VirtualKey.GoBack);

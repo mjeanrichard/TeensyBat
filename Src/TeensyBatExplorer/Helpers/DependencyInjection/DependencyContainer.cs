@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2017 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2017 Meinrad Jean-Richard
 //  
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ using System;
 
 using TeensyBatExplorer.Activation;
 using TeensyBatExplorer.Services;
+using TeensyBatExplorer.Services.Project;
 using TeensyBatExplorer.Views;
 
 using Unity;
@@ -40,6 +41,7 @@ namespace TeensyBatExplorer.Helpers.DependencyInjection
             unityContainer.RegisterSingleton<NavigationService>();
             unityContainer.RegisterSingleton<ActivationService>();
             unityContainer.RegisterSingleton<HidDeviceHandler>();
+            unityContainer.RegisterSingleton<ProjectManager>();
             
             unityContainer.RegisterType<ActivationHandler, LaunchActivationHandler>();
             unityContainer.RegisterType<ActivationHandler, SuspendAndResumeService>();
@@ -49,7 +51,7 @@ namespace TeensyBatExplorer.Helpers.DependencyInjection
 
         private static UnityContainer _unityContainer;
 
-        public static UnityContainer Current
+        public static IUnityContainer Current
         {
             get { return _unityContainer; }
         }

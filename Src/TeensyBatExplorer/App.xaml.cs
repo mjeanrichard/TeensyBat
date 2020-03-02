@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2018 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2018 Meinrad Jean-Richard
 //  
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ using System;
 
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI.Core.Preview;
 using Windows.UI.Xaml;
 
 using Microsoft.AppCenter;
@@ -27,6 +28,7 @@ using Microsoft.AppCenter.Crashes;
 using TeensyBatExplorer.Helpers;
 using TeensyBatExplorer.Helpers.DependencyInjection;
 using TeensyBatExplorer.Services;
+using TeensyBatExplorer.Services.Project;
 using TeensyBatExplorer.Views;
 
 using Unity;

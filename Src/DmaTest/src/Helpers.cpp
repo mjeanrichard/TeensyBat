@@ -41,3 +41,18 @@ void FatalError(uint8_t errorCode, const __FlashStringHelper *f)
         }
     }
 }
+
+void WriteInt16(uint8_t * buffer, uint16_t data)
+{
+    buffer[0] = (uint8_t)(data);
+    buffer[1] = (uint8_t)(data >> 8);
+}
+
+void WriteInt32(uint8_t * buffer, uint32_t data)
+{
+    buffer[0] = (uint8_t)(data);
+    buffer[1] = (uint8_t)(data >> 8);
+    buffer[2] = (uint8_t)(data >> 16);
+    buffer[3] = (uint8_t)(data >> 24);
+
+}

@@ -1,5 +1,5 @@
 // 
-// Teensy Bat Explorer - Copyright(C) 2017 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2017 Meinrad Jean-Richard
 //  
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
