@@ -158,7 +158,7 @@ void LogWriter::WriteFileHeader()
   	uint32_t time = Teensy3Clock.get();
     uint32_t offset = micros();
     WriteInt32(pBuffer + 16, time);
-    WriteInt32(pBuffer + 24, offset);
+    WriteInt32(pBuffer + 20, offset);
 }
 
 void LogWriter::CardError()
