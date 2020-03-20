@@ -7,17 +7,31 @@
     xmlns:views="using:TeensyBatExplorer.Views"
     xmlns:main="using:TeensyBatExplorer.Views.Main"
     xmlns:controls="using:TeensyBatExplorer.Controls"
+    xmlns:services="using:TeensyBatExplorer.Services"
     Style="{StaticResource PageStyle}"
     mc:Ignorable="d">
 
     <controls:PageViewControl BusyState="{Binding Busy}">
-    <Grid
-        x:Name="ContentArea"
-        Margin="{StaticResource MediumLeftRightMargin}">
-        <Grid
-            Background="{ThemeResource SystemControlPageBackgroundChromeLowBrush}">
-            
-        </Grid>
+    <Grid x:Name="rootElement" Margin="{StaticResource MediumLeftRightMargin}">
+
+        <ListView ItemsSource="{Binding MruProjects}">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="services:ProjectMetadata">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="5" />
+                        <TextBlock Grid.Column="2" Text="{Binding Filename}" Margin="5" />
+                        <controls:IconButton Grid.Column="0" Symbol="OpenFile" Command="{Binding ElementName=rootElement, Path=DataContext.OpenMruProjectCommand}" CommandParameter="{Binding Token}" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
     </Grid>
     </controls:PageViewControl>
 

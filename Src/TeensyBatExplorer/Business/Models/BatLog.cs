@@ -26,6 +26,24 @@ namespace TeensyBatExplorer.Business.Models
     public class BatLog : Observable
     {
         public int Id { get; set; }
+
+        public int NodeNumber { get; set; }
+        public int FirmwareVersion { get; set; }
+        public int HardwareVersion { get; set; }
+        public bool Debug { get; set; }
+        
+        public int PreCallBufferSize { get; set; }
+        public int AfterCallBufferSize { get; set; }
+        public int CallStartThreshold { get; set; }
+        public int CallEndThreshold { get; set; }
+
+        public int ErrorCountCallBuffFull { get; set; }
+        public int ErrorCountPointerBufferFull { get; set; }
+        public int ErrorCountDataBufferFull { get; set; }
+        public int ErrorCountProcessOverlap { get; set; }
+        
+        public string Filename { get; set; }
+
         public DateTime StartTime { get; set; }
 
         [BsonRef(nameof(BatCall))]
@@ -37,10 +55,6 @@ namespace TeensyBatExplorer.Business.Models
         [BsonRef(nameof(Models.TemperatureData))]
         public List<TemperatureData> TemperatureData { get; set; } = new List<TemperatureData>();
 
-        public int ErrorCountCallBuffFull { get; set; }
-        public int ErrorCountPointerBufferFull { get; set; }
-        public int ErrorCountDataBufferFull { get; set; }
-        public int ErrorCountProcessOverlap { get; set; }
-
+        public int NodeId { get; set; }
     }
 }

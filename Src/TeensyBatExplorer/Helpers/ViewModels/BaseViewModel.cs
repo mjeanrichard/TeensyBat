@@ -18,6 +18,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Toolkit.Uwp.Helpers;
+
+using TeensyBatExplorer.Business.Commands;
+
 namespace TeensyBatExplorer.Helpers.ViewModels
 {
     public abstract class BaseViewModel : Observable
@@ -30,8 +34,6 @@ namespace TeensyBatExplorer.Helpers.ViewModels
         }
 
         protected bool IsInitialized { get; set; }
-
-        protected Task DataLoaderTask { get; private set; }
 
         public BusyState Busy { get; set; }
 
@@ -47,7 +49,7 @@ namespace TeensyBatExplorer.Helpers.ViewModels
                 return;
             }
             await InitializeInternalAsync();
-            await RunBusy(LoadData, string.Empty);
+            await Task.Run(LoadData);
             IsInitialized = true;
         }
 
@@ -61,14 +63,14 @@ namespace TeensyBatExplorer.Helpers.ViewModels
             return Task.CompletedTask;
         }
 
-        public BusyState MarkBusy(string message = null)
+        public async Task<BusyState> MarkBusy(string message = null)
         {
-            return new BusyState(this, message);
+            return await RunOnUiThread(() => new BusyState(this, message));
         }
 
         public async Task RunBusy(Func<Task> action, string message)
         {
-            using (MarkBusy(message))
+            using (await MarkBusy(message))
             {
                 await action();
             }
@@ -106,6 +108,21 @@ namespace TeensyBatExplorer.Helpers.ViewModels
         public void BusyChanged()
         {
             OnPropertyChanged(nameof(Busy));
+        }
+
+        protected async Task<T> RunOnUiThread<T>(Func<Task<T>> action)
+        {
+            return await DispatcherHelper.ExecuteOnUIThreadAsync(action).ConfigureAwait(false);
+        }
+
+        protected async Task<T> RunOnUiThread<T>(Func<T> action)
+        {
+            return await DispatcherHelper.ExecuteOnUIThreadAsync(action).ConfigureAwait(false);
+        }
+
+        protected async Task RunOnUiThread(Action action)
+        {
+            await DispatcherHelper.ExecuteOnUIThreadAsync(action).ConfigureAwait(false);
         }
     }
 
@@ -168,9 +185,19 @@ namespace TeensyBatExplorer.Helpers.ViewModels
             }
         }
 
-        public void Dispose()
+        public async void Dispose()
         {
-            _baseViewModel.DecrementBusyCounter(_oldBusyState);
+            await DispatcherHelper.ExecuteOnUIThreadAsync(() => _baseViewModel.DecrementBusyCounter(_oldBusyState)).ConfigureAwait(false);
+        }
+
+        public async Task Update(CountProgress countProgress)
+        {
+            await DispatcherHelper.ExecuteOnUIThreadAsync(() =>
+            {
+                MaxProgressValue = countProgress.Total;
+                ProgressValue = countProgress.Current;
+                Message = countProgress.Text;
+            }).ConfigureAwait(false);
         }
     }
 }

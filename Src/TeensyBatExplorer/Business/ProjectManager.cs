@@ -10,17 +10,26 @@ using Windows.Storage;
 using LiteDB;
 
 using TeensyBatExplorer.Business.Models;
+using TeensyBatExplorer.Services;
 
-namespace TeensyBatExplorer.Services.Project
+namespace TeensyBatExplorer.Business
 {
     public class ProjectManager : IDisposable
     {
+        private readonly MruService _mruService;
         private StorageFile _storageFile;
         private Stream _stream;
         private LiteDatabase _db;
         private BatProject _batProject;
 
         public bool IsProjectOpen { get; private set; }
+
+        public BatProject Project => _batProject;
+
+        public ProjectManager(MruService mruService)
+        {
+            _mruService = mruService;
+        }
 
         public async Task OpenProject(StorageFile storageFile)
         {
@@ -31,8 +40,12 @@ namespace TeensyBatExplorer.Services.Project
             _storageFile = storageFile;
             _stream = await storageFile.OpenStreamForWriteAsync();
             _db = new LiteDatabase(_stream);
-            LiteCollection<BatProject> projectCollection = _db.GetCollection<BatProject>();
+            ILiteCollection<BatProject> projectCollection = _db.GetCollection<BatProject>();
             _batProject = projectCollection.FindAll().FirstOrDefault();
+
+            _mruService.AddProject(storageFile, _batProject);
+        
+            IsProjectOpen = true;
         }
 
         public async Task CreateNewProject(StorageFile storageFile)
@@ -43,15 +56,29 @@ namespace TeensyBatExplorer.Services.Project
             }
             _storageFile = storageFile;
             _stream = await storageFile.OpenStreamForWriteAsync();
+            _stream.SetLength(0);
             _db = new LiteDatabase(_stream);
 
-            LiteCollection<BatProject> projectCollection = _db.GetCollection<BatProject>();
+            ILiteCollection<BatProject> projectCollection = _db.GetCollection<BatProject>();
             _batProject = new BatProject() { CreatedOn = DateTime.Now, Name = "New Project" };
             projectCollection.Insert(_batProject);
             _db.Checkpoint();
+
+            _mruService.AddProject(storageFile, _batProject);
+
             IsProjectOpen = true;
         }
 
+        public LiteDatabase GetDatabase()
+        {
+            if (IsProjectOpen)
+            {
+                return _db;
+            }
+
+            return null;
+        }
+        
         public void Close()
         {
             _db.Dispose();

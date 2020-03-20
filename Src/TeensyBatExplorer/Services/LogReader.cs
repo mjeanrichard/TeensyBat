@@ -41,21 +41,54 @@ namespace TeensyBatExplorer.Services
             }
         }
 
+        private void ReadFileHeader(BinaryReader reader, BatLog log)
+        {
+            byte magicOne = reader.ReadByte();
+            byte magicTwo = reader.ReadByte();
+            if (magicOne != 0xFF || magicTwo != 0xCC)
+            {
+                throw new LogFileFormatException($"Wrong file marker 0x{magicOne:X2},0x{magicTwo:X2} (expected 0xFF,0xCC).");
+            }
+
+            log.HardwareVersion = reader.ReadByte();
+            log.FirmwareVersion = reader.ReadByte();
+            log.NodeNumber = reader.ReadByte();
+            log.Debug = reader.ReadBoolean();
+            log.PreCallBufferSize = reader.ReadByte();
+            log.AfterCallBufferSize = reader.ReadByte();
+            log.CallStartThreshold = reader.ReadUInt16();
+            log.CallEndThreshold = reader.ReadUInt16();
+            
+            reader.SkipBytes(4);
+
+            log.StartTime = reader.ReadDateTimeWithMicroseconds();
+
+            reader.SkipBytes(488);
+        }
+
         private void ReadData(BinaryReader reader, BatLog log)
         {
             Stream stream = reader.BaseStream;
+            ReadFileHeader(reader, log);
             while (stream.Position < stream.Length)
             {
-                if (reader.ReadByte() == 0xFF)
+                byte markOne = reader.ReadByte();
+                byte markTwo = reader.ReadByte();
+
+                if (markOne == 0 && markTwo == 0)
                 {
-                    if (reader.ReadByte() == 0xFE)
-                    {
-                        BatCall call = new BatCall();
-                        ReadCall(call, reader, log);
-                        ProcessCall(call, log);
-                        log.Calls.Add(call);
-                    }
+                    // Assuming end of file. Rest should be zero
+                    return;
                 }
+                if (markOne != 0xFF || markTwo != 0xFE)
+                {
+                    throw new LogFileFormatException($"Call marker expected (0xFF,0xFE) but 0x{markOne:X2},0x{markTwo:X2} found.");
+                }
+
+                BatCall call = new BatCall();
+                ReadCall(call, reader, log);
+                ProcessCall(call, log);
+                log.Calls.Add(call);
 
                 //Seek to the next block
                 long offset = stream.Position % 512;
@@ -88,10 +121,10 @@ namespace TeensyBatExplorer.Services
                 call.StartTime = batLog.StartTime.AddMilliseconds(call.StartTimeMS);
 
                 // Error Counters
-                batLog.ErrorCountCallBuffFull = reader.ReadByte();
-                batLog.ErrorCountPointerBufferFull = reader.ReadByte();
-                batLog.ErrorCountDataBufferFull = reader.ReadByte();
-                batLog.ErrorCountProcessOverlap = reader.ReadByte();
+                batLog.ErrorCountCallBuffFull += reader.ReadByte();
+                batLog.ErrorCountPointerBufferFull += reader.ReadByte();
+                batLog.ErrorCountDataBufferFull += reader.ReadByte();
+                batLog.ErrorCountProcessOverlap += reader.ReadByte();
 
                 call.HighFreqSampleCount = reader.ReadByte();
                 call.HighPowerSampleCount = reader.ReadByte();
@@ -357,6 +390,21 @@ namespace TeensyBatExplorer.Services
         }
     }
 
+    public class LogFileFormatException : Exception
+    {
+        public LogFileFormatException()
+        {
+        }
+
+        public LogFileFormatException(string message) : base(message)
+        {
+        }
+
+        public LogFileFormatException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+
     public static class BinaryReaderHelper
     {
         public static void SkipBytes(this BinaryReader reader, int count)
@@ -368,6 +416,14 @@ namespace TeensyBatExplorer.Services
                     // Ups...
                 }
             }
+        }
+        public static DateTime ReadDateTimeWithMicroseconds(this BinaryReader reader)
+        {
+            long unixTimestamp = reader.ReadUInt32();
+            long microsOffset = reader.ReadUInt32();
+
+            DateTimeOffset dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
+            return dateTime.AddMilliseconds(microsOffset / 1000d).DateTime;
         }
     }
 }

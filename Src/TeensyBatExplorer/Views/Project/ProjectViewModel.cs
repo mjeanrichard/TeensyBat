@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Windows.Storage;
@@ -24,6 +25,7 @@ using Windows.UI.Xaml.Navigation;
 
 using Microsoft.Toolkit.Uwp.Helpers;
 
+using TeensyBatExplorer.Business;
 using TeensyBatExplorer.Business.Commands;
 using TeensyBatExplorer.Business.Models;
 using TeensyBatExplorer.Business.Queries;
@@ -34,28 +36,26 @@ namespace TeensyBatExplorer.Views.Project
 {
     public class ProjectViewModel : BaseViewModel
     {
-        private readonly Func<AddLogsCommand> _addLogCommandFactory;
         private readonly NavigationService _navigationService;
-        private readonly IStorageFile _projectFile;
+        private readonly ProjectManager _projectManager;
         private BatProject _batProject;
+        private IEnumerable<BatNode> _nodes;
 
-        public ProjectViewModel(NavigationEventArgs navigationEventArgs, Func<AddLogsCommand> addLogCommandFactory, NavigationService navigationService)
+        public ProjectViewModel(NavigationService navigationService, ProjectManager projectManager)
         {
-            _addLogCommandFactory = addLogCommandFactory;
             _navigationService = navigationService;
-            _projectFile = (IStorageFile)navigationEventArgs.Parameter;
+            _projectManager = projectManager;
             SaveCommand = new AsyncCommand(SaveProject, this);
             AddLogCommand = new AsyncCommand(AddLog, this);
-            OpenLogCommand = new AsyncCommand(OpenLog, this);
+            OpenNodeCommand = new AsyncParameterCommand<int>(OpenLog, this);
         }
 
-        private async Task OpenLog()
+        private async Task OpenLog(int nodeNumber)
         {
-            await _navigationService.NavigateToLogPage(_projectFile);
+            await _navigationService.NavigateToNodePage(nodeNumber);
         }
 
-        public AsyncCommand OpenLogCommand { get; set; }
-
+        public AsyncParameterCommand<int> OpenNodeCommand { get; set; }
         public AsyncCommand SaveCommand { get; }
         public AsyncCommand AddLogCommand { get; }
 
@@ -65,33 +65,28 @@ namespace TeensyBatExplorer.Views.Project
             set => Set(ref _batProject, value);
         }
 
+        public IEnumerable<BatNode> Nodes
+        {
+            get => _nodes;
+            set => Set(ref _nodes, value);
+        }
+
         private async Task AddLog()
         {
-            using (BusyState busyState = MarkBusy())
-            {
-                FileOpenPicker openPicker = new FileOpenPicker();
-                openPicker.ViewMode = PickerViewMode.List;
-                openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-                openPicker.FileTypeFilter.Add(".dat");
-                IReadOnlyList<StorageFile> files = await DispatcherHelper.ExecuteOnUIThreadAsync(async () => await openPicker.PickMultipleFilesAsync());
-                if (files.Count > 0)
-                {
-                    AddLogsCommand command = _addLogCommandFactory();
-                    await command.ExecuteAsync(_projectFile, files, busyState);
-                }
-            }
+            await _navigationService.NavigateToAddFilesPage();
         }
 
         private async Task SaveProject()
         {
-            SaveProjectCommand command = new SaveProjectCommand();
-            await command.ExecuteAsyc(BatProject, _projectFile);
+            //SaveProjectCommand command = new SaveProjectCommand();
+            //await command.ExecuteAsyc(BatProject, _projectFile);
         }
 
         protected override async Task LoadData()
         {
-            GetProjectQuery query = new GetProjectQuery();
-            BatProject = await query.Execute(_projectFile);
+            await RunOnUiThread(() => BatProject = _projectManager.Project);
+            List<BatNode> nodes = _projectManager.GetDatabase().GetCollection<BatNode>().FindAll().ToList();
+            await RunOnUiThread(() => Nodes = nodes);
         }
     }
 }

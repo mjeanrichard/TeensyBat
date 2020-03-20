@@ -33,6 +33,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
+using TeensyBatExplorer.Business;
 using TeensyBatExplorer.Business.Models;
 using TeensyBatExplorer.Business.Queries;
 using TeensyBatExplorer.Helpers.ViewModels;
@@ -44,17 +45,21 @@ namespace TeensyBatExplorer.Views.Log
     public class LogViewModel : BaseViewModel
     {
         private readonly LogReader _logReader;
+        private readonly ProjectManager _projectManager;
         private BatLog _log;
         private CallModel _selectedCall;
         private List<CallModel> _calls;
-        private IStorageFile _projectFile;
-        
+        private int _nodeNumber;
+
         public AsyncCommand AnalyzeCallsCommand { get; }
 
-        public LogViewModel(NavigationEventArgs navigationEventArgs, LogReader logReader)
+        public LogViewModel(NavigationEventArgs navigationEventArgs, LogReader logReader, ProjectManager projectManager)
         {
-            _projectFile = (IStorageFile)navigationEventArgs.Parameter;
             _logReader = logReader;
+            _projectManager = projectManager;
+
+            _nodeNumber = (int)navigationEventArgs.Parameter;
+
             AnalyzeCallsCommand = new AsyncCommand(AnalyzeCalls, this);
             BatteryData = new BatteryViewModel();
             TemperatureData = new TemperatureViewModel();
@@ -62,121 +67,121 @@ namespace TeensyBatExplorer.Views.Log
 
         private async Task AnalyzeCalls()
         {
-            using (BusyState busyState = MarkBusy("SDF"))
-            {
-                GetLogDetailsQuery query = new GetLogDetailsQuery();
-                IEnumerable<BatCall> calls = await query.Execute(_projectFile);
-                //foreach (BatCall call in calls)
-                //{
-                //    int maxLen = 0;
-                //    int count = 0;
-                //    foreach (FftBlock fftBlock in call.FftData)
-                //    {
-                //        if (fftBlock.Loudness > 2400)
-                //        {
-                //            count++;
-                //        }
-                //        else
-                //        {
-                //            if (count > 0)
-                //            {
-                //                if (maxLen < count)
-                //                {
-                //                    maxLen = count;
-                //                }
+            //using (BusyState busyState = await MarkBusy("SDF"))
+            //{
+            //    GetLogDetailsQuery query = new GetLogDetailsQuery();
+            //    IEnumerable<BatCall> calls = await query.Execute(_projectFile);
+            //    //foreach (BatCall call in calls)
+            //    //{
+            //    //    int maxLen = 0;
+            //    //    int count = 0;
+            //    //    foreach (FftBlock fftBlock in call.FftData)
+            //    //    {
+            //    //        if (fftBlock.Loudness > 2400)
+            //    //        {
+            //    //            count++;
+            //    //        }
+            //    //        else
+            //    //        {
+            //    //            if (count > 0)
+            //    //            {
+            //    //                if (maxLen < count)
+            //    //                {
+            //    //                    maxLen = count;
+            //    //                }
 
-                //                count = 0;
-                //            }
-                //        }
-                //    }
-                //    //call.HighPowerSampleCount = call.FftData.Count(f => f.Loudness > 2400);
-                //    call.HighPowerSampleCount = maxLen;
-                //    call.IsBat = (call.HighPowerSampleCount >= 2 && call.HighPowerSampleCount < 5) && call.HighFreqSampleCount < 1;
-                //}
+            //    //                count = 0;
+            //    //            }
+            //    //        }
+            //    //    }
+            //    //    //call.HighPowerSampleCount = call.FftData.Count(f => f.Loudness > 2400);
+            //    //    call.HighPowerSampleCount = maxLen;
+            //    //    call.IsBat = (call.HighPowerSampleCount >= 2 && call.HighPowerSampleCount < 5) && call.HighFreqSampleCount < 1;
+            //    //}
 
-                foreach (BatCall call in calls)
-                {
-                    int noisiness = 0;
-                    bool[] check = new bool[40];
-                    int[] values = new int[40];
-                    int lastVal = 0;
-                    bool lastDeltaPositive = true;
-                    for (int i = 0; i < call.FftData.Count; i++)
-                    {
-                        int value = call.FftData[i].Loudness;
-                        int delta = value - lastVal;
-                        if (delta > 0 && !lastDeltaPositive)
-                        {
-                            noisiness++;
-                        }
-                        else if (delta < 0 && lastDeltaPositive)
-                        {
-                            noisiness++;
-                        }
+            //    foreach (BatCall call in calls)
+            //    {
+            //        int noisiness = 0;
+            //        bool[] check = new bool[40];
+            //        int[] values = new int[40];
+            //        int lastVal = 0;
+            //        bool lastDeltaPositive = true;
+            //        for (int i = 0; i < call.FftData.Count; i++)
+            //        {
+            //            int value = call.FftData[i].Loudness;
+            //            int delta = value - lastVal;
+            //            if (delta > 0 && !lastDeltaPositive)
+            //            {
+            //                noisiness++;
+            //            }
+            //            else if (delta < 0 && lastDeltaPositive)
+            //            {
+            //                noisiness++;
+            //            }
 
-                        lastVal = value;
-                        lastDeltaPositive = delta > 0;
-                    }
-                    //for (int i = 0; i < call.FftData.Count; i++)
-                    //{
-                    //    FftBlock fftBlock = call.FftData[i];
-                    //    for (int j = 10; j < 25; j++)
-                    //    {
-                    //        byte value = fftBlock.Data[j];
-                    //        if (i == 0)
-                    //        {
-                    //            values[j] = value;
-                    //        }
-                    //        else
-                    //        {
-                    //            int delta = values[j] - value;
-                    //            if (delta > 10)
-                    //            {
-                    //                noisiness++;
-                    //            }
-                    //            else if (delta < -10)
-                    //            {
-                    //                noisiness++;
-                    //            }
+            //            lastVal = value;
+            //            lastDeltaPositive = delta > 0;
+            //        }
+            //        //for (int i = 0; i < call.FftData.Count; i++)
+            //        //{
+            //        //    FftBlock fftBlock = call.FftData[i];
+            //        //    for (int j = 10; j < 25; j++)
+            //        //    {
+            //        //        byte value = fftBlock.Data[j];
+            //        //        if (i == 0)
+            //        //        {
+            //        //            values[j] = value;
+            //        //        }
+            //        //        else
+            //        //        {
+            //        //            int delta = values[j] - value;
+            //        //            if (delta > 10)
+            //        //            {
+            //        //                noisiness++;
+            //        //            }
+            //        //            else if (delta < -10)
+            //        //            {
+            //        //                noisiness++;
+            //        //            }
 
-                    //            values[j] = value;
-                    //            check[j] = delta < 0;
-                    //        }
-                    //    }
-                    //}
+            //        //            values[j] = value;
+            //        //            check[j] = delta < 0;
+            //        //        }
+            //        //    }
+            //        //}
 
-                    int maxLen = 0;
-                    int count = 0;
-                    foreach (FftBlock fftBlock in call.FftData)
-                    {
-                        if (fftBlock.Loudness > 2400)
-                        {
-                            count++;
-                        }
-                        else
-                        {
-                            if (count > 0)
-                            {
-                                if (maxLen < count)
-                                {
-                                    maxLen = count;
-                                }
+            //        int maxLen = 0;
+            //        int count = 0;
+            //        foreach (FftBlock fftBlock in call.FftData)
+            //        {
+            //            if (fftBlock.Loudness > 2400)
+            //            {
+            //                count++;
+            //            }
+            //            else
+            //            {
+            //                if (count > 0)
+            //                {
+            //                    if (maxLen < count)
+            //                    {
+            //                        maxLen = count;
+            //                    }
 
-                                count = 0;
-                            }
-                        }
-                    }
+            //                    count = 0;
+            //                }
+            //            }
+            //        }
 
 
-                    call.AvgPeakFrequency = noisiness;
-                    call.HighPowerSampleCount = maxLen;
-                    call.IsBat = (call.HighPowerSampleCount >= 2 && call.HighPowerSampleCount < 5) && call.HighFreqSampleCount < 1;
+            //        call.AvgPeakFrequency = noisiness;
+            //        call.HighPowerSampleCount = maxLen;
+            //        call.IsBat = (call.HighPowerSampleCount >= 2 && call.HighPowerSampleCount < 5) && call.HighFreqSampleCount < 1;
 
-                }
+            //    }
 
-                _calls = calls.OrderBy(l => l.StartTimeMS).Where(c => c.IsBat).Select(l => new CallModel(l)).ToList();
-                OnPropertyChanged(nameof(Calls));
-            }
+            //    _calls = calls.OrderBy(l => l.StartTimeMS).Where(c => c.IsBat).Select(l => new CallModel(l)).ToList();
+            //    OnPropertyChanged(nameof(Calls));
+            //}
         }
 
         public IList<CallModel> Calls
@@ -191,8 +196,7 @@ namespace TeensyBatExplorer.Views.Log
 
         protected override async Task LoadData()
         {
-            GetLogDetailsQuery query = new GetLogDetailsQuery();
-            IEnumerable<BatCall> calls = await query.Execute(_projectFile);
+            IEnumerable<BatCall> calls = _projectManager.GetCallsForNode(_nodeNumber);
             _calls = calls.OrderBy(l => l.StartTimeMS).Where(c => c.IsBat).Select(l => new CallModel(l)).ToList();
             OnPropertyChanged(nameof(Calls));
             //await BatteryData.Update(_log);

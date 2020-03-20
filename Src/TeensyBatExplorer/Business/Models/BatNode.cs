@@ -14,29 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System.IO;
-using System.Threading.Tasks;
-
-using Windows.Storage;
+using System.Collections.Generic;
 
 using LiteDB;
 
-using TeensyBatExplorer.Business.Models;
-
-namespace TeensyBatExplorer.Business.Commands
+namespace TeensyBatExplorer.Business.Models
 {
-    public class SaveProjectCommand
+    public class BatNode
     {
-        public async Task ExecuteAsyc(BatProject batProject, IStorageFile storageFile)
-        {
-            using (Stream stream = await storageFile.OpenStreamForWriteAsync())
-            {
-                using (LiteDatabase db = new LiteDatabase(stream))
-                {
-                    ILiteCollection<BatProject> projectCollection = db.GetCollection<BatProject>();
-                    projectCollection.Update(batProject);
-                }
-            }
-        }
+        public int Id { get; set; }
+        public int NodeId { get; set; }
+
+        [BsonRef(nameof(BatLog))]
+        public List<BatLog> Logs { get; set; } = new List<BatLog>();
     }
 }

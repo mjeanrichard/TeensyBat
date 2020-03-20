@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 
+using LiteDB;
+
 namespace TeensyBatExplorer.Business.Models
 {
     [DebuggerDisplay("{" + nameof(Voltage) + "}V")]
@@ -7,5 +9,8 @@ namespace TeensyBatExplorer.Business.Models
     {
         public int Id { get; set; }
         public double Voltage { get; set; }
+
+        public int NodeId { get; set; }
+        public int LogId { get; set; }
     }
 }

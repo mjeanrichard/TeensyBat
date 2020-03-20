@@ -93,32 +93,32 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LiteDB">
-      <Version>5.0.0-alpha</Version>
+      <Version>5.0.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.2.8</Version>
+      <Version>6.2.9</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Uwp.Managed">
       <Version>2.0.1</Version>
     </PackageReference>
     <!-- Nuget package references -->
     <PackageReference Include="Microsoft.AppCenter.Analytics">
-      <Version>2.0.0</Version>
+      <Version>3.0.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AppCenter.Crashes">
-      <Version>2.0.0</Version>
+      <Version>3.0.0</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.2</Version>
+      <Version>12.0.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls">
-      <Version>5.1.1</Version>
+      <Version>6.0.0</Version>
     </PackageReference>
     <PackageReference Include="OxyPlot.Windows">
       <Version>2.0.0-unstable1059</Version>
     </PackageReference>
     <PackageReference Include="Unity">
-      <Version>5.11.1</Version>
+      <Version>5.11.4</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -130,9 +130,11 @@
     <Compile Include="Business\Commands\SaveProjectCommand.cs" />
     <Compile Include="Business\Models\AdditionalData.cs" />
     <Compile Include="Business\Models\BatCall.cs" />
+    <Compile Include="Business\Models\BatNode.cs" />
     <Compile Include="Business\Models\BatteryData.cs" />
     <Compile Include="Business\Models\FftBlock.cs" />
     <Compile Include="Business\Models\TemperatureData.cs" />
+    <Compile Include="Business\ProjectManager.cs" />
     <Compile Include="Controls\ColorPalettes.cs" />
     <Compile Include="Controls\EditableTextBox.xaml.cs">
       <DependentUpon>EditableTextBox.xaml</DependentUpon>
@@ -162,20 +164,25 @@
     <Compile Include="Business\Models\SampleOrder.cs" />
     <Compile Include="Business\Models\TeensyBatDevice.cs" />
     <Compile Include="Business\Queries\GetProjectQuery.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Services\ActivationService.cs" />
     <Compile Include="Activation\LaunchActivationHandler.cs" />
     <Compile Include="Business\Models\BatLog.cs" />
     <Compile Include="Services\HidDeviceHandler.cs" />
     <Compile Include="Services\LogReader.cs" />
+    <Compile Include="Services\MruService.cs" />
     <Compile Include="Services\NavigationService.cs" />
     <Compile Include="Services\OnBackgroundEnteringEventArgs.cs" />
     <Compile Include="Services\OnDeviceConnectedEventArgs.cs" />
-    <Compile Include="Business\Commands\CreateProjectCommand.cs" />
-    <Compile Include="Services\Project\CreateProjectCommand.cs" />
     <Compile Include="Services\SampleDataService.cs" />
     <Compile Include="Services\SuspendAndResumeService.cs" />
     <Compile Include="Services\SuspensionState.cs" />
     <Compile Include="Services\ThemeSelectorService.cs" />
+    <Compile Include="Views\AddFiles\AddFilesPage.xaml.cs">
+      <DependentUpon>AddFilesPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AddFiles\AddFilesViewModel.cs" />
+    <Compile Include="Views\AddFiles\BatLogViewModel.cs" />
     <Compile Include="Views\Log\CallDetailControl.xaml.cs">
       <DependentUpon>CallDetailControl.xaml</DependentUpon>
     </Compile>
@@ -255,6 +262,10 @@
     <Page Include="Styles\TextBlock.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AddFiles\AddFilesPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Devices\DevicesPage.xaml">
       <Generator>MSBuild:Compile</Generator>

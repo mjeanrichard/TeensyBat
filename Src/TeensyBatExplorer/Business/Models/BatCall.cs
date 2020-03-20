@@ -31,10 +31,13 @@ namespace TeensyBatExplorer.Business.Models
         public DateTime StartTime { get; set; }
         public bool IsBat { get; set; }
 
-        public List<FftBlock> FftData { get; set; } = new List<FftBlock>();
-        
         public int HighFreqSampleCount { get; set; }
         public int HighPowerSampleCount { get; set; }
         public int MaxLevel { get; set; }
+
+        public List<FftBlock> FftData { get; set; } = new List<FftBlock>();
+        
+        public int NodeId { get; set; }
+        public int LogId { get; set; }
     }
 }

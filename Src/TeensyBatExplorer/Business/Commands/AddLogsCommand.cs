@@ -1,5 +1,5 @@
-﻿
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+﻿// 
+// Teensy Bat Explorer - Copyright(C) 2019 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,96 +16,89 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-
-using Windows.ApplicationModel.Core;
-using Windows.Storage;
 
 using LiteDB;
 
-using Microsoft.Toolkit.Uwp.Helpers;
-
 using TeensyBatExplorer.Business.Models;
-using TeensyBatExplorer.Helpers.ViewModels;
-using TeensyBatExplorer.Services;
-using TeensyBatExplorer.Views.Project;
 
 namespace TeensyBatExplorer.Business.Commands
 {
     public class AddLogsCommand
     {
-        private readonly LogReader _logReader;
-
-        public AddLogsCommand(LogReader logReader)
+        public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatLog> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
         {
-            _logReader = logReader;
+            await Task.Run(() => ExecuteInternalAsync(projectManager, loadedFiles, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task ExecuteAsync(IStorageFile projectFile, IEnumerable<IStorageFile> logFiles, BusyState busyState)
+        private void ExecuteInternalAsync(ProjectManager projectManager, IEnumerable<BatLog> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
         {
-            await Task.Run(async () => await ExecuteInternalAsync(projectFile, logFiles, busyState)).ConfigureAwait(false);
-        }
+            LiteDatabase db = projectManager.GetDatabase();
 
-        private async Task ExecuteInternalAsync(IStorageFile projectFile, IEnumerable<IStorageFile> logFiles, BusyState busyState)
-        {
-            BatLog log = new BatLog();
-            foreach (IStorageFile file in logFiles)
+            int i = 0;
+            BatLog[] batLogs = loadedFiles.ToArray();
+            foreach (BatLog batLog in batLogs)
             {
-                await _logReader.Load(file, log);
+                cancellationToken.ThrowIfCancellationRequested();
+                i++;
+                progress.Report(new CountProgress { Current = i, Total = batLogs.Length, Text = $"'{batLog.Filename}'..." });
+                db.BeginTrans();
+                AddBatLog(db, batLog, cancellationToken);
+                db.Commit();
+                db.Checkpoint();
+            }
+        }
+
+        private void AddBatLog(LiteDatabase db, BatLog batLog, CancellationToken cancellationToken)
+        {
+            ILiteCollection<BatLog> logCollection = db.GetCollection<BatLog>();
+            ILiteCollection<BatNode> nodeCollection = db.GetCollection<BatNode>();
+            ILiteCollection<BatCall> batCallCollection = db.GetCollection<BatCall>();
+            ILiteCollection<BatteryData> batteryDataCollection = db.GetCollection<BatteryData>();
+            ILiteCollection<TemperatureData> tempDataCollection = db.GetCollection<TemperatureData>();
+
+            BatNode batNode = nodeCollection.FindOne(n => n.NodeId == batLog.NodeNumber);
+
+            if (batNode == null)
+            {
+                batNode = new BatNode { NodeId = batLog.NodeNumber };
+                nodeCollection.Insert(batNode);
             }
 
-            using (Stream stream = await projectFile.OpenStreamForWriteAsync())
+            batLog.NodeId = batNode.Id;
+            logCollection.Insert(batLog);
+
+            batNode.Logs.Add(batLog);
+            
+            foreach (BatCall call in batLog.Calls)
             {
-                using (LiteDatabase db = new LiteDatabase(stream))
-                {
-                    LiteCollection<BatCall> batCallCollection = db.GetCollection<BatCall>();
-                    LiteCollection<BatteryData> batteryDataCollection = db.GetCollection<BatteryData>();
-                    LiteCollection<TemperatureData> tempDataCollection = db.GetCollection<TemperatureData>();
-                    LiteCollection<BatLog> logCollection = db.GetCollection<BatLog>();
-
-                    if (!CoreApplication.MainView.Dispatcher.HasThreadAccess)
-                    {
-                        await DispatcherHelper.ExecuteOnUIThreadAsync(() => busyState.MaxProgressValue = log.Calls.Count).ConfigureAwait(true);
-                    }
-                    else
-                    {
-                        busyState.MaxProgressValue = log.Calls.Count;
-                    }
-
-                    db.BeginTrans();
-                    int i = 0;
-                    foreach (BatCall logCall in log.Calls)
-                    {
-                        batCallCollection.Insert(logCall);
-                        i++;
-                        if (i % 500 == 0)
-                        {
-                            db.Commit();
-                            db.Checkpoint();
-                            if (!CoreApplication.MainView.Dispatcher.HasThreadAccess)
-                            {
-                                await DispatcherHelper.ExecuteOnUIThreadAsync(() => busyState.ProgressValue = i).ConfigureAwait(true);
-                            }
-                            else
-                            {
-                                busyState.ProgressValue = i;
-                            }
-                            db.BeginTrans();
-                        }
-                    }
-                    db.Commit();
-                    db.Checkpoint();
-
-                    db.BeginTrans();
-                    batteryDataCollection.Insert(log.BatteryData);
-                    tempDataCollection.Insert(log.TemperatureData);
-                    logCollection.Insert(log);
-                    db.Commit();
-                }
+                call.NodeId = batNode.Id;
+                call.LogId = batLog.Id;
             }
+            batCallCollection.InsertBulk(batLog.Calls);
 
+            foreach (BatteryData bat in batLog.BatteryData)
+            {
+                bat.NodeId = batNode.Id;
+                bat.LogId = batLog.Id;
+            }
+            batteryDataCollection.Insert(batLog.BatteryData);
+
+            foreach (TemperatureData temp in batLog.TemperatureData)
+            {
+                temp.NodeId = batNode.Id;
+                temp.LogId = batLog.Id;
+            }
+            tempDataCollection.Insert(batLog.TemperatureData);
         }
+    }
+
+    public class CountProgress
+    {
+        public int Total { get; set; }
+        public int Current { get; set; }
+        public string Text { get; set; }
     }
 }

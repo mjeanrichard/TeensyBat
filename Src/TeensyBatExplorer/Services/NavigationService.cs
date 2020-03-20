@@ -15,6 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Windows.Storage;
@@ -26,6 +28,7 @@ using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.Helpers;
 
 using TeensyBatExplorer.Views;
+using TeensyBatExplorer.Views.AddFiles;
 using TeensyBatExplorer.Views.Devices;
 using TeensyBatExplorer.Views.Log;
 using TeensyBatExplorer.Views.Main;
@@ -113,14 +116,19 @@ namespace TeensyBatExplorer.Services
             return await Navigate<DevicesPage>();
         }
 
-        public async Task<bool> NavigateToProjectPage(IStorageFile projectFile)
+        public async Task<bool> NavigateToProjectPage()
         {
-            return await Navigate<ProjectPage>(projectFile);
+            return await Navigate<ProjectPage>();
         }
 
-        public async Task<bool> NavigateToLogPage(IStorageFile projectFile)
+        public async Task<bool> NavigateToAddFilesPage()
         {
-            return await Navigate<LogPage>(projectFile);
+            return await Navigate<AddFilesPage>();
+        }
+
+        public async Task<bool> NavigateToNodePage(int nodeNumber)
+        {
+            return await Navigate<LogPage>(nodeNumber);
         }
 
         private void RegisterFrameEvents()
