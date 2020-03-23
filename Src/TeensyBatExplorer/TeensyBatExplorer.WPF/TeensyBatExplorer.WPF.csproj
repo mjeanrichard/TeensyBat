@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Views\Devices\**" />
+    <Compile Remove="Views\Log\**" />
+    <EmbeddedResource Remove="Views\Devices\**" />
+    <EmbeddedResource Remove="Views\Log\**" />
+    <None Remove="Views\Devices\**" />
+    <None Remove="Views\Log\**" />
+    <Page Remove="Views\Devices\**" />
+    <Page Remove="Views\Log\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MaterialDesignThemes" Version="3.0.1" />
+    <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
+    <PackageReference Include="Nito.Mvvm.Async" Version="1.0.0-pre-03" />
+    <PackageReference Include="Nito.Mvvm.Core" Version="1.2.2" />
+    <PackageReference Include="Unity" Version="5.11.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TeensyBatExplorer.Core\TeensyBatExplorer.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\NodeDetail\" />
+  </ItemGroup>
+
+</Project>

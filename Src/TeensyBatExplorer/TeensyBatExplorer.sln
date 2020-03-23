@@ -1,43 +1,31 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27924.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeensyBatExplorer", "TeensyBatExplorer.csproj", "{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeensyBatExplorer.WPF", "TeensyBatExplorer.WPF\TeensyBatExplorer.WPF.csproj", "{08FBE33B-0B78-459A-9915-D763A6ADF020}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeensyBatExplorer.Core", "TeensyBatExplorer.Core\TeensyBatExplorer.Core.csproj", "{80B6C0CD-782F-449B-8AB9-B80E932D7CAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|ARM = Debug|ARM
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|ARM = Release|ARM
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|ARM.ActiveCfg = Debug|ARM
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|ARM.Build.0 = Debug|ARM
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|ARM.Deploy.0 = Debug|ARM
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|x64.ActiveCfg = Debug|x64
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|x64.Build.0 = Debug|x64
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|x64.Deploy.0 = Debug|x64
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|x86.ActiveCfg = Debug|x86
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|x86.Build.0 = Debug|x86
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Debug|x86.Deploy.0 = Debug|x86
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|ARM.ActiveCfg = Release|ARM
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|ARM.Build.0 = Release|ARM
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|ARM.Deploy.0 = Release|ARM
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|x64.ActiveCfg = Release|x64
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|x64.Build.0 = Release|x64
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|x64.Deploy.0 = Release|x64
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|x86.ActiveCfg = Release|x86
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|x86.Build.0 = Release|x86
-		{D76EBA06-09DD-4C94-A9E9-AD2295CA3CB5}.Release|x86.Deploy.0 = Release|x86
+		{08FBE33B-0B78-459A-9915-D763A6ADF020}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08FBE33B-0B78-459A-9915-D763A6ADF020}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08FBE33B-0B78-459A-9915-D763A6ADF020}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08FBE33B-0B78-459A-9915-D763A6ADF020}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80B6C0CD-782F-449B-8AB9-B80E932D7CAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80B6C0CD-782F-449B-8AB9-B80E932D7CAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80B6C0CD-782F-449B-8AB9-B80E932D7CAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80B6C0CD-782F-449B-8AB9-B80E932D7CAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {284D339A-9401-4DD1-A72A-2B84CD2DD0F8}
+		SolutionGuid = {9AE4324C-F421-4854-B6E4-6586A4052DD9}
 	EndGlobalSection
 EndGlobal
