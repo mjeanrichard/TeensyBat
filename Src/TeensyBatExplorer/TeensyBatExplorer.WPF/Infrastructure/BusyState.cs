@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2020 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
 
         public async Task Update(string text, int? current, int? total)
         {
-            await _baseViewModel.RunOnUiThread(() =>
+            await _baseViewModel.RunOnUiThreadAsync(() =>
             {
                 Text = text;
                 Total = total;

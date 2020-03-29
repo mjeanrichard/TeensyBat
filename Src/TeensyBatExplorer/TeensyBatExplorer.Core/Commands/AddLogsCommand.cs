@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2020 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,13 +27,6 @@ using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.Core.Commands
 {
-    public class NoopProgress<T> : IProgress<T>
-    {
-        public void Report(T value)
-        {
-        }
-    }
-
     public class AddLogsCommand
     {
         public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatLog> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
@@ -96,12 +88,5 @@ namespace TeensyBatExplorer.Core.Commands
                 temp.Log = batLog;
             }
         }
-    }
-
-    public class CountProgress
-    {
-        public int Total { get; set; }
-        public int Current { get; set; }
-        public string Text { get; set; }
     }
 }

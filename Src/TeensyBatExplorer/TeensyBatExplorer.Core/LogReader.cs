@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2019 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2019 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -387,44 +387,6 @@ namespace TeensyBatExplorer.Core
             None = 0,
             Temperature = 1,
             Voltage = 2
-        }
-    }
-
-    public class LogFileFormatException : Exception
-    {
-        public LogFileFormatException()
-        {
-        }
-
-        public LogFileFormatException(string message) : base(message)
-        {
-        }
-
-        public LogFileFormatException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-    }
-
-    public static class BinaryReaderHelper
-    {
-        public static void SkipBytes(this BinaryReader reader, int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                if (reader.ReadByte() != 0)
-                {
-                    // Ups...
-                }
-            }
-        }
-
-        public static DateTime ReadDateTimeWithMicroseconds(this BinaryReader reader)
-        {
-            long unixTimestamp = reader.ReadUInt32();
-            long microsOffset = reader.ReadUInt32();
-
-            DateTimeOffset dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
-            return dateTime.AddMilliseconds(microsOffset / 1000d).DateTime;
         }
     }
 }

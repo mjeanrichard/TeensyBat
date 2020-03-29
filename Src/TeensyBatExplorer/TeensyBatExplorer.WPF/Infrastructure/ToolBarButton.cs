@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,8 +32,15 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             Action = new AsyncCommand(action);
         }
 
+        public ToolBarButton(IAsyncCommand command, PackIconKind icon, string tooltip)
+        {
+            Icon = icon;
+            Tooltip = tooltip;
+            Action = command;
+        }
+
         public PackIconKind Icon { get; set; }
         public string Tooltip { get; set; }
-        public AsyncCommand Action { get; private set; }
+        public IAsyncCommand Action { get; private set; }
     }
 }

@@ -5,37 +5,44 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
 
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:infrastructure="clr-namespace:TeensyBatExplorer.WPF.Infrastructure"
         xmlns:startPage="clr-namespace:TeensyBatExplorer.WPF.Views.Start"
         xmlns:project="clr-namespace:TeensyBatExplorer.WPF.Views.Project"
         xmlns:addLogs="clr-namespace:TeensyBatExplorer.WPF.Views.AddLogs"
         xmlns:wpf="clr-namespace:TeensyBatExplorer.WPF"
+        xmlns:device="clr-namespace:TeensyBatExplorer.WPF.Views.Device"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.FontWeight="Medium"
         TextElement.FontSize="14"
-        FontFamily="{materialDesign:MaterialDesignFont}"
+        FontFamily="{md:MaterialDesignFont}"
 
         d:DataContext="{d:DesignInstance Type=wpf:MainViewModel, IsDesignTimeCreatable=False}"
 
         Title="MainWindow" Height="450" Width="800">
 
     <Window.Resources>
-        <infrastructure:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
-        <DataTemplate DataType="{x:Type startPage:StartPageViewModel}">
-            <startPage:StartPage />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type project:ProjectPageViewModel}">
-            <project:ProjectPage />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type addLogs:AddLogsViewModel}">
-            <addLogs:AddLogsPage />
-        </DataTemplate>
+        <ResourceDictionary>
+            <infrastructure:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
+            <DataTemplate DataType="{x:Type startPage:StartPageViewModel}">
+                <startPage:StartPage />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type project:ProjectPageViewModel}">
+                <project:ProjectPage />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type addLogs:AddLogsViewModel}">
+                <addLogs:AddLogsPage />
+            </DataTemplate>
+
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Views/Device/DevicePageResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
 
-    <materialDesign:DialogHost Identifier="RootDialog" Style="{StaticResource MaterialDesignEmbeddedDialogHost }">
-        <Grid>
+    <Grid>
+        <md:DialogHost Identifier="RootDialog" Style="{StaticResource MaterialDesignEmbeddedDialogHost }">
             <Grid Name="MainGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -46,11 +53,11 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <materialDesign:ColorZone
+                <md:ColorZone
                     Grid.Row="0" Grid.ColumnSpan="2"
                     Mode="PrimaryDark"
                     Padding="16"
-                    materialDesign:ShadowAssist.ShadowDepth="Depth3"
+                    md:ShadowAssist.ShadowDepth="Depth3"
                     Margin="0">
                     <StackPanel
                         Orientation="Horizontal">
@@ -62,14 +69,14 @@
                             Invoice Manager
                         </TextBlock>
                     </StackPanel>
-                </materialDesign:ColorZone>
+                </md:ColorZone>
 
                 <StackPanel Grid.Column="0" Grid.Row="1" Background="{DynamicResource PrimaryHueDarkBrush}">
                     <Button Style="{StaticResource MaterialDesignFlatButton}"
                             Command="{Binding GoHomeCommand}"
                             Margin="0 15 15 15">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Foreground="White" Kind="FormatListBulletedType" Margin="10 0" />
+                            <md:PackIcon Foreground="White" Kind="FormatListBulletedType" Margin="10 0" />
                             <TextBlock Text="Home" Foreground="White" VerticalAlignment="Center" Margin="5 0 15 0" />
                         </StackPanel>
                     </Button>
@@ -78,8 +85,16 @@
                             Command="{Binding GoToProjectCommand}"
                             Margin="0 15 15 15">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Foreground="White" Kind="FormatListBulletedType" Margin="10 0" />
+                            <md:PackIcon Foreground="White" Kind="FormatListBulletedType" Margin="10 0" />
                             <TextBlock Text="Projekt" Foreground="White" VerticalAlignment="Center" Margin="5 0 15 0" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                            Command="{Binding GoToDeviceCommand}"
+                            Margin="0 15 15 15">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Foreground="White" Kind="Devices" Margin="10 0" />
+                            <TextBlock Text="Geräte" Foreground="White" VerticalAlignment="Center" Margin="5 0 15 0" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -100,7 +115,7 @@
                             <ToolBar.ItemTemplate>
                                 <DataTemplate DataType="infrastructure:ToolBarButton">
                                     <Button ToolTip="{Binding Tooltip}" Command="{Binding Action}">
-                                        <materialDesign:PackIcon Kind="{Binding Icon}" />
+                                        <md:PackIcon Kind="{Binding Icon}" />
                                     </Button>
                                 </DataTemplate>
                             </ToolBar.ItemTemplate>
@@ -108,56 +123,43 @@
                     </Grid>
 
                     <ContentPresenter Grid.Row="1" Content="{Binding CurrentPage}" Margin="10" />
-                    <materialDesign:Snackbar Grid.Row="1" x:Name="MySnackbar" MessageQueue="{Binding SnackbarMessageQueue}" />
+                    <md:Snackbar Grid.Row="1" x:Name="MySnackbar" MessageQueue="{Binding SnackbarMessageQueue}" />
                 </Grid>
             </Grid>
-            <Grid
-                Name="BusyIndicatorGrid"
-                Visibility="{Binding CurrentPage.IsBusy, Converter={StaticResource boolToVisibilityConverter}}">
-                <Grid.Background>
-                    <SolidColorBrush Color="Black" Opacity="0.5" />
-                </Grid.Background>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <materialDesign:Card Grid.Column="1" Grid.Row="1" UniformCornerRadius="16">
-                    <Grid Margin="15">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <ProgressBar
-                            Grid.Row="1"
-                            Margin="0 15 0 10"
-                            HorizontalAlignment="Stretch"
-                            Height="8"
-                            IsIndeterminate="{Binding CurrentPage.BusyState.IsIndeterminate}"
-                            Maximum="{Binding CurrentPage.BusyState.Total}"
-                            Value="{Binding CurrentPage.BusyState.Current}" />
-                        <TextBlock Grid.Row="0"
-                                   HorizontalAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   TextAlignment="Center"
-                                   Text="{Binding CurrentPage.BusyState.Text}" />
-                        <Button
-                            Grid.Row="2"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            IsCancel="True"
-                            Command="{Binding Cancel}"
-                            HorizontalAlignment="Center">
-                            CANCEL
-                        </Button>
-                    </Grid>
-                </materialDesign:Card>
-            </Grid>
-        </Grid>
-    </materialDesign:DialogHost>
+        </md:DialogHost>
+
+        <md:DialogHost Identifier="BusyDialog" IsOpen="{Binding CurrentPage.IsBusy, Mode=OneWay}" Style="{StaticResource MaterialDesignEmbeddedDialogHost }">
+            <md:DialogHost.DialogContent>
+                <Grid Margin="15">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <ProgressBar
+                        Grid.Row="1"
+                        Margin="0 15 0 10"
+                        HorizontalAlignment="Stretch"
+                        Height="8"
+                        IsIndeterminate="{Binding CurrentPage.BusyState.IsIndeterminate, Mode=OneWay}"
+                        Maximum="{Binding CurrentPage.BusyState.Total, Mode=OneWay}"
+                        Value="{Binding CurrentPage.BusyState.Current, Mode=OneWay}"
+                        md:TransitionAssist.DisableTransitions="True" />
+                    <TextBlock Grid.Row="0"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Text="{Binding CurrentPage.BusyState.Text, Mode=OneWay}" />
+                    <Button
+                        Grid.Row="2"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        IsCancel="True"
+                        Command="{Binding Cancel}"
+                        HorizontalAlignment="Center">
+                        CANCEL
+                    </Button>
+                </Grid>
+            </md:DialogHost.DialogContent>
+        </md:DialogHost>
+    </Grid>
 </Window>

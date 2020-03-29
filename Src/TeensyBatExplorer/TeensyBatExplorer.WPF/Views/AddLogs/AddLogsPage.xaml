@@ -18,16 +18,16 @@
                 <GridView>
                     <GridViewColumn
                         DisplayMemberBinding="{Binding Selected}"
-                        Header="Id" />
+                        Header="" />
                     <GridViewColumn
                         DisplayMemberBinding="{Binding Node}"
-                        Header="Id" />
+                        Header="Geräte Nr." />
                     <GridViewColumn
                         DisplayMemberBinding="{Binding Datum}"
-                        Header="Id" />
+                        Header="Datum" />
                     <GridViewColumn
                         DisplayMemberBinding="{Binding CallCount}"
-                        Header="Id" />
+                        Header="Anzahl Rufe" />
                 </GridView>
             </ListView.View>
         </ListView>

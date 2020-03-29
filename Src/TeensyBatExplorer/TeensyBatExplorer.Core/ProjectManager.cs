@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2020 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,20 +20,28 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
+using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.Core
 {
     public class ProjectManager : IDisposable
     {
-        public event EventHandler<EventArgs> ProjectChanged;
+        private readonly AddToMruCommand _addToMruCommand;
 
         private string _filename;
         private BatProject _batProject;
 
+        public ProjectManager(AddToMruCommand addToMruCommand)
+        {
+            _addToMruCommand = addToMruCommand;
+        }
+
         public bool IsProjectOpen { get; private set; }
 
         public BatProject Project => _batProject;
+
+        public event EventHandler<EventArgs> ProjectChanged;
 
         public async Task OpenProject(string filename)
         {
@@ -48,6 +56,7 @@ namespace TeensyBatExplorer.Core
                 _batProject = await context.Projects.AsNoTracking().SingleAsync();
             }
 
+            await _addToMruCommand.Execute(_batProject, filename);
 
             IsProjectOpen = true;
             OnProjectChanged();

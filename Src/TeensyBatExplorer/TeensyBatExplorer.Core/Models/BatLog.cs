@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2019 Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ namespace TeensyBatExplorer.Core.Models
         public int FirmwareVersion { get; set; }
         public int HardwareVersion { get; set; }
         public bool Debug { get; set; }
-        
+
         public int PreCallBufferSize { get; set; }
         public int AfterCallBufferSize { get; set; }
         public int CallStartThreshold { get; set; }
@@ -37,7 +37,7 @@ namespace TeensyBatExplorer.Core.Models
         public int ErrorCountPointerBufferFull { get; set; }
         public int ErrorCountDataBufferFull { get; set; }
         public int ErrorCountProcessOverlap { get; set; }
-        
+
         public string Filename { get; set; }
 
         public DateTime StartTime { get; set; }

@@ -1,6 +1,20 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿// 
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using MaterialDesignThemes.Wpf;
@@ -10,7 +24,6 @@ using Nito.Mvvm;
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
-using TeensyBatExplorer.WPF.Annotations;
 using TeensyBatExplorer.WPF.Infrastructure;
 
 namespace TeensyBatExplorer.WPF.Views.Project
@@ -32,11 +45,6 @@ namespace TeensyBatExplorer.WPF.Views.Project
             AddToolbarButton(new ToolBarButton(SaveProject, PackIconKind.ContentSave, "Speichern"));
         }
 
-        private async Task OpenLog(int nodeNumber)
-        {
-            //await _navigationService.NavigateToNodePage(nodeNumber);
-        }
-
         public AsyncCommand OpenNodeCommand { get; set; }
 
         public BatProject BatProject { get; private set; }
@@ -49,6 +57,11 @@ namespace TeensyBatExplorer.WPF.Views.Project
                 _nodes = value;
                 OnPropertyChanged();
             }
+        }
+
+        private async Task OpenLog(int nodeNumber)
+        {
+            //await _navigationService.NavigateToNodePage(nodeNumber);
         }
 
         private async Task AddLog()
@@ -64,8 +77,7 @@ namespace TeensyBatExplorer.WPF.Views.Project
 
         public override async Task Load()
         {
-            List<BatNode> nodes = await _projectManager.GetNodes();
-            await RunOnUiThread(() => Nodes = nodes);
+            Nodes = await Task.Run(async () => await _projectManager.GetNodes());
         }
 
         public override Task Initialize()

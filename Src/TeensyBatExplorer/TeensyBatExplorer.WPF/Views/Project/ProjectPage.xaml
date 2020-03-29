@@ -4,31 +4,36 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:project="clr-namespace:TeensyBatExplorer.WPF.Views.Project"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=project:ProjectPageViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
 
-
     <Grid>
-
-        <StackPanel>
-            <TextBox Text="{Binding BatProject.Name, Mode=TwoWay}" />
-
-            <ListView ItemsSource="{Binding Nodes}">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn
-                            DisplayMemberBinding="{Binding NodeNumber}"
-                            Header="Nr" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0">
+            <TextBox Text="{Binding BatProject.Name, Mode=TwoWay}"
+                     md:HintAssist.Hint="Project Name"
+                     Style="{StaticResource MaterialDesignFilledTextFieldTextBox}" />
         </StackPanel>
+        <ListView
+            Grid.Row="1"
+            ItemsSource="{Binding Nodes}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn
+                        DisplayMemberBinding="{Binding NodeNumber}"
+                        Header="Nr" />
+                </GridView>
+            </ListView.View>
+        </ListView>
     </Grid>
 </UserControl>

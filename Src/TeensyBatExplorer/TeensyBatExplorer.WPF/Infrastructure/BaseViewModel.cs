@@ -1,16 +1,16 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2018 Meinrad Jean-Richard
-//  
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
+// 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//  
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -51,15 +50,18 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             }
         }
 
+        public bool IsCancellationRequested => _busyStates.LastOrDefault()?.IsCancellationRequested ?? false;
+
         protected void AddToolbarButton(ToolBarButton button)
         {
             ToolBarButtons.Add(button);
             OnPropertyChanged(nameof(ToolBarButtons));
         }
 
-        public BusyState BeginBusy()
+        public BusyState BeginBusy(string title)
         {
             BusyState busyState = new BusyState(this);
+            busyState.Text = title;
             _busyStates.Add(busyState);
             OnPropertyChanged(nameof(IsBusy));
             OnPropertyChanged(nameof(BusyState));
@@ -74,8 +76,6 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             OnPropertyChanged(nameof(BusyState));
         }
 
-        public bool IsCancellationRequested => _busyStates.LastOrDefault()?.IsCancellationRequested ?? false;
-
         public virtual Task Initialize()
         {
             return Task.CompletedTask;
@@ -86,12 +86,17 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             return Task.CompletedTask;
         }
 
-        public async Task RunOnUiThread(Action action)
+        public async Task RunOnUiThreadAsync(Action action)
         {
             await Application.Current.Dispatcher.InvokeAsync(action);
         }
 
-        public async Task RunOnUiThread(Func<Task> action)
+        public void RunOnUiThread(Action action)
+        {
+            Application.Current.Dispatcher.Invoke(action);
+        }
+
+        public async Task RunOnUiThreadAsync(Func<Task> action)
         {
             await Application.Current.Dispatcher.InvokeAsync(async () => await action());
         }
@@ -106,6 +111,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
 
             return Task.CompletedTask;
         }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 

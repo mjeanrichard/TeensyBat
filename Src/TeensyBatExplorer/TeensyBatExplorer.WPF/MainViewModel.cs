@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2020 Meinard Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ namespace TeensyBatExplorer.WPF
 
             GoHomeCommand = new AsyncCommand(GoHome);
             GoToProjectCommand = new AsyncCommand(GoToProject);
+            GoToDeviceCommand = new AsyncCommand(GoToDevice);
             Cancel = new CustomAsyncCommand(CancelOperation, () => !IsCancellationRequested);
 
             CurrentPage = _navigationService.CurrentViewModel;
@@ -53,6 +54,7 @@ namespace TeensyBatExplorer.WPF
 
         public AsyncCommand GoHomeCommand { get; set; }
         public AsyncCommand GoToProjectCommand { get; set; }
+        public AsyncCommand GoToDeviceCommand { get; set; }
         public CustomAsyncCommand Cancel { get; set; }
 
         public ISnackbarMessageQueue SnackbarMessageQueue => _snackbarMessageQueue;
@@ -72,6 +74,11 @@ namespace TeensyBatExplorer.WPF
             }
         }
 
+        private async Task GoToDevice()
+        {
+            await _navigationService.NavigateToDevicePage();
+        }
+
         private void OnProjectChanged(object? sender, EventArgs e)
         {
             OnPropertyChanged(nameof(HasProject));
@@ -79,8 +86,7 @@ namespace TeensyBatExplorer.WPF
 
         private async Task GoHome()
         {
-            await DialogHost.Show("Yello!");
-//            await _navigationService.NavigateToStartPage();
+            await _navigationService.NavigateToStartPage();
         }
 
         private async Task GoToProject()
