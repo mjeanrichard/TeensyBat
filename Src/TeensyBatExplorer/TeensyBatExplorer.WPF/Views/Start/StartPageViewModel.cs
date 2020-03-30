@@ -99,7 +99,7 @@ namespace TeensyBatExplorer.WPF.Views.Start
         public override async Task Load()
         {
             List<ProjectMruEntry> mruEntries = await Task.Run(async () => await _getProjectMruQuery.Execute());
-            await RunOnUiThreadAsync(() => MruEntries = mruEntries.Select(m => new MruViewModel(m, _projectManager, this, _navigationService)).ToList());
+            MruEntries = mruEntries.Select(m => new MruViewModel(m, _projectManager, this, _navigationService)).ToList();
         }
     }
 }

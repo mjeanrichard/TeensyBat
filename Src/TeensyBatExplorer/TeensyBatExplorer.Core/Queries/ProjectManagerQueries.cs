@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
@@ -26,27 +27,39 @@ namespace TeensyBatExplorer.Core.Queries
 {
     public static class ProjectManagerQueries
     {
-        public static async Task<IReadOnlyList<BatCall>> GetCallsForNode(this ProjectManager projectManager, int nodeNumber)
+        public static async Task<IReadOnlyList<BatCall>> GetCallsForNode(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
         {
             using (ProjectContext db = projectManager.GetContext())
             {
-                return await db.Calls.Where(c => c.Node.NodeNumber == nodeNumber).AsNoTracking().ToListAsync();
+                return await db.Calls.Where(c => c.Node.NodeNumber == nodeNumber).AsNoTracking().ToListAsync(cancellationToken);
             }
         }
 
-        public static async Task<BatNode> GetBatNode(this ProjectManager projectManager, int nodeNumber)
+        public static async Task<BatNode> GetBatNode(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
         {
             using (ProjectContext db = projectManager.GetContext())
             {
-                return await db.Nodes.AsNoTracking().SingleOrDefaultAsync(n => n.NodeNumber == nodeNumber);
+                return await db.Nodes.AsNoTracking().SingleOrDefaultAsync(n => n.NodeNumber == nodeNumber, cancellationToken);
             }
         }
 
-        public static async Task<List<BatNode>> GetNodes(this ProjectManager projectManager)
+        public static async Task<BatNode> GetBatNodeWithLogs(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
         {
             using (ProjectContext db = projectManager.GetContext())
             {
-                return await db.Nodes.AsNoTracking().ToListAsync();
+                return await db.Nodes
+                    .Include(n => n.Logs).ThenInclude(l => l.Calls)
+                    //.Include(l => l.Logs).ThenInclude(l => l.BatteryData)
+                    //.Include(l => l.Logs).ThenInclude(l => l.TemperatureData)
+                    .AsNoTracking().SingleOrDefaultAsync(n => n.NodeNumber == nodeNumber, cancellationToken);
+            }
+        }
+
+        public static async Task<List<BatNode>> GetNodes(this ProjectManager projectManager, CancellationToken cancellationToken)
+        {
+            using (ProjectContext db = projectManager.GetContext())
+            {
+                return await db.Nodes.OrderBy(n => n.NodeNumber).AsNoTracking().ToListAsync(cancellationToken);
             }
         }
     }

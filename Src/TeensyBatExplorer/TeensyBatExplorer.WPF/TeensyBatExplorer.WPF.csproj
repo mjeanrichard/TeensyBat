@@ -30,7 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Views\NodeDetail\" />
+    <Page Update="Views\NodeDetail\NodeDetailPageResources.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 
 </Project>

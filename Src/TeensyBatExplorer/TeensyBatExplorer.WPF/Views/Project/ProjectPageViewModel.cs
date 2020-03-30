@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using MaterialDesignThemes.Wpf;
@@ -24,6 +28,7 @@ using Nito.Mvvm;
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
+using TeensyBatExplorer.WPF.Annotations;
 using TeensyBatExplorer.WPF.Infrastructure;
 
 namespace TeensyBatExplorer.WPF.Views.Project
@@ -32,24 +37,22 @@ namespace TeensyBatExplorer.WPF.Views.Project
     {
         private readonly NavigationService _navigationService;
         private readonly ProjectManager _projectManager;
-        private IEnumerable<BatNode> _nodes;
+        private readonly Func<NodeViewModel> _nodeViewModelFactory;
+        private IEnumerable<NodeViewModel> _nodes;
 
-        public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager)
+        public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager, Func<NodeViewModel> nodeViewModelFactory)
         {
             _navigationService = navigationService;
             _projectManager = projectManager;
-
-            OpenNodeCommand = new AsyncCommand(async o => await OpenLog((int)o));
+            _nodeViewModelFactory = nodeViewModelFactory;
 
             AddToolbarButton(new ToolBarButton(AddLog, PackIconKind.PlusBoxMultipleOutline, "Logs hinzufügen"));
             AddToolbarButton(new ToolBarButton(SaveProject, PackIconKind.ContentSave, "Speichern"));
         }
 
-        public AsyncCommand OpenNodeCommand { get; set; }
-
         public BatProject BatProject { get; private set; }
 
-        public IEnumerable<BatNode> Nodes
+        public IEnumerable<NodeViewModel> Nodes
         {
             get => _nodes;
             private set
@@ -57,11 +60,6 @@ namespace TeensyBatExplorer.WPF.Views.Project
                 _nodes = value;
                 OnPropertyChanged();
             }
-        }
-
-        private async Task OpenLog(int nodeNumber)
-        {
-            //await _navigationService.NavigateToNodePage(nodeNumber);
         }
 
         private async Task AddLog()
@@ -77,13 +75,60 @@ namespace TeensyBatExplorer.WPF.Views.Project
 
         public override async Task Load()
         {
-            Nodes = await Task.Run(async () => await _projectManager.GetNodes());
+            using (BusyState busyState = BeginBusy("Lade Projekt..."))
+            {
+                List<BatNode> nodes = await Task.Run(async () => await _projectManager.GetNodes(busyState.Token), busyState.Token);
+                Nodes = nodes.Select(n =>
+                {
+                    NodeViewModel vm = _nodeViewModelFactory();
+                    vm.Load(n, this);
+                    return vm;
+                });
+            }
         }
 
         public override Task Initialize()
         {
             BatProject = _projectManager.Project;
             return Task.CompletedTask;
+        }
+    }
+
+    public class NodeViewModel : INotifyPropertyChanged
+    {
+        private readonly NavigationService _navigationService;
+        private BatNode _node;
+        private BaseViewModel _parentViewModel;
+
+        public NodeViewModel(NavigationService navigationService)
+        {
+            _navigationService = navigationService;
+            OpenNodeCommand = new AsyncCommand(OpenNode);
+        }
+
+        private async Task OpenNode()
+        {
+            await _navigationService.NavigateToNodeDetailPage(_node.NodeNumber);
+        }
+
+        public AsyncCommand OpenNodeCommand { get; set; }
+
+        public void Load(BatNode batNode, BaseViewModel parentViewModel)
+        {
+            _node = batNode;
+            _parentViewModel = parentViewModel;
+
+            OnPropertyChanged(nameof(NodeNumber));
+        }
+
+        public int NodeNumber => _node.NodeNumber;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

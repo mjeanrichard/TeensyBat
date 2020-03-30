@@ -19,10 +19,12 @@ using System.Threading.Tasks;
 
 using TeensyBatExplorer.WPF.Views.AddLogs;
 using TeensyBatExplorer.WPF.Views.Device;
+using TeensyBatExplorer.WPF.Views.NodeDetail;
 using TeensyBatExplorer.WPF.Views.Project;
 using TeensyBatExplorer.WPF.Views.Start;
 
 using Unity;
+using Unity.Resolution;
 
 namespace TeensyBatExplorer.WPF.Infrastructure
 {
@@ -45,11 +47,24 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         private async Task<T> Navigate<T>() where T : BaseViewModel
         {
             T currentViewModel = _container.Resolve<T>();
-            await currentViewModel.Initialize();
-            CurrentViewModel = currentViewModel;
-            OnViewModelChanged?.Invoke(this, new EventArgs());
-            await Task.Run(() => currentViewModel.Load());
+            await Navigate<T>(currentViewModel);
             return currentViewModel;
+        }
+
+        private async Task<T> Navigate<T, TParam>(TParam param) where T : BaseViewModel
+        {
+            NavigationArgument<TParam> parameter = new NavigationArgument<TParam>(param);
+            T currentViewModel = _container.Resolve<T>(new ParameterOverride(typeof(NavigationArgument<TParam>), parameter));
+            await Navigate<T>(currentViewModel);
+            return currentViewModel;
+        }
+
+        private async Task Navigate<T>(T viewModel) where T : BaseViewModel
+        {
+            await viewModel.Initialize();
+            CurrentViewModel = viewModel;
+            OnViewModelChanged?.Invoke(this, new EventArgs());
+            await viewModel.Load();
         }
 
         public event EventHandler<EventArgs> OnViewModelChanged;
@@ -68,5 +83,20 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         {
             await Navigate<DeviceViewModel>();
         }
+
+        public async Task NavigateToNodeDetailPage(int nodeNumber)
+        {
+            await Navigate<NodeDetailViewModel, int>(nodeNumber);
+        }
+    }
+
+    public class NavigationArgument<T>
+    {
+        public NavigationArgument(T data)
+        {
+            Data = data;
+        }
+
+        public T Data { get; private set; }
     }
 }

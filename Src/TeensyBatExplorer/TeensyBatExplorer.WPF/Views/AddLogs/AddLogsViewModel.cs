@@ -110,7 +110,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
 
         public override async Task Load()
         {
-            await RunOnUiThreadAsync(AddLogs);
+            await AddLogs();
         }
     }
 }
