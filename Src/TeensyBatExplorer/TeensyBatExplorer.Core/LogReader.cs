@@ -28,40 +28,40 @@ namespace TeensyBatExplorer.Core
     {
         private static Regex FilenamePattern = new Regex(@"TB(?<nn>[0-9]{3})-(?<d>[0-9]{12})-(?<i>[0-9]+)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private void AddMessage(BatLog log, BatLogMessageLevel level, string message, BinaryReader reader)
+        private void AddMessage(BatDataFile dataFile, BatLogMessageLevel level, string message, BinaryReader reader)
         {
-            log.LogMessages.Add(new BatLogMessage { Message = message, Level = level, Position = reader.BaseStream.Position });
+            dataFile.LogMessages.Add(new DataFileMessage { Message = message, Level = level, Position = reader.BaseStream.Position });
         }
 
-        public async Task Load(string filename, BatLog log)
+        public async Task Load(string filename, BatDataFile dataFile)
         {
-            await Task.Run(() => LoadInternal(filename, log));
+            await Task.Run(() => LoadInternal(filename, dataFile));
         }
 
-        public void LoadInternal(string filename, BatLog log)
+        public void LoadInternal(string filename, BatDataFile dataFile)
         {
             using (Stream logStream = File.OpenRead(filename))
             {
                 using (BinaryReader reader = new BinaryReader(logStream))
                 {
-                    ReadData(reader, log);
+                    ReadData(reader, dataFile);
 
                     Match filenameMatch = FilenamePattern.Match(Path.GetFileNameWithoutExtension(filename));
                     if (filenameMatch.Success && filenameMatch.Groups["d"].Success)
                     {
-                        if (log.StartTime == DateTime.UnixEpoch)
+                        if (dataFile.StartTime == DateTime.UnixEpoch)
                         {
                             if (DateTime.TryParseExact(filenameMatch.Groups["d"].Value, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime parsedDate))
                             {
-                                log.StartTime = parsedDate;
+                                dataFile.StartTime = parsedDate;
                             }
                         }
 
-                        if (log.NodeNumber == 0 && filenameMatch.Groups["nn"].Success)
+                        if (dataFile.NodeNumber == 0 && filenameMatch.Groups["nn"].Success)
                         {
                             if (int.TryParse(filenameMatch.Groups["nn"].Value, out int parsedNodeNumber))
                             {
-                                log.NodeNumber = parsedNodeNumber;
+                                dataFile.NodeNumber = parsedNodeNumber;
                             }
                         }
                     }
@@ -69,36 +69,36 @@ namespace TeensyBatExplorer.Core
             }
         }
 
-        private void ReadFileHeader(BinaryReader reader, BatLog log)
+        private void ReadFileHeader(BinaryReader reader, BatDataFile dataFile)
         {
             byte magicOne = reader.ReadByte();
             byte magicTwo = reader.ReadByte();
             if (magicOne != 0xFF || magicTwo != 0xCC)
             {
-                AddMessage(log, BatLogMessageLevel.Warning, $"Ungültiger File Marker 0x{magicOne:X2}{magicTwo:X2} (0xFFCC erwartet).", reader);
+                AddMessage(dataFile, BatLogMessageLevel.Warning, $"Ungültiger File Marker 0x{magicOne:X2}{magicTwo:X2} (0xFFCC erwartet).", reader);
             }
 
-            log.HardwareVersion = reader.ReadByte();
-            log.FirmwareVersion = reader.ReadByte();
-            log.NodeNumber = reader.ReadByte();
-            log.Debug = reader.ReadBoolean();
-            log.PreCallBufferSize = reader.ReadByte();
-            log.AfterCallBufferSize = reader.ReadByte();
-            log.CallStartThreshold = reader.ReadUInt16();
-            log.CallEndThreshold = reader.ReadUInt16();
+            dataFile.HardwareVersion = reader.ReadByte();
+            dataFile.FirmwareVersion = reader.ReadByte();
+            dataFile.NodeNumber = reader.ReadByte();
+            dataFile.Debug = reader.ReadBoolean();
+            dataFile.PreCallBufferSize = reader.ReadByte();
+            dataFile.AfterCallBufferSize = reader.ReadByte();
+            dataFile.CallStartThreshold = reader.ReadUInt16();
+            dataFile.CallEndThreshold = reader.ReadUInt16();
 
             reader.SkipBytes(4);
 
-            log.StartTime = reader.ReadDateTimeWithMicroseconds();
-            log.OriginalStartTime = log.StartTime;
+            dataFile.StartTime = reader.ReadDateTimeWithMicroseconds();
+            dataFile.OriginalStartTime = dataFile.StartTime;
 
             reader.SkipBytes(488);
         }
 
-        private void ReadData(BinaryReader reader, BatLog log)
+        private void ReadData(BinaryReader reader, BatDataFile dataFile)
         {
             Stream stream = reader.BaseStream;
-            ReadFileHeader(reader, log);
+            ReadFileHeader(reader, dataFile);
             while (stream.Position < stream.Length)
             {
                 byte markOne = reader.ReadByte();
@@ -115,10 +115,10 @@ namespace TeensyBatExplorer.Core
                     throw new LogFileFormatException($"Call marker erwartet (0xFFFE) aber 0x{markOne:X2}{markTwo:X2} gefunden.", reader.BaseStream.Position);
                 }
 
-                BatCall call = new BatCall();
-                ReadCall(call, reader, log);
-                ProcessCall(call, log);
-                log.Calls.Add(call);
+                BatDataFileEntry dataFileEntry = new BatDataFileEntry();
+                ReadCall(dataFileEntry, reader, dataFile);
+                ProcessCall(dataFileEntry, dataFile);
+                dataFile.Entries.Add(dataFileEntry);
 
                 //Seek to the next block
                 long offset = stream.Position % 512;
@@ -142,27 +142,27 @@ namespace TeensyBatExplorer.Core
         ///    |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
         ///    | 255 | 252 |  0  |  0  |  0  |  0  |  0  |  0  |
         /// </summary>
-        private void ReadCall(BatCall call, BinaryReader reader, BatLog batLog)
+        private void ReadCall(BatDataFileEntry dataFileEntry, BinaryReader reader, BatDataFile batDataFile)
         {
-            call.FftCount = reader.ReadUInt16();
-            call.StartTimeMS = reader.ReadUInt32();
-            call.StartTime = batLog.StartTime.AddMilliseconds(call.StartTimeMS);
+            dataFileEntry.FftCount = reader.ReadUInt16();
+            dataFileEntry.StartTimeMs = reader.ReadUInt32();
+            dataFileEntry.StartTime = batDataFile.StartTime.AddMilliseconds(dataFileEntry.StartTimeMs);
 
             // Error Counters
-            batLog.ErrorCountCallBuffFull += reader.ReadByte();
-            batLog.ErrorCountPointerBufferFull += reader.ReadByte();
-            batLog.ErrorCountDataBufferFull += reader.ReadByte();
-            batLog.ErrorCountProcessOverlap += reader.ReadByte();
+            batDataFile.ErrorCountCallBuffFull += reader.ReadByte();
+            batDataFile.ErrorCountPointerBufferFull += reader.ReadByte();
+            batDataFile.ErrorCountDataBufferFull += reader.ReadByte();
+            batDataFile.ErrorCountProcessOverlap += reader.ReadByte();
 
-            call.HighFreqSampleCount = reader.ReadByte();
-            call.HighPowerSampleCount = reader.ReadByte();
-            call.MaxLevel = reader.ReadByte();
+            dataFileEntry.HighFreqSampleCount = reader.ReadByte();
+            dataFileEntry.HighPowerSampleCount = reader.ReadByte();
+            dataFileEntry.MaxLevel = reader.ReadByte();
             reader.ReadByte();
 
-            ReadAdditionalData(reader, batLog);
-            ReadAdditionalData(reader, batLog);
+            ReadAdditionalData(reader, batDataFile);
+            ReadAdditionalData(reader, batDataFile);
 
-            for (int i = 0; i < call.FftCount; i++)
+            for (int i = 0; i < dataFileEntry.FftCount; i++)
             {
                 if (i > 0 && i % 3 == 0)
                 {
@@ -175,24 +175,24 @@ namespace TeensyBatExplorer.Core
                     }
 
                     reader.SkipBytes(6);
-                    ReadAdditionalData(reader, batLog);
-                    ReadAdditionalData(reader, batLog);
-                    ReadAdditionalData(reader, batLog);
+                    ReadAdditionalData(reader, batDataFile);
+                    ReadAdditionalData(reader, batDataFile);
+                    ReadAdditionalData(reader, batDataFile);
                 }
 
-                FftBlock fftData = ReadFftData(reader, batLog);
+                FftBlock fftData = ReadFftData(reader, batDataFile);
                 if (fftData == null || fftData.Index != i)
                 {
-                    AddMessage(batLog, BatLogMessageLevel.Warning, $"FFT index stimmt nicht mit den daten überein.", reader);
+                    AddMessage(batDataFile, BatLogMessageLevel.Warning, $"FFT index stimmt nicht mit den daten überein.", reader);
                 }
                 else
                 {
-                    call.FftData.Add(fftData);
+                    dataFileEntry.FftData.Add(fftData);
                 }
             }
         }
 
-        private void ReadAdditionalData(BinaryReader reader, BatLog log)
+        private void ReadAdditionalData(BinaryReader reader, BatDataFile dataFile)
         {
             AdditionalDataType type = (AdditionalDataType)reader.ReadByte();
             long timestamp = reader.ReadUInt32();
@@ -204,36 +204,36 @@ namespace TeensyBatExplorer.Core
                 case AdditionalDataType.Temperature:
                     TemperatureData tData = new TemperatureData();
                     tData.Timestamp = timestamp;
-                    tData.DateTime = log.StartTime.AddMilliseconds(timestamp);
+                    tData.DateTime = dataFile.StartTime.AddMilliseconds(timestamp);
                     tData.Temperature = reader.ReadUInt16();
-                    log.TemperatureData.Add(tData);
+                    dataFile.TemperatureData.Add(tData);
                     reader.SkipBytes(1);
                     break;
                 case AdditionalDataType.Voltage:
                     BatteryData vData = new BatteryData();
                     vData.Timestamp = timestamp;
-                    vData.DateTime = log.StartTime.AddMilliseconds(timestamp);
+                    vData.DateTime = dataFile.StartTime.AddMilliseconds(timestamp);
                     vData.Voltage = reader.ReadUInt16();
-                    log.BatteryData.Add(vData);
+                    dataFile.BatteryData.Add(vData);
                     reader.SkipBytes(1);
                     break;
                 default:
-                    AddMessage(log, BatLogMessageLevel.Warning, $"Unbekannter AdditionalDataType '0x{type:X}' wird ignoriert.", reader);
+                    AddMessage(dataFile, BatLogMessageLevel.Warning, $"Unbekannter AdditionalDataType '0x{type:X}' wird ignoriert.", reader);
                     reader.SkipBytes(3);
                     break;
             }
         }
 
-        private void ProcessCall(BatCall call, BatLog log)
+        private void ProcessCall(BatDataFileEntry dataFileEntry, BatDataFile dataFile)
         {
             int noisiness = 0;
             bool[] check = new bool[40];
             int[] values = new int[40];
             int peak = 0;
             int pwrAbove = 0;
-            for (int i = 0; i < call.FftData.Count; i++)
+            for (int i = 0; i < dataFileEntry.FftData.Count; i++)
             {
-                FftBlock fftBlock = call.FftData[i];
+                FftBlock fftBlock = dataFileEntry.FftData[i];
                 for (int j = 10; j < fftBlock.Data.Length; j++)
                 {
                     byte value = fftBlock.Data[j];
@@ -276,12 +276,12 @@ namespace TeensyBatExplorer.Core
             }
 
 
-            call.AvgPeakFrequency = Math.Round(noisiness / (double)call.FftData.Count, 1);
-            call.MaxPeakFrequency = peak;
+            dataFileEntry.AvgPeakFrequency = Math.Round(noisiness / (double)dataFileEntry.FftData.Count, 1);
+            dataFileEntry.MaxPeakFrequency = peak;
 
-            if (pwrAbove >= 2 || call.AvgPeakFrequency < 1 || peak > 30 && call.AvgPeakFrequency < 2)
+            if (pwrAbove >= 2 || dataFileEntry.AvgPeakFrequency < 1 || peak > 30 && dataFileEntry.AvgPeakFrequency < 2)
             {
-                call.IsBat = true;
+                dataFileEntry.IsBat = true;
             }
 
 
@@ -380,7 +380,7 @@ namespace TeensyBatExplorer.Core
         ///    |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8-64 |
         ///    | 255 | 253 |   Index   | Loudness  |  0  |  0  |  FFT  |
         /// </summary>
-        private FftBlock ReadFftData(BinaryReader reader, BatLog batLog)
+        private FftBlock ReadFftData(BinaryReader reader, BatDataFile batDataFile)
         {
             if (reader.ReadByte() != 0xFF)
             {
@@ -395,9 +395,9 @@ namespace TeensyBatExplorer.Core
             FftBlock fft = new FftBlock();
             fft.Index = reader.ReadUInt16();
 
-            ReadAdditionalData(reader, batLog);
-            ReadAdditionalData(reader, batLog);
-            ReadAdditionalData(reader, batLog);
+            ReadAdditionalData(reader, batDataFile);
+            ReadAdditionalData(reader, batDataFile);
+            ReadAdditionalData(reader, batDataFile);
 
             fft.Loudness = reader.ReadUInt16();
             fft.SampleNr = reader.ReadUInt16();

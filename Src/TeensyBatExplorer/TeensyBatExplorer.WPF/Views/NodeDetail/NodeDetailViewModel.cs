@@ -35,7 +35,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         private readonly int _nodeNumber;
         private BatNode _node;
         private PlotModel _batteryPlot;
-        private BatCall _selectedCall;
+        private BatDataFileEntry _selectedDataFileEntry;
         private List<TemperatureData> _temperatureData;
         private PlotModel _temperaturePlot;
 
@@ -47,14 +47,14 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             Title = $"Daten zu Gerät Nr. {_nodeNumber}";
         }
 
-        public BatCall SelectedCall
+        public BatDataFileEntry SelectedDataFileEntry
         {
-            get => _selectedCall;
+            get => _selectedDataFileEntry;
             set
             {
-                if (!Equals(value, _selectedCall))
+                if (!Equals(value, _selectedDataFileEntry))
                 {
-                    _selectedCall = value;
+                    _selectedDataFileEntry = value;
                     OnPropertyChanged();
                 }
             }
@@ -73,7 +73,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public IEnumerable<BatLog> Logs => Node?.Logs;
+        public IEnumerable<BatDataFile> Logs => Node?.DataFiles;
 
         public PlotModel BatteryPlot
         {

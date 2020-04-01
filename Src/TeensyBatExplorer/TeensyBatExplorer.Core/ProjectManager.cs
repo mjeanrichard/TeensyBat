@@ -83,7 +83,7 @@ namespace TeensyBatExplorer.Core
 	                'CreatedOn'	TEXT NOT NULL
                 );
 
-                CREATE TABLE 'Calls' (
+                CREATE TABLE 'DataFileEntries' (
 	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 	                'FftCount'	INTEGER NOT NULL,
                     'StartTimeMS' INTEGER NOT NULL,
@@ -96,7 +96,7 @@ namespace TeensyBatExplorer.Core
                     'HighPowerSampleCount' INTEGER NOT NULL,
                     'MaxLevel' INTEGER NOT NULL,
                    
-                    'LogId' INTEGER NOT NULL,
+                    'DataFileId' INTEGER NOT NULL,
                     'NodeId' INTEGER NOT NULL
                 );
 
@@ -106,8 +106,7 @@ namespace TeensyBatExplorer.Core
                     'DateTime'    TEXT NOT NULL,
                     'Timestamp'    INTEGER NOT NULL,
 
-                    'LogId' INTEGER NOT NULL,
-                    'NodeId' INTEGER NULL
+                    'DataFileId' INTEGER NOT NULL
                 );
 
                 CREATE TABLE 'TemperatureData' (
@@ -116,8 +115,7 @@ namespace TeensyBatExplorer.Core
                     'DateTime'    TEXT NOT NULL,
                     'Timestamp'    INTEGER NOT NULL,
                    
-                    'LogId' INTEGER NOT NULL,
-                    'NodeId' INTEGER NULL
+                    'DataFileId' INTEGER NOT NULL
                 );
 
                 CREATE TABLE 'FftBlocks' (
@@ -127,7 +125,7 @@ namespace TeensyBatExplorer.Core
 	                'SampleNr'	INTEGER NOT NULL,
 	                'Data'	BLOB NOT NULL,
                    
-                    'CallId' INTEGER NOT NULL
+                    'DataFileEntryId' INTEGER NOT NULL
                 );
 
                 CREATE TABLE 'Nodes' (
@@ -135,7 +133,13 @@ namespace TeensyBatExplorer.Core
                     'NodeNumber' INTEGER NOT NULL
                 );
 
-                CREATE TABLE 'Logs' (
+                CREATE TABLE 'Call' (
+	                'Id'    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    'StartTime'    TEXT NOT NULL,
+                    'NodeId'    INTEGER NULL
+                );
+
+                CREATE TABLE 'DataFiles' (
 	                'Id'    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     'NodeNumber'    INTEGER NOT NULL,
                     'FirmwareVersion'    INTEGER NOT NULL,
@@ -156,9 +160,9 @@ namespace TeensyBatExplorer.Core
                     'NodeId'    INTEGER NULL
                 );
 
-                CREATE TABLE 'LogMessages' (
+                CREATE TABLE 'DataFileMessages' (
 	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'LogId' INTEGER NOT NULL,
+                    'DataFileId' INTEGER NOT NULL,
                     'Message' TEXT NOT NULL,
                     'Level' TEXT NOT NULL,
                     'Position' INTEGER NULL

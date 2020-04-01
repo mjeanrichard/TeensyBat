@@ -29,16 +29,16 @@ namespace TeensyBatExplorer.WPF.Controls
     public class CallDataView : Control
     {
         public static readonly DependencyProperty BatCallProperty = DependencyProperty.Register(
-            "BatCall", typeof(BatCall), typeof(CallDataView), new PropertyMetadata(default(BatCall), OnBatCallChanged));
+            "BatDataFileEntry", typeof(BatDataFileEntry), typeof(CallDataView), new PropertyMetadata(default(BatDataFileEntry), OnBatDataFileEntryChanged));
 
-        private static void OnBatCallChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnBatDataFileEntryChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((CallDataView)d).Invalidate();
         }
 
-        public BatCall BatCall
+        public BatDataFileEntry BatDataFileEntry
         {
-            get { return (BatCall)GetValue(BatCallProperty); }
+            get { return (BatDataFileEntry)GetValue(BatCallProperty); }
             set { SetValue(BatCallProperty, value); }
         }
 
@@ -84,7 +84,7 @@ namespace TeensyBatExplorer.WPF.Controls
 
         private void Draw()
         {
-            if (_imageControl == null || BatCall == null)
+            if (_imageControl == null || BatDataFileEntry == null)
             {
                 return;
             }
@@ -93,7 +93,7 @@ namespace TeensyBatExplorer.WPF.Controls
             {
                 _canvas.Clear();
 
-                IList<FftBlock> fftData = BatCall.FftData;
+                IList<FftBlock> fftData = BatDataFileEntry.FftData;
                 for (int iCol = 0; iCol < fftData.Count; iCol++)
                 {
                     int columnCenter = iCol * ColWidth;

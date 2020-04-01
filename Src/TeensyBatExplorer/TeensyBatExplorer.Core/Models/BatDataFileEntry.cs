@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,16 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
+using System.Collections.Generic;
+
 namespace TeensyBatExplorer.Core.Models
 {
-    public class BatLogMessage
+    public class BatDataFileEntry
     {
         public int Id { get; set; }
-        public string Message { get;set; }
-        public long Position{ get;set; }
-        public BatLogMessageLevel Level { get; set; }
+        public int FftCount { get; set; }
+        public long StartTimeMs { get; set; }
+        public double MaxPeakFrequency { get; set; }
+        public double AvgPeakFrequency { get; set; }
+        public DateTime StartTime { get; set; }
+        public bool IsBat { get; set; }
 
-        public int LogId { get; set; }
-        public BatLog Log { get; set; }
+        public int HighFreqSampleCount { get; set; }
+        public int HighPowerSampleCount { get; set; }
+        public int MaxLevel { get; set; }
+
+        public IList<FftBlock> FftData { get; set; } = new List<FftBlock>();
+
+        public BatNode Node { get; set; }
+        public BatDataFile DataFile { get; set; }
     }
 }

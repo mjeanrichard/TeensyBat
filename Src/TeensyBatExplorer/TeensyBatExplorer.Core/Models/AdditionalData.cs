@@ -20,8 +20,10 @@ namespace TeensyBatExplorer.Core.Models
 {
     public class AdditionalData
     {
-        public int NodeId { get; set; }
+        public int Id { get; set; }
         public long Timestamp { get; set; }
         public DateTime DateTime { get; set; }
+
+        public BatDataFile DataFile { get; set; }
     }
 }

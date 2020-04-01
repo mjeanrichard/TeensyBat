@@ -29,7 +29,7 @@ namespace TeensyBatExplorer.Core.Commands
 {
     public class AddLogsCommand
     {
-        public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatLog> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
+        public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatDataFile> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
         {
             if (progress == null)
             {
@@ -37,9 +37,9 @@ namespace TeensyBatExplorer.Core.Commands
             }
 
             int i = 0;
-            BatLog[] batLogs = loadedFiles.ToArray();
+            BatDataFile[] batLogs = loadedFiles.ToArray();
 
-            foreach (BatLog batLog in batLogs)
+            foreach (BatDataFile batLog in batLogs)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 i++;
@@ -57,35 +57,33 @@ namespace TeensyBatExplorer.Core.Commands
             }
         }
 
-        private async Task AddBatLog(ProjectContext db, BatLog batLog, CancellationToken cancellationToken)
+        private async Task AddBatLog(ProjectContext db, BatDataFile batDataFile, CancellationToken cancellationToken)
         {
-            BatNode batNode = await db.Nodes.SingleOrDefaultAsync(n => n.NodeNumber == batLog.NodeNumber, cancellationToken);
+            BatNode batNode = await db.Nodes.SingleOrDefaultAsync(n => n.NodeNumber == batDataFile.NodeNumber, cancellationToken);
 
             if (batNode == null)
             {
-                batNode = new BatNode { NodeNumber = batLog.NodeNumber };
+                batNode = new BatNode { NodeNumber = batDataFile.NodeNumber };
                 db.Nodes.Add(batNode);
             }
 
-            batLog.Node = batNode;
-            db.Logs.Add(batLog);
+            batDataFile.Node = batNode;
+            db.DataFiles.Add(batDataFile);
 
-            foreach (BatCall call in batLog.Calls)
+            foreach (BatDataFileEntry call in batDataFile.Entries)
             {
                 call.Node = batNode;
-                call.Log = batLog;
+                call.DataFile = batDataFile;
             }
 
-            foreach (BatteryData bat in batLog.BatteryData)
+            foreach (BatteryData bat in batDataFile.BatteryData)
             {
-                bat.Node = batNode;
-                bat.Log = batLog;
+                bat.DataFile = batDataFile;
             }
 
-            foreach (TemperatureData temp in batLog.TemperatureData)
+            foreach (TemperatureData temp in batDataFile.TemperatureData)
             {
-                temp.Node = batNode;
-                temp.Log = batLog;
+                temp.DataFile = batDataFile;
             }
         }
     }

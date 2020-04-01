@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace TeensyBatExplorer.Core.Models
 {
-    public class BatLog
+    public class BatDataFile
     {
         public int Id { get; set; }
 
@@ -43,14 +43,15 @@ namespace TeensyBatExplorer.Core.Models
         public DateTime OriginalStartTime { get; set; }
         public DateTime StartTime { get; set; }
 
-        public ICollection<BatCall> Calls { get; set; } = new HashSet<BatCall>();
+        public ICollection<BatDataFileEntry> Entries { get; set; } = new HashSet<BatDataFileEntry>();
 
         public ICollection<BatteryData> BatteryData { get; set; } = new HashSet<BatteryData>();
 
         public ICollection<TemperatureData> TemperatureData { get; set; } = new HashSet<TemperatureData>();
         
-        public IList<BatLogMessage> LogMessages { get; set; } = new List<BatLogMessage>();
+        public IList<DataFileMessage> LogMessages { get; set; } = new List<DataFileMessage>();
 
+        public int NodeId { get; set; }
         public BatNode Node { get; set; }
     }
 }

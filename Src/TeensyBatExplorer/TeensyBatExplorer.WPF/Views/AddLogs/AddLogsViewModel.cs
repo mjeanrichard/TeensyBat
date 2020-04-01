@@ -79,7 +79,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
                 await Task.Run(async () =>
                 {
                     Progress<CountProgress> progress = new Progress<CountProgress>(async p => await busyState.Update(p));
-                    await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Where(b => b.Selected).Select(v => v.Log), progress, CancellationToken.None);
+                    await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Where(b => b.Selected).Select(v => v.DataFile), progress, CancellationToken.None);
                 });
             }
         }
@@ -99,14 +99,14 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
                     foreach (string file in openPicker.FileNames)
                     {
                         _filesToAdd.Add(file);
-                        BatLog batLog = new BatLog();
-                        batLog.Filename = Path.GetFileName(file);
-                        await busyState.Update($"Lade '{batLog.Filename}'...", i, openPicker.FileNames.Length);
+                        BatDataFile batDataFile = new BatDataFile();
+                        batDataFile.Filename = Path.GetFileName(file);
+                        await busyState.Update($"Lade '{batDataFile.Filename}'...", i, openPicker.FileNames.Length);
 
                         try
                         {
-                            await Task.Run(async () => await _logReader.Load(file, batLog));
-                            BatLogs.Add(new BatLogViewModel(batLog));
+                            await Task.Run(async () => await _logReader.Load(file, batDataFile));
+                            BatLogs.Add(new BatLogViewModel(batDataFile));
                         }
                         catch (LogFileFormatException ex)
                         {

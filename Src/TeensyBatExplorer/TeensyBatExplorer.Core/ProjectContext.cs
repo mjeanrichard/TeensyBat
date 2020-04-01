@@ -32,11 +32,11 @@ namespace TeensyBatExplorer.Core
 
         public DbSet<TemperatureData> TemperatureData { get; set; }
         public DbSet<BatteryData> BatteryData { get; set; }
-        public DbSet<BatCall> Calls { get; set; }
+        public DbSet<BatDataFileEntry> DataFileEntries { get; set; }
         public DbSet<BatNode> Nodes { get; set; }
         public DbSet<BatProject> Projects { get; set; }
-        public DbSet<BatLog> Logs { get; set; }
-        public DbSet<BatLogMessage> LogMessages { get; set; }
+        public DbSet<BatDataFile> DataFiles { get; set; }
+        public DbSet<DataFileMessage> DataFileMessages { get; set; }
         public DbSet<FftBlock> FftBlocks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -48,10 +48,10 @@ namespace TeensyBatExplorer.Core
         {
             modelBuilder.Entity<TemperatureData>();
             modelBuilder.Entity<BatteryData>();
-            modelBuilder.Entity<BatCall>().ToTable("Calls");
+            modelBuilder.Entity<BatDataFileEntry>().ToTable("DataFileEntries");
             modelBuilder.Entity<BatNode>().ToTable("Nodes");
-            modelBuilder.Entity<BatLog>().ToTable("Logs");
-            modelBuilder.Entity<BatLogMessage>().ToTable("LogMessages").Property(m => m.Level).HasConversion(new EnumToStringConverter<BatLogMessageLevel>());
+            modelBuilder.Entity<BatDataFile>().ToTable("DataFiles");
+            modelBuilder.Entity<DataFileMessage>().ToTable("DataFileMessages").Property(m => m.Level).HasConversion(new EnumToStringConverter<BatLogMessageLevel>());
             modelBuilder.Entity<BatProject>().ToTable("Projects");
             modelBuilder.Entity<FftBlock>().ToTable("FftBlocks");
         }

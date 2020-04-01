@@ -10,16 +10,16 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
     {
         private bool _selected;
 
-        public BatLogViewModel(BatLog batLog)
+        public BatLogViewModel(BatDataFile batDataFile)
         {
-            Log = batLog;
+            DataFile = batDataFile;
             Selected = true;
         }
 
-        public string Node => Log.NodeNumber.ToString();
-        public string Datum => Log.StartTime.ToString("dd.MM.yy hh:mm:ss");
-        public string CallCount => Log.Calls.Count.ToString();
-        public string MessageCount => Log.LogMessages.Count.ToString();
+        public string Node => DataFile.NodeNumber.ToString();
+        public string Datum => DataFile.StartTime.ToString("dd.MM.yy hh:mm:ss");
+        public string CallCount => DataFile.Entries.Count.ToString();
+        public string MessageCount => DataFile.LogMessages.Count.ToString();
 
         public bool Selected
         {
@@ -36,7 +36,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
             }
         }
 
-        public BatLog Log { get; }
+        public BatDataFile DataFile { get; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
