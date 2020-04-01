@@ -4,11 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:TeensyBatExplorer.WPF.Views.AddLogs"
+             xmlns:models="clr-namespace:TeensyBatExplorer.Core.Models;assembly=TeensyBatExplorer.Core"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=local:AddLogsViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-        <ListView ItemsSource="{Binding BatLogs, Mode=OneWay}">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="500" />
+        </Grid.ColumnDefinitions>
+        <ListView ItemsSource="{Binding BatLogs, Mode=OneWay}" SelectedItem="{Binding SelectedLog, Mode=TwoWay}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
                     <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -16,20 +21,45 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
+                    <GridViewColumn Header="">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate DataType="local:BatLogViewModel">
+                                <CheckBox IsChecked="{Binding Selected}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn
-                        DisplayMemberBinding="{Binding Selected}"
-                        Header="" />
-                    <GridViewColumn
-                        DisplayMemberBinding="{Binding Node}"
+                        DisplayMemberBinding="{Binding Node, Mode=OneWay}"
                         Header="Geräte Nr." />
                     <GridViewColumn
-                        DisplayMemberBinding="{Binding Datum}"
+                        DisplayMemberBinding="{Binding Datum, Mode=OneWay}"
                         Header="Datum" />
                     <GridViewColumn
-                        DisplayMemberBinding="{Binding CallCount}"
+                        DisplayMemberBinding="{Binding CallCount, Mode=OneWay}"
                         Header="Anzahl Rufe" />
+                    <GridViewColumn
+                        DisplayMemberBinding="{Binding MessageCount, Mode=OneWay}"
+                        Header="Fehler" />
                 </GridView>
             </ListView.View>
         </ListView>
+        <GroupBox Grid.Column="1" Margin="16 8 0 0" Header="Meldungen">
+            <ItemsControl ItemsSource="{Binding SelectedLog.Log.LogMessages}"
+                          Grid.IsSharedSizeScope="True">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:BatLogMessage}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock TextWrapping="Wrap" Grid.Column="0" Margin="0 4 8 4" Text="{Binding Level}" />
+                            <TextBlock TextWrapping="Wrap" Grid.Column="1" Margin="0 4 8 4" Text="{Binding Message}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </GroupBox>
     </Grid>
 </UserControl>

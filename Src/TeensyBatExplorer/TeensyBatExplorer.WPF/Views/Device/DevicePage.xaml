@@ -6,22 +6,36 @@
              xmlns:local="clr-namespace:TeensyBatExplorer.WPF.Views.Device"
              xmlns:controls="clr-namespace:TeensyBatExplorer.WPF.Controls"
              xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:infrastructure="clr-namespace:TeensyBatExplorer.WPF.Infrastructure"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=local:DeviceViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+
+    <UserControl.Resources>
+        <infrastructure:BoolToVisibilityConverter FalseValue="Visible" TrueValue="Hidden" x:Key="BtvInverted" />
+        <infrastructure:BoolToVisibilityConverter x:Key="BtvNormal" />
+    </UserControl.Resources>
+
+    <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="200" Name="ExpanderRow" />
+            <RowDefinition Height="Auto" Name="ExpanderRow" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
+        <TextBlock Grid.Row="0" 
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Style="{StaticResource MaterialDesignHeadline3TextBlock}"
+                   Visibility="{Binding IsConnected, Converter={StaticResource BtvInverted}}">
+            Kein Gerät verbunden...
+        </TextBlock>
+        <Grid Grid.Row="0"
+              Visibility="{Binding IsConnected, Converter={StaticResource BtvNormal}}"
+              Margin="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="120" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="200" />
-                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0 0 10 0">
                 <Grid>
@@ -104,14 +118,20 @@
                          Margin="0 10 0 10"
                          md:TextFieldAssist.DecorationVisibility="Hidden"
                          Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
-                <StackPanel Orientation="Horizontal">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <TextBox Text="{Binding TimeDiff, Mode=OneWay}"
+                             Grid.Column="0"
                              md:HintAssist.Hint="Differenz"
                              IsReadOnly="True"
                              Margin="0 10 0 10"
                              md:TextFieldAssist.DecorationVisibility="Hidden"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
                     <Button Command="{Binding UpdateTimeCommand}"
+                            Grid.Column="1"
                             VerticalAlignment="Center"
                             VerticalContentAlignment="Center"
                             Width="20"
@@ -121,9 +141,9 @@
                             ToolTip="Sync">
                         <md:PackIcon Kind="Timer" Width="15" Height="15" />
                     </Button>
-                </StackPanel>
+                </Grid>
                 <TextBox Text="{Binding TimeErrorPpm, Mode=OneWay}"
-                         md:HintAssist.Hint="Geräte Zeit"
+                         md:HintAssist.Hint="Fehler"
                          IsReadOnly="True"
                          Margin="0 10 0 10"
                          md:TextFieldAssist.DecorationVisibility="Hidden"
@@ -133,14 +153,15 @@
         </Grid>
 
         <GridSplitter Name="Splitter" Grid.Row="1" Height="5" HorizontalAlignment="Stretch" />
+
         <Expander
             Grid.Row="2"
             HorizontalAlignment="Stretch"
             VerticalContentAlignment="Stretch"
-            IsExpanded="True"
+            IsExpanded="False"
             Expanded="Expander_Expanded"
             Collapsed="Expander_Collapsed"
-            Header="Device Log">
+            Header="Geräte Log">
             <controls:ConsoleView x:Name="ConsoleView"
                                   TextProvider="{Binding}"
                                   VerticalAlignment="Stretch" />

@@ -48,6 +48,8 @@ namespace TeensyBatExplorer.WPF.Views.Project
 
             AddToolbarButton(new ToolBarButton(AddLog, PackIconKind.PlusBoxMultipleOutline, "Logs hinzufügen"));
             AddToolbarButton(new ToolBarButton(SaveProject, PackIconKind.ContentSave, "Speichern"));
+
+            Title = "Projekt";
         }
 
         public BatProject BatProject { get; private set; }
@@ -77,13 +79,14 @@ namespace TeensyBatExplorer.WPF.Views.Project
         {
             using (BusyState busyState = BeginBusy("Lade Projekt..."))
             {
-                List<BatNode> nodes = await Task.Run(async () => await _projectManager.GetNodes(busyState.Token), busyState.Token);
+                List<BatNode> nodes = await _projectManager.GetNodes(busyState.Token);
                 Nodes = nodes.Select(n =>
                 {
                     NodeViewModel vm = _nodeViewModelFactory();
                     vm.Load(n, this);
                     return vm;
                 });
+                Title = $"Projekt {_projectManager.Project.Name}";
             }
         }
 

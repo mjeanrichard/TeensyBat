@@ -47,10 +47,11 @@
             <Grid Name="MainGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="150" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -58,27 +59,33 @@
                     Grid.Row="0" Grid.ColumnSpan="2"
                     Mode="PrimaryDark"
                     Padding="16"
-                    md:ShadowAssist.ShadowDepth="Depth3"
                     Margin="0">
                     <StackPanel
                         Orientation="Horizontal">
                         <ToggleButton Style="{DynamicResource MaterialDesignHamburgerToggleButton}" />
                         <TextBlock
                             Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                            Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}"
                             VerticalAlignment="Center"
                             Margin="16 0 0 0">
-                            Invoice Manager
+                            Bat Explorer
                         </TextBlock>
                     </StackPanel>
                 </md:ColorZone>
 
-                <StackPanel Grid.Column="0" Grid.Row="1" Background="{DynamicResource PrimaryHueDarkBrush}">
+                <!-- Menu -->
+                <StackPanel Grid.Column="0"
+                            Grid.Row="1"
+                            Grid.RowSpan="2"
+                            md:ShadowAssist.ShadowDepth="Depth0"
+                            Background="{DynamicResource PrimaryHueDarkBrush}"
+                            Margin="0">
                     <Button Style="{StaticResource MaterialDesignFlatButton}"
                             Command="{Binding GoHomeCommand}"
                             Margin="0 15 15 15">
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon Foreground="White" Kind="FormatListBulletedType" Margin="10 0" />
-                            <TextBlock Text="Home" Foreground="White" VerticalAlignment="Center" Margin="5 0 15 0" />
+                            <md:PackIcon Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}" Kind="FormatListBulletedType" Margin="10 0" />
+                            <TextBlock Text="Home" Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}" VerticalAlignment="Center" Margin="5 0 15 0" />
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource MaterialDesignFlatButton}"
@@ -86,46 +93,52 @@
                             Command="{Binding GoToProjectCommand}"
                             Margin="0 15 15 15">
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon Foreground="White" Kind="FormatListBulletedType" Margin="10 0" />
-                            <TextBlock Text="Projekt" Foreground="White" VerticalAlignment="Center" Margin="5 0 15 0" />
+                            <md:PackIcon Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}" Kind="FormatListBulletedType" Margin="10 0" />
+                            <TextBlock Text="Projekt" Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}" VerticalAlignment="Center" Margin="5 0 15 0" />
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource MaterialDesignFlatButton}"
                             Command="{Binding GoToDeviceCommand}"
                             Margin="0 15 15 15">
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon Foreground="White" Kind="Devices" Margin="10 0" />
-                            <TextBlock Text="Geräte" Foreground="White" VerticalAlignment="Center" Margin="5 0 15 0" />
+                            <md:PackIcon Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}" Kind="Devices" Margin="10 0" />
+                            <TextBlock Text="Geräte" Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}" VerticalAlignment="Center" Margin="5 0 15 0" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
-                <Grid Name="ContentGrid" Grid.Column="1" Grid.Row="1">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Name="ToolbarGrid" Grid.Row="0">
+                <!-- Inhalt -->
+                <md:ColorZone Grid.Row="1" Grid.Column="1" Background="{DynamicResource PrimaryHueDarkBrush}">
+                    <Grid Name="ToolbarGrid" Margin="0 8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding Title}" />
-                        <ToolBar Grid.Column="1" ItemsSource="{Binding CurrentPage.ToolBarButtons}" ToolBarTray.IsLocked="True" HorizontalAlignment="Right">
+                        <TextBlock Grid.Column="0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding CurrentPage.Title}"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}" />
+                        <ToolBar Grid.Column="1"
+                                 ItemsSource="{Binding CurrentPage.ToolBarButtons}"
+                                 ToolBarTray.IsLocked="True"
+                                 Background="Transparent"
+                                 HorizontalAlignment="Right">
                             <ToolBar.ItemTemplate>
                                 <DataTemplate DataType="infrastructure:ToolBarButton">
-                                    <Button ToolTip="{Binding Tooltip}" Command="{Binding Action}">
+                                    <Button ToolTip="{Binding Tooltip}" 
+                                            Margin="8 0 0 0"
+                                            Command="{Binding Action}">
                                         <md:PackIcon Kind="{Binding Icon}" />
                                     </Button>
                                 </DataTemplate>
                             </ToolBar.ItemTemplate>
                         </ToolBar>
                     </Grid>
+                </md:ColorZone>
 
-                    <ContentPresenter Grid.Row="1" Content="{Binding CurrentPage}" Margin="10" />
-                    <md:Snackbar Grid.Row="1" x:Name="MySnackbar" MessageQueue="{Binding SnackbarMessageQueue}" />
-                </Grid>
+                <ContentPresenter Grid.Row="2" Grid.Column="1" Content="{Binding CurrentPage}" />
+                <md:Snackbar Grid.Row="2" Grid.Column="1" x:Name="MySnackbar" MessageQueue="{Binding SnackbarMessageQueue}" />
             </Grid>
         </md:DialogHost>
 

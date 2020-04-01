@@ -22,7 +22,7 @@ namespace TeensyBatExplorer.Core.Models
     public class BatteryData : AdditionalData
     {
         public int Id { get; set; }
-        public double Voltage { get; set; }
+        public int Voltage { get; set; }
 
         public BatNode Node { get; set; }
         public BatLog Log { get; set; }

@@ -102,7 +102,7 @@ namespace TeensyBatExplorer.Core
 
                 CREATE TABLE 'BatteryData' (
 	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	                'Voltage'	REAL NOT NULL,
+	                'Voltage'	INTEGER NOT NULL,
                     'DateTime'    TEXT NOT NULL,
                     'Timestamp'    INTEGER NOT NULL,
 
@@ -112,7 +112,7 @@ namespace TeensyBatExplorer.Core
 
                 CREATE TABLE 'TemperatureData' (
 	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	                'Temperature'	REAL NOT NULL,
+	                'Temperature'	INTEGER NOT NULL,
                     'DateTime'    TEXT NOT NULL,
                     'Timestamp'    INTEGER NOT NULL,
                    
@@ -141,6 +141,7 @@ namespace TeensyBatExplorer.Core
                     'FirmwareVersion'    INTEGER NOT NULL,
                     'HardwareVersion'    INTEGER NOT NULL,
                     'Debug'    INTEGER NOT NULL,
+                    'OriginalStartTime'    TEXT NOT NULL,
                     'StartTime'    TEXT NOT NULL,
                     'PreCallBufferSize'    INTEGER NOT NULL,
                     'AfterCallBufferSize'    INTEGER NOT NULL,
@@ -154,6 +155,15 @@ namespace TeensyBatExplorer.Core
                     'Filename'    TEXT NOT NULL,
                     'NodeId'    INTEGER NULL
                 );
+
+                CREATE TABLE 'LogMessages' (
+	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    'LogId' INTEGER NOT NULL,
+                    'Message' TEXT NOT NULL,
+                    'Level' TEXT NOT NULL,
+                    'Position' INTEGER NULL
+                );
+
             ");
 
                 BatProject project = new BatProject();

@@ -40,6 +40,7 @@ namespace TeensyBatExplorer.Core.Models
 
         public string Filename { get; set; }
 
+        public DateTime OriginalStartTime { get; set; }
         public DateTime StartTime { get; set; }
 
         public ICollection<BatCall> Calls { get; set; } = new HashSet<BatCall>();
@@ -47,6 +48,8 @@ namespace TeensyBatExplorer.Core.Models
         public ICollection<BatteryData> BatteryData { get; set; } = new HashSet<BatteryData>();
 
         public ICollection<TemperatureData> TemperatureData { get; set; } = new HashSet<TemperatureData>();
+        
+        public IList<BatLogMessage> LogMessages { get; set; } = new List<BatLogMessage>();
 
         public BatNode Node { get; set; }
     }

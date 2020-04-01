@@ -1,31 +1,134 @@
 ﻿<UserControl x:Class="TeensyBatExplorer.WPF.Views.NodeDetail.NodeDetailPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:TeensyBatExplorer.WPF.Views.NodeDetail"
              xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-             mc:Ignorable="d" 
+             xmlns:dragablz="http://dragablz.net/winfx/xaml/dragablz"
+             xmlns:oxy="http://oxyplot.org/wpf"
+             xmlns:controls="clr-namespace:TeensyBatExplorer.WPF.Controls"
+             mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=local:NodeDetailViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                <TextBox Text="{Binding Node.NodeNumber, Mode=OneWay}"
-                         md:HintAssist.Hint="Geräte Nummer"
-                         IsReadOnly="True"
-                         Margin="0 10 20 10"
-                         HorizontalContentAlignment="Right"
-                         VerticalContentAlignment="Top"
-                         md:TextFieldAssist.DecorationVisibility="Hidden"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
-                <TextBox Text="{Binding Node.Logs.Count, Mode=OneWay}"
-                         md:HintAssist.Hint="Anzahl Log Files"
-                         IsReadOnly="True"
-                         Margin="0 10 20 10"
-                         HorizontalContentAlignment="Right"
-                         md:TextFieldAssist.DecorationVisibility="Hidden"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+        <dragablz:TabablzControl Margin="0"
+                                 FixedHeaderCount="5"
+                                 BorderThickness="0">
+            <dragablz:TabablzControl.InterTabController>
+                <dragablz:InterTabController />
+            </dragablz:TabablzControl.InterTabController>
 
-            </StackPanel>
+            <TabItem Header="Geräte Info" IsSelected="True">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top">
+                        <TextBox Text="{Binding Node.NodeNumber, Mode=OneWay}"
+                                 md:HintAssist.Hint="Geräte Nummer"
+                                 IsReadOnly="True"
+                                 Margin="0 10 20 10"
+                                 HorizontalContentAlignment="Right"
+                                 VerticalContentAlignment="Top"
+                                 md:TextFieldAssist.DecorationVisibility="Hidden"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                        <TextBox Text="{Binding Node.Logs.Count, Mode=OneWay}"
+                                 md:HintAssist.Hint="Anzahl Log Files"
+                                 IsReadOnly="True"
+                                 Margin="0 10 20 10"
+                                 HorizontalContentAlignment="Right"
+                                 md:TextFieldAssist.DecorationVisibility="Hidden"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </StackPanel>
+
+                    <GroupBox Header="Logdateien" Grid.Row="1" Margin="0 16">
+                        <ListView ItemsSource="{Binding Logs, Mode=OneWay}">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn
+                                        DisplayMemberBinding="{Binding Filename, Mode=OneWay}"
+                                        Header="Datei" />
+                                    <GridViewColumn
+                                        DisplayMemberBinding="{Binding Calls.Count, Mode=OneWay}"
+                                        Header="Anzahl Rufe" />
+                                    <GridViewColumn
+                                        DisplayMemberBinding="{Binding StartTime, Mode=OneWay}"
+                                        Header="Startzeit" />
+                                    <GridViewColumn
+                                        DisplayMemberBinding="{Binding HardwareVersion, Mode=OneWay}"
+                                        Header="HW Version" />
+                                    <GridViewColumn
+                                        DisplayMemberBinding="{Binding FirmwareVersion, Mode=OneWay}"
+                                        Header="FW Version" />
+                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountCallBuffFull, Mode=OneWay}">
+                                        <GridViewColumn.Header>
+                                            <TextBlock Text="CBF" ToolTip="Anzahl 'Call Buffer Full' Fehler" />
+                                        </GridViewColumn.Header>
+                                    </GridViewColumn>
+                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountDataBufferFull, Mode=OneWay}">
+                                        <GridViewColumn.Header>
+                                            <TextBlock Text="DBF" ToolTip="Anzahl 'Data Buffer Full' Fehler" />
+                                        </GridViewColumn.Header>
+                                    </GridViewColumn>
+                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountPointerBufferFull, Mode=OneWay}">
+                                        <GridViewColumn.Header>
+                                            <TextBlock Text="PBF" ToolTip="Anzahl 'Pointer Buffer Full' Fehler" />
+                                        </GridViewColumn.Header>
+                                    </GridViewColumn>
+                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountProcessOverlap, Mode=OneWay}">
+                                        <GridViewColumn.Header>
+                                            <TextBlock Text="PO" ToolTip="Anzahl 'Process Overlap' Fehler" />
+                                        </GridViewColumn.Header>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Rufe">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ListView
+                        Grid.Column="0"
+                        SelectedItem="{Binding SelectedCall, Mode=TwoWay}"
+                        ItemsSource="{Binding Node.Calls, Mode=OneWay}">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn
+                                    DisplayMemberBinding="{Binding AvgPeakFrequency}"
+                                    Header="Datei" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <GroupBox Grid.Column="1"
+                              Header="Details">
+                        <controls:CallDataView BatCall="{Binding SelectedCall}" />
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Batterie">
+                <oxy:PlotView Model="{Binding BatteryPlot}" />
+            </TabItem>
+            <TabItem Header="Temperatur">
+                <oxy:PlotView Model="{Binding TemperaturePlot}" />
+            </TabItem>
+        </dragablz:TabablzControl>
     </Grid>
 </UserControl>

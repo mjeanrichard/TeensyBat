@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,26 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-
-namespace TeensyBatExplorer.Core
+namespace TeensyBatExplorer.Core.Models
 {
-    public class LogFileFormatException : Exception
+    public enum BatLogMessageLevel
     {
-        public long Position { get; }
-
-        public LogFileFormatException()
-        {
-        }
-
-        public LogFileFormatException(string message, long position) : base(message)
-        {
-            Position = position;
-        }
-
-        public LogFileFormatException(string message, long position, Exception innerException) : base(message, innerException)
-        {
-            Position = position;
-        }
+        Information,
+        Warning,
+        Error
     }
 }

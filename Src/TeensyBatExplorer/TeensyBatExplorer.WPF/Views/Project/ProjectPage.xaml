@@ -10,8 +10,9 @@
              d:DataContext="{d:DesignInstance Type=project:ProjectPageViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
 
-    <Grid>
+    <Grid Margin="8">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -20,36 +21,37 @@
                      md:HintAssist.Hint="Project Name"
                      Style="{StaticResource MaterialDesignFilledTextFieldTextBox}" />
         </StackPanel>
-        <ListView
-            Grid.Row="1"
-            ItemsSource="{Binding Nodes}">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
-                    <Setter Property="VerticalContentAlignment" Value="Center" />
-                </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn
-                        DisplayMemberBinding="{Binding NodeNumber}"
-                        Header="Nr" />
-                    <GridViewColumn Header="">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate DataType="project:NodeViewModel">
-                                <Button Command="{Binding OpenNodeCommand}"
-                                        VerticalAlignment="Center"
-                                        VerticalContentAlignment="Center"
-                                        Width="30"
-                                        Height="30"
-                                        Style="{StaticResource MaterialDesignIconButton}"
-                                        ToolTip="Sync">
-                                    <md:PackIcon Kind="OpenInApp" Width="20" Height="20" />
-                                </Button>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
+
+        <GroupBox Header="Geräte" Grid.Row="1" Margin="0 16">
+            <ListView ItemsSource="{Binding Nodes}">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn
+                            DisplayMemberBinding="{Binding NodeNumber}"
+                            Header="Nr" />
+                        <GridViewColumn Header="">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="project:NodeViewModel">
+                                    <Button Command="{Binding OpenNodeCommand}"
+                                            VerticalAlignment="Center"
+                                            VerticalContentAlignment="Center"
+                                            Width="30"
+                                            Height="30"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            ToolTip="Details anzeigen">
+                                        <md:PackIcon Kind="OpenInApp" Width="20" Height="20" />
+                                    </Button>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </GroupBox>
     </Grid>
 </UserControl>

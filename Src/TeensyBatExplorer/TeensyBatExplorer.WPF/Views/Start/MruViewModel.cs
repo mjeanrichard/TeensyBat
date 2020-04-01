@@ -35,5 +35,6 @@ namespace TeensyBatExplorer.WPF.Views.Start
         }
 
         public string Name => _projectMruEntry.ProjectName;
+        public string Filename => _projectMruEntry.FullPath;
     }
 }

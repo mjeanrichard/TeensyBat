@@ -34,10 +34,13 @@ namespace TeensyBatExplorer.Core.Queries
 
         public async Task<List<ProjectMruEntry>> Execute()
         {
-            using (ApplicationContext context = _appContextFactory())
+            return await Task.Run(async () =>
             {
-                return await context.ProjectMruEntries.OrderByDescending(m => m.LastAccessTime).Take(10).AsNoTracking().ToListAsync();
-            }
+                using (ApplicationContext context = _appContextFactory())
+                {
+                    return await context.ProjectMruEntries.OrderByDescending(m => m.LastAccessTime).Take(10).AsNoTracking().ToListAsync();
+                }
+            });
         }
     }
 }

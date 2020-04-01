@@ -46,6 +46,8 @@ namespace TeensyBatExplorer.WPF.Views.Start
 
             AddToolbarButton(new ToolBarButton(OpenProject, PackIconKind.FolderOpenOutline, "Open"));
             AddToolbarButton(new ToolBarButton(CreateNewProject, PackIconKind.FolderAddOutline, "Create new"));
+
+            Title = "Start";
         }
 
         public List<MruViewModel> MruEntries
@@ -98,7 +100,7 @@ namespace TeensyBatExplorer.WPF.Views.Start
 
         public override async Task Load()
         {
-            List<ProjectMruEntry> mruEntries = await Task.Run(async () => await _getProjectMruQuery.Execute());
+            List<ProjectMruEntry> mruEntries = await _getProjectMruQuery.Execute();
             MruEntries = mruEntries.Select(m => new MruViewModel(m, _projectManager, this, _navigationService)).ToList();
         }
     }

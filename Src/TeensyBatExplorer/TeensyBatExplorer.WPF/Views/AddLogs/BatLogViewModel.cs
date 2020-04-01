@@ -13,11 +13,13 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
         public BatLogViewModel(BatLog batLog)
         {
             Log = batLog;
+            Selected = true;
         }
 
         public string Node => Log.NodeNumber.ToString();
         public string Datum => Log.StartTime.ToString("dd.MM.yy hh:mm:ss");
         public string CallCount => Log.Calls.Count.ToString();
+        public string MessageCount => Log.LogMessages.Count.ToString();
 
         public bool Selected
         {

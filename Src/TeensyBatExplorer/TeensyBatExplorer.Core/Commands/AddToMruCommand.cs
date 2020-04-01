@@ -49,6 +49,7 @@ namespace TeensyBatExplorer.Core.Commands
                 }
 
                 mruEntry.ProjectName = batProject.Name;
+                mruEntry.LastAccessTime = DateTime.UtcNow;
 
                 await context.SaveChangesAsync();
             }

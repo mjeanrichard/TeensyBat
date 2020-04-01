@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using TeensyBatExplorer.Core.Models;
 
@@ -35,6 +36,7 @@ namespace TeensyBatExplorer.Core
         public DbSet<BatNode> Nodes { get; set; }
         public DbSet<BatProject> Projects { get; set; }
         public DbSet<BatLog> Logs { get; set; }
+        public DbSet<BatLogMessage> LogMessages { get; set; }
         public DbSet<FftBlock> FftBlocks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -49,6 +51,7 @@ namespace TeensyBatExplorer.Core
             modelBuilder.Entity<BatCall>().ToTable("Calls");
             modelBuilder.Entity<BatNode>().ToTable("Nodes");
             modelBuilder.Entity<BatLog>().ToTable("Logs");
+            modelBuilder.Entity<BatLogMessage>().ToTable("LogMessages").Property(m => m.Level).HasConversion(new EnumToStringConverter<BatLogMessageLevel>());
             modelBuilder.Entity<BatProject>().ToTable("Projects");
             modelBuilder.Entity<FftBlock>().ToTable("FftBlocks");
         }

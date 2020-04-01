@@ -22,7 +22,8 @@ namespace TeensyBatExplorer.Core.Models
     public class TemperatureData : AdditionalData
     {
         public int Id { get; set; }
-        public double Temperature { get; set; }
+
+        public int Temperature { get; set; }
 
         public BatNode Node { get; set; }
         public BatLog Log { get; set; }

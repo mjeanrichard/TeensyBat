@@ -25,5 +25,6 @@ namespace TeensyBatExplorer.Core.Models
         public int NodeNumber { get; set; }
 
         public ICollection<BatLog> Logs { get; set; } = new HashSet<BatLog>();
+        public ICollection<BatCall> Calls { get; set; } = new HashSet<BatCall>();
     }
 }

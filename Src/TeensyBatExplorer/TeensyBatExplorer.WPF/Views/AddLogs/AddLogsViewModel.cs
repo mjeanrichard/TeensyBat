@@ -41,6 +41,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
         private readonly AddLogsCommand _addLogsCommand;
         private readonly ISnackbarMessageQueue _snackbarMessageQueue;
         private readonly List<string> _filesToAdd = new List<string>();
+        private BatLogViewModel _selectedLog;
 
         public AddLogsViewModel(NavigationService navigationService, LogReader logReader, ProjectManager projectManager, AddLogsCommand addLogsCommand, ISnackbarMessageQueue snackbarMessageQueue)
         {
@@ -56,7 +57,18 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
             AddToolbarButton(new ToolBarButton(SaveLogs, PackIconKind.ContentSave, "Save"));
         }
 
-        public BatProject BatProject { get; private set; }
+        public BatLogViewModel SelectedLog
+        {
+            get => _selectedLog;
+            set
+            {
+                if (!Equals(value, _selectedLog))
+                {
+                    _selectedLog = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public ObservableCollection<BatLogViewModel> BatLogs { get; }
 
@@ -67,7 +79,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
                 await Task.Run(async () =>
                 {
                     Progress<CountProgress> progress = new Progress<CountProgress>(async p => await busyState.Update(p));
-                    await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Select(v => v.Log), progress, CancellationToken.None);
+                    await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Where(b => b.Selected).Select(v => v.Log), progress, CancellationToken.None);
                 });
             }
         }

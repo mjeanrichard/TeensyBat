@@ -49,6 +49,8 @@ namespace TeensyBatExplorer.WPF.Views.Device
             UpdateTimeCommand = new AsyncCommand(SetTime);
             OpenSetVoltageCommand = new AsyncCommand(OpenSetVoltage);
             OpenSetNodeNumberCommand = new AsyncCommand(OpenSetNodeNumber);
+
+            Title = "Geräte konfigurieren";
         }
 
         public AsyncCommand OpenSetNodeNumberCommand { get; set; }
@@ -135,6 +137,7 @@ namespace TeensyBatExplorer.WPF.Views.Device
                 OnPropertyChanged(nameof(DeviceTime));
                 OnPropertyChanged(nameof(TimeDiff));
                 OnPropertyChanged(nameof(TimeErrorPpm));
+                OnPropertyChanged(nameof(IsConnected));
             });
         }
 

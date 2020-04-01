@@ -9,36 +9,44 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=start:StartPageViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-        <ListView
-            ItemsSource="{Binding MruEntries}">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
-                    <Setter Property="VerticalContentAlignment" Value="Center" />
-                </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn
-                        DisplayMemberBinding="{Binding Name}"
-                        Header="Projekt Name" />
-                    <GridViewColumn Header="">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate DataType="start:MruViewModel">
-                                <Button Command="{Binding OpenCommand}"
-                                        VerticalAlignment="Center"
-                                        VerticalContentAlignment="Center"
-                                        Width="30"
-                                        Height="30"
-                                        Style="{StaticResource MaterialDesignIconButton}"
-                                        ToolTip="Sync">
-                                    <materialDesign:PackIcon Kind="OpenInApp" Width="20" Height="20" />
-                                </Button>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <GroupBox Header="Kürzlich verwendetet Projekte">
+            <ListView ItemsSource="{Binding MruEntries}">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn
+                            DisplayMemberBinding="{Binding Name}"
+                            Header="Projekt Name" />
+                        <GridViewColumn
+                            DisplayMemberBinding="{Binding Filename}"
+                            Header="Projekt Name" />
+                        <GridViewColumn Header="">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="start:MruViewModel">
+                                    <Button Command="{Binding OpenCommand}"
+                                            VerticalAlignment="Center"
+                                            VerticalContentAlignment="Center"
+                                            Width="30"
+                                            Height="30"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            ToolTip="Sync">
+                                        <materialDesign:PackIcon Kind="OpenInApp" Width="20" Height="20" />
+                                    </Button>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </GroupBox>
     </Grid>
 </UserControl>
