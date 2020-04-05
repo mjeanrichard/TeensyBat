@@ -30,10 +30,49 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:CallDataView}">
-                    <Image x:Name="PART_Image" 
-                           HorizontalAlignment="Left" 
-                           VerticalAlignment="Top"
-                           Stretch="None" />
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Image x:Name="PART_Image" 
+                               Grid.Row="0"
+                               HorizontalAlignment="Left" 
+                               VerticalAlignment="Top"
+                               Stretch="None" />
+                        <ScrollBar x:Name="PART_Scroll"
+                                   Grid.Row="1"
+                                   Orientation="Horizontal" />
+                        <Popup Grid.Row="1" x:Name="PART_Tooltip" AllowsTransparency="True" Placement="Relative" PlacementTarget="{Binding ElementName=PART_Image}">
+                            <TextBlock x:Name="PART_TooltipText" Background="White"></TextBlock>
+                        </Popup>
+                        <Line Grid.Row="0" Grid.RowSpan="2" 
+                              x:Name="PART_HorizontalCursor1" 
+                              Stroke="Black" 
+                              StrokeThickness="1" 
+                              SnapsToDevicePixels="True" 
+                              RenderOptions.EdgeMode="Aliased" />
+                        <Line Grid.Row="0" Grid.RowSpan="2" 
+                              x:Name="PART_HorizontalCursor2" 
+                              Stroke="White" 
+                              StrokeDashArray="1,1" 
+                              StrokeThickness="1" 
+                              SnapsToDevicePixels="True" 
+                              RenderOptions.EdgeMode="Aliased" />
+                        <Line Grid.Row="0" Grid.RowSpan="2" 
+                              x:Name="PART_VerticalCursor1" 
+                              Stroke="Black" 
+                              StrokeThickness="1" 
+                              SnapsToDevicePixels="True" 
+                              RenderOptions.EdgeMode="Aliased" />
+                        <Line Grid.Row="0" Grid.RowSpan="2" 
+                              x:Name="PART_VerticalCursor2" 
+                              Stroke="White" 
+                              StrokeDashArray="1,1" 
+                              StrokeThickness="1" 
+                              SnapsToDevicePixels="True" 
+                              RenderOptions.EdgeMode="Aliased" />
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

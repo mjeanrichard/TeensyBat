@@ -45,7 +45,7 @@
                     </StackPanel>
 
                     <GroupBox Header="Logdateien" Grid.Row="1" Margin="0 16">
-                        <ListView ItemsSource="{Binding Logs, Mode=OneWay}">
+                        <ListView ItemsSource="{Binding DataFiles, Mode=OneWay}">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
                                     <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -102,8 +102,8 @@
                     </Grid.ColumnDefinitions>
                     <ListView
                         Grid.Column="0"
-                        SelectedItem="{Binding SelectedDataFileEntry, Mode=TwoWay}"
-                        ItemsSource="{Binding Node.Calls, Mode=OneWay}">
+                        SelectedItem="{Binding SelectedCall, Mode=TwoWay}"
+                        ItemsSource="{Binding Calls, Mode=OneWay}">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
                                 <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -112,14 +112,14 @@
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn
-                                    DisplayMemberBinding="{Binding AvgPeakFrequency}"
+                                    DisplayMemberBinding="{Binding StartTime}"
                                     Header="Datei" />
                             </GridView>
                         </ListView.View>
                     </ListView>
                     <GroupBox Grid.Column="1"
                               Header="Details">
-                        <controls:CallDataView BatDataFileEntry="{Binding SelectedDataFileEntry}" />
+                        <controls:CallDataView CollapsePauses="True" BatCall="{Binding SelectedCall}" />
                     </GroupBox>
                 </Grid>
             </TabItem>

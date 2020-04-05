@@ -35,7 +35,10 @@ namespace TeensyBatExplorer.Core.Models
 
         public IList<FftBlock> FftData { get; set; } = new List<FftBlock>();
 
-        public BatNode Node { get; set; }
+        public int DataFileId { get; set; }
         public BatDataFile DataFile { get; set; }
+
+        public int CallId { get; set; }
+        public BatCall Call { get; set; }
     }
 }

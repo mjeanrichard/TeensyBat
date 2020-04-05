@@ -97,7 +97,11 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         {
             await _baseViewModel.RunOnUiThreadAsync(() =>
             {
-                Text = text;
+                if (text != null)
+                {
+                    Text = text;
+                }
+
                 Total = total;
                 Current = current;
             });
@@ -109,6 +113,11 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public IProgress<CountProgress> GetProgress()
+        {
+            return new Progress<CountProgress>(async p => await Update(p));
         }
     }
 }

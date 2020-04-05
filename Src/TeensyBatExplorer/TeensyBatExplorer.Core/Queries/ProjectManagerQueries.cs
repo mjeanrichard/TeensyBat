@@ -27,17 +27,6 @@ namespace TeensyBatExplorer.Core.Queries
 {
     public static class ProjectManagerQueries
     {
-        public static async Task<IReadOnlyList<BatDataFileEntry>> GetCallsForNode(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
-        {
-            return await Task.Run(async () =>
-            {
-                using (ProjectContext db = projectManager.GetContext())
-                {
-                    return await db.DataFileEntries.Where(c => c.Node.NodeNumber == nodeNumber).AsNoTracking().ToListAsync(cancellationToken);
-                }
-            }, cancellationToken);
-        }
-
         public static async Task<BatNode> GetBatNode(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
         {
             return await Task.Run(async () =>
@@ -49,15 +38,29 @@ namespace TeensyBatExplorer.Core.Queries
             }, cancellationToken);
         }
 
-        public static async Task<BatNode> GetBatNodeWithLogs(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
+        public static async Task<BatNode> GetBatNodeWithFiles(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
         {
             return await Task.Run(async () =>
             {
                 using (ProjectContext db = projectManager.GetContext())
                 {
                     return await db.Nodes
-                        .Include(n => n.DataFiles).ThenInclude(l => l.Entries).ThenInclude(c => c.FftData)
+                        .Include(n => n.DataFiles)
                         .SingleOrDefaultAsync(n => n.NodeNumber == nodeNumber, cancellationToken);
+                }
+            }, cancellationToken);
+        }
+
+        public static async Task<List<BatCall>> GetCalls(this ProjectManager projectManager, int nodeId, CancellationToken cancellationToken)
+        {
+            return await Task.Run(async () =>
+            {
+                using (ProjectContext db = projectManager.GetContext())
+                {
+                    return await db.Calls.Where(c => c.NodeId == nodeId)
+                        .Include(c => c.Entries).ThenInclude(c => c.FftData)
+                        .OrderBy(c => c.StartTime)
+                        .ToListAsync(cancellationToken);
                 }
             }, cancellationToken);
         }

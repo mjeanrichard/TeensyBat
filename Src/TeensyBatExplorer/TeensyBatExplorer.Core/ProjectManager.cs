@@ -97,7 +97,7 @@ namespace TeensyBatExplorer.Core
                     'MaxLevel' INTEGER NOT NULL,
                    
                     'DataFileId' INTEGER NOT NULL,
-                    'NodeId' INTEGER NOT NULL
+                    'CallId' INTEGER NULL
                 );
 
                 CREATE TABLE 'BatteryData' (
@@ -133,7 +133,7 @@ namespace TeensyBatExplorer.Core
                     'NodeNumber' INTEGER NOT NULL
                 );
 
-                CREATE TABLE 'Call' (
+                CREATE TABLE 'Calls' (
 	                'Id'    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     'StartTime'    TEXT NOT NULL,
                     'NodeId'    INTEGER NULL

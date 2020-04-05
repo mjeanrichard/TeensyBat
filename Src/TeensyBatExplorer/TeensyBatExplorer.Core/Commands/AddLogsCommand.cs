@@ -72,7 +72,6 @@ namespace TeensyBatExplorer.Core.Commands
 
             foreach (BatDataFileEntry call in batDataFile.Entries)
             {
-                call.Node = batNode;
                 call.DataFile = batDataFile;
             }
 

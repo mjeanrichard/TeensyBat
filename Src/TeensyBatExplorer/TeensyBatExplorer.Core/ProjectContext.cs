@@ -34,6 +34,7 @@ namespace TeensyBatExplorer.Core
         public DbSet<BatteryData> BatteryData { get; set; }
         public DbSet<BatDataFileEntry> DataFileEntries { get; set; }
         public DbSet<BatNode> Nodes { get; set; }
+        public DbSet<BatCall> Calls { get; set; }
         public DbSet<BatProject> Projects { get; set; }
         public DbSet<BatDataFile> DataFiles { get; set; }
         public DbSet<DataFileMessage> DataFileMessages { get; set; }

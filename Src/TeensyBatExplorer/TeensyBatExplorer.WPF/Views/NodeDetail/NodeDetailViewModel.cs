@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using MaterialDesignThemes.Wpf;
+
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
@@ -32,29 +34,33 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
     public class NodeDetailViewModel : BaseViewModel
     {
         private readonly ProjectManager _projectManager;
+        private readonly NodeProcessor _nodeProcessor;
         private readonly int _nodeNumber;
         private BatNode _node;
         private PlotModel _batteryPlot;
-        private BatDataFileEntry _selectedDataFileEntry;
-        private List<TemperatureData> _temperatureData;
+        private BatCall _selectedCall;
         private PlotModel _temperaturePlot;
+        private List<BatCall> _calls;
 
-        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager)
+        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, NodeProcessor nodeProcessor)
         {
             _projectManager = projectManager;
+            _nodeProcessor = nodeProcessor;
             _nodeNumber = navigationArgument.Data;
 
             Title = $"Daten zu Gerät Nr. {_nodeNumber}";
+
+            AddToolbarButton(new ToolBarButton(ProcessNode, PackIconKind.MessageProcessing, "Daten analysieren"));
         }
 
-        public BatDataFileEntry SelectedDataFileEntry
+        public BatCall SelectedCall
         {
-            get => _selectedDataFileEntry;
+            get => _selectedCall;
             set
             {
-                if (!Equals(value, _selectedDataFileEntry))
+                if (!Equals(value, _selectedCall))
                 {
-                    _selectedDataFileEntry = value;
+                    _selectedCall = value;
                     OnPropertyChanged();
                 }
             }
@@ -73,7 +79,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public IEnumerable<BatDataFile> Logs => Node?.DataFiles;
+        public IEnumerable<BatDataFile> DataFiles => Node?.DataFiles;
 
         public PlotModel BatteryPlot
         {
@@ -101,6 +107,31 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
+        public List<BatCall> Calls
+        {
+            get => _calls;
+            set
+            {
+                if (Equals(value, _calls))
+                {
+                    return;
+                }
+
+                _calls = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private async Task ProcessNode()
+        {
+            using (BusyState busyState = BeginBusy("Analysiere Gerätedaten..."))
+            {
+                await _nodeProcessor.Process(_node.Id, busyState.GetProgress(), busyState.Token);
+                await busyState.Update("Daten neu laden...", 0, 10);
+                await LoadNode(busyState);
+            }
+        }
+
         public override async Task Load()
         {
             using (BusyState busyState = BeginBusy("Lade Gerätedaten..."))
@@ -111,18 +142,20 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         private async Task LoadNode(BusyState busyState)
         {
-            await busyState.Update(busyState.Text, 0, 3);
+            await busyState.Update(busyState.Text, 1, 10);
 
-            Node = await _projectManager.GetBatNodeWithLogs(_nodeNumber, busyState.Token);
-            OnPropertyChanged(nameof(Logs));
+            Node = await _projectManager.GetBatNodeWithFiles(_nodeNumber, busyState.Token);
+            OnPropertyChanged(nameof(DataFiles));
+            await busyState.Update(busyState.Text, 1, 10);
 
-            await busyState.Update(busyState.Text, 1, 3);
+            Calls = await _projectManager.GetCalls(Node.Id, busyState.Token);
+            await busyState.Update(busyState.Text, 8, 10);
 
             UpdateBatteryPlot(await _projectManager.GetBatteryData(Node.Id, busyState.Token));
-            await busyState.Update(busyState.Text, 2, 3);
+            await busyState.Update(busyState.Text, 9, 10);
 
             UpdateTemperaturePlot(await _projectManager.GetTemperatureData(Node.Id, busyState.Token));
-            await busyState.Update(busyState.Text, 3, 3);
+            await busyState.Update(busyState.Text, 10, 10);
         }
 
         private void UpdateBatteryPlot(List<BatteryData> batteryData)

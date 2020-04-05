@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
+
 namespace TeensyBatExplorer.Core.Commands
 {
     public class CountProgress
@@ -21,5 +23,18 @@ namespace TeensyBatExplorer.Core.Commands
         public int Total { get; set; }
         public int Current { get; set; }
         public string Text { get; set; }
+    }
+
+    public static class ProgressHelper
+    {
+        public static void Report(this IProgress<CountProgress> progress, string message, int current, int total)
+        {
+            progress.Report(new CountProgress { Current = current, Total = total, Text = message });
+        }
+
+        public static void Report(this IProgress<CountProgress> progress, int current, int total)
+        {
+            progress.Report(new CountProgress { Current = current, Total = total });
+        }
     }
 }
