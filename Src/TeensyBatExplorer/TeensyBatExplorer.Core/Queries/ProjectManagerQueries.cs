@@ -97,5 +97,27 @@ namespace TeensyBatExplorer.Core.Queries
                 }
             }, cancellationToken);
         }
+
+        public static async Task<int> GetCallCount(this ProjectManager projectManager, int nodeId, CancellationToken cancellationToken)
+        {
+            return await Task.Run(async () =>
+            {
+                using (ProjectContext db = projectManager.GetContext())
+                {
+                    return await db.Calls.CountAsync(c => c.NodeId == nodeId, cancellationToken);
+                }
+            }, cancellationToken);
+        }
+
+        public static async Task<int> GetDataFileCount(this ProjectManager projectManager, int nodeId, CancellationToken cancellationToken)
+        {
+            return await Task.Run(async () =>
+            {
+                using (ProjectContext db = projectManager.GetContext())
+                {
+                    return await db.DataFiles.CountAsync(c => c.NodeId == nodeId, cancellationToken);
+                }
+            }, cancellationToken);
+        }
     }
 }

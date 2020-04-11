@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
+using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.WPF.Annotations;
 
@@ -17,7 +18,8 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
         }
 
         public string Node => DataFile.NodeNumber.ToString();
-        public string Datum => DataFile.StartTime.ToString("dd.MM.yy hh:mm:ss");
+        public string CreateDatum => DataFile.FileCreateTime.ToFormattedString();
+        public string ReferenceDatum => DataFile.ReferenceTime.ToFormattedString();
         public string CallCount => DataFile.Entries.Count.ToString();
         public string MessageCount => DataFile.LogMessages.Count.ToString();
 

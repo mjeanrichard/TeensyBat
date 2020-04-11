@@ -24,7 +24,6 @@
 
     <Window.Resources>
         <ResourceDictionary>
-            <infrastructure:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
             <DataTemplate DataType="{x:Type startPage:StartPageViewModel}">
                 <startPage:StartPage />
             </DataTemplate>
@@ -89,7 +88,7 @@
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Visibility="{Binding HasProject, Converter={StaticResource boolToVisibilityConverter}}"
+                            Visibility="{Binding HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                             Command="{Binding GoToProjectCommand}"
                             Margin="0 15 15 15">
                         <StackPanel Orientation="Horizontal">

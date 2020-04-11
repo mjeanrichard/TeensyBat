@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,16 +19,16 @@ using System.Collections.Generic;
 
 namespace TeensyBatExplorer.Core.Models
 {
-    public class BatNode
+    public class BatCall
     {
         public int Id { get; set; }
 
-        public int NodeNumber { get; set; }
-        public int CallStartThreshold { get; set; }
-        public int CallEndThreshold { get; set; }
-        public DateTime StartTime { get; set; }
+        public int NodeId { get; set; }
+        public BatNode Node { get; set; }
 
-        public IList<BatDataFile> DataFiles { get; set; } = new List<BatDataFile>();
-        public IList<BatCall> Calls { get; set; } = new List<BatCall>();
+        public DateTime StartTime { get; set; }
+        public long StartTimeMicros { get; set; }
+
+        public IList<BatDataFileEntry> Entries { get; set; } = new List<BatDataFileEntry>();
     }
 }

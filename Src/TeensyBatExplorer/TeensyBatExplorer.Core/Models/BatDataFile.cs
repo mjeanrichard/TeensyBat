@@ -40,8 +40,9 @@ namespace TeensyBatExplorer.Core.Models
 
         public string Filename { get; set; }
 
-        public DateTime OriginalStartTime { get; set; }
-        public DateTime StartTime { get; set; }
+        public DateTime OriginalReferenceTime { get; set; }
+        public DateTime ReferenceTime { get; set; }
+        public DateTime FileCreateTime { get; set; }
 
         public ICollection<BatDataFileEntry> Entries { get; set; } = new HashSet<BatDataFileEntry>();
 

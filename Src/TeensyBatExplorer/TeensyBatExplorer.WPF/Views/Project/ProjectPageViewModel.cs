@@ -16,19 +16,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using MaterialDesignThemes.Wpf;
 
-using Nito.Mvvm;
-
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
-using TeensyBatExplorer.WPF.Annotations;
 using TeensyBatExplorer.WPF.Infrastructure;
 
 namespace TeensyBatExplorer.WPF.Views.Project
@@ -94,44 +89,6 @@ namespace TeensyBatExplorer.WPF.Views.Project
         {
             BatProject = _projectManager.Project;
             return Task.CompletedTask;
-        }
-    }
-
-    public class NodeViewModel : INotifyPropertyChanged
-    {
-        private readonly NavigationService _navigationService;
-        private BatNode _node;
-        private BaseViewModel _parentViewModel;
-
-        public NodeViewModel(NavigationService navigationService)
-        {
-            _navigationService = navigationService;
-            OpenNodeCommand = new AsyncCommand(OpenNode);
-        }
-
-        private async Task OpenNode()
-        {
-            await _navigationService.NavigateToNodeDetailPage(_node.NodeNumber);
-        }
-
-        public AsyncCommand OpenNodeCommand { get; set; }
-
-        public void Load(BatNode batNode, BaseViewModel parentViewModel)
-        {
-            _node = batNode;
-            _parentViewModel = parentViewModel;
-
-            OnPropertyChanged(nameof(NodeNumber));
-        }
-
-        public int NodeNumber => _node.NodeNumber;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -11,11 +11,6 @@
              d:DataContext="{d:DesignInstance Type=local:DeviceViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
 
-    <UserControl.Resources>
-        <infrastructure:BoolToVisibilityConverter FalseValue="Visible" TrueValue="Hidden" x:Key="BtvInverted" />
-        <infrastructure:BoolToVisibilityConverter x:Key="BtvNormal" />
-    </UserControl.Resources>
-
     <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -27,11 +22,11 @@
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    Style="{StaticResource MaterialDesignHeadline3TextBlock}"
-                   Visibility="{Binding IsConnected, Converter={StaticResource BtvInverted}}">
+                   Visibility="{Binding IsConnected, Converter={StaticResource InverseBoolToVisConverter}}">
             Kein Gerät verbunden...
         </TextBlock>
         <Grid Grid.Row="0"
-              Visibility="{Binding IsConnected, Converter={StaticResource BtvNormal}}"
+              Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}"
               Margin="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="120" />

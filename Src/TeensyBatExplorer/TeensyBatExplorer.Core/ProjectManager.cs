@@ -86,10 +86,11 @@ namespace TeensyBatExplorer.Core
                 CREATE TABLE 'DataFileEntries' (
 	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 	                'FftCount'	INTEGER NOT NULL,
-                    'StartTimeMS' INTEGER NOT NULL,
+                    'StartTimeMillis' INTEGER NOT NULL,
+                    'StartTimeMicros' INTEGER NOT NULL,
+                    'PauseFromPrevEntryMicros' INTEGER NULL,
                     'MaxPeakFrequency' REAL NOT NULL,
                     'AvgPeakFrequency' REAL NOT NULL,
-                    'StartTime' TEXT NOT NULL,
                     'IsBat' INTEGER NOT NULL,
 
                     'HighFreqSampleCount' INTEGER NOT NULL,
@@ -130,13 +131,17 @@ namespace TeensyBatExplorer.Core
 
                 CREATE TABLE 'Nodes' (
 	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'NodeNumber' INTEGER NOT NULL
+                    'NodeNumber' INTEGER NOT NULL,
+                    'StartTime' TEXT NOT NULL,
+                    'CallStartThreshold' INTEGER NOT NULL,
+                    'CallEndThreshold' INTEGER NOT NULL
                 );
 
                 CREATE TABLE 'Calls' (
-	                'Id'    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'StartTime'    TEXT NOT NULL,
-                    'NodeId'    INTEGER NULL
+	                'Id'                INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    'StartTime'         TEXT NOT NULL,
+                    'StartTimeMicros'   INTEGER NOT NULL,
+                    'NodeId'            INTEGER NULL
                 );
 
                 CREATE TABLE 'DataFiles' (
@@ -145,8 +150,9 @@ namespace TeensyBatExplorer.Core
                     'FirmwareVersion'    INTEGER NOT NULL,
                     'HardwareVersion'    INTEGER NOT NULL,
                     'Debug'    INTEGER NOT NULL,
-                    'OriginalStartTime'    TEXT NOT NULL,
-                    'StartTime'    TEXT NOT NULL,
+                    'OriginalReferenceTime'    TEXT NOT NULL,
+                    'ReferenceTime'    TEXT NOT NULL,
+                    'FileCreateTime'    TEXT NOT NULL,
                     'PreCallBufferSize'    INTEGER NOT NULL,
                     'AfterCallBufferSize'    INTEGER NOT NULL,
                     'CallStartThreshold'    INTEGER NOT NULL,

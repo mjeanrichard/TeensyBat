@@ -1,0 +1,40 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:TeensyBatExplorer.WPF.Themes"
+                    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+                    xmlns:controls="clr-namespace:TeensyBatExplorer.WPF.Controls"
+                    xmlns:infrastructure="clr-namespace:TeensyBatExplorer.WPF.Infrastructure">
+    
+    <DataTemplate x:Key="RightAlignedColumn">
+        <TextBlock Text="{Binding}" TextAlignment="Right" />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type local:YesNoDialogViewModel}">
+        <StackPanel Margin="20">
+            <TextBlock Style="{StaticResource MaterialDesignBody1TextBlock}" 
+                       Margin="0 10"
+                       Text="{Binding Message, Mode=OneWay}" />
+            <StackPanel
+                Orientation="Horizontal"
+                HorizontalAlignment="Right">
+                <Button
+                    Style="{StaticResource MaterialDesignFlatDarkBgButton}"
+                    IsDefault="True"
+                    Margin="0 8 8 0"
+                    Command="md:DialogHost.CloseDialogCommand"
+                    CommandParameter="{x:Static local:DialogResult.Yes}">
+                    Ja
+                </Button>
+                <Button
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    IsCancel="True"
+                    Margin="0 8 8 0"
+                    Command="md:DialogHost.CloseDialogCommand"
+                    CommandParameter="{x:Static local:DialogResult.No}">
+                    Nein
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+</ResourceDictionary>

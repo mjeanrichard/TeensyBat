@@ -20,6 +20,7 @@ using Nito.Mvvm;
 
 using TeensyBatExplorer.Core.Devices;
 using TeensyBatExplorer.WPF.Infrastructure;
+using TeensyBatExplorer.WPF.Themes;
 
 namespace TeensyBatExplorer.WPF.Views.Device
 {

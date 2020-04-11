@@ -10,6 +10,14 @@
              d:DataContext="{d:DesignInstance Type=project:ProjectPageViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
 
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="GridViewCellTemplateStyle">
+                <TextBlock Text="{Binding}" Background="Yellow" />
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -23,35 +31,62 @@
         </StackPanel>
 
         <GroupBox Header="Geräte" Grid.Row="1" Margin="0 16">
-            <ListView ItemsSource="{Binding Nodes}">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn
-                            DisplayMemberBinding="{Binding NodeNumber}"
-                            Header="Nr" />
-                        <GridViewColumn Header="">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate DataType="project:NodeViewModel">
-                                    <Button Command="{Binding OpenNodeCommand}"
-                                            VerticalAlignment="Center"
-                                            VerticalContentAlignment="Center"
-                                            Width="30"
-                                            Height="30"
-                                            Style="{StaticResource MaterialDesignIconButton}"
-                                            ToolTip="Details anzeigen">
-                                        <md:PackIcon Kind="OpenInApp" Width="20" Height="20" />
-                                    </Button>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            <StackPanel>
+                <TextBlock Visibility="{Binding ElementName=NodesListView, Path=HasItems, Converter={StaticResource InverseBoolToVisConverter}}">
+                    Diese Projekt enhält noch keine Geräte...
+                </TextBlock>
+                <ListView x:Name="NodesListView"
+                          ItemsSource="{Binding Nodes, Mode=OneWay}"
+                          Visibility="{Binding RelativeSource={RelativeSource Self}, Path=HasItems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn
+                                DisplayMemberBinding="{Binding NodeNumber, Mode=OneWay}"
+                                Header="Nr" />
+                            <GridViewColumn
+                                DisplayMemberBinding="{Binding StartDatum, Mode=OneWay}"
+                                Header="Start Datum" />
+                            <GridViewColumn
+                                DisplayMemberBinding="{Binding FileCount, Mode=OneWay}"
+                                Header="# Files" />
+                            <GridViewColumn
+                                DisplayMemberBinding="{Binding CallCount, Mode=OneWay}"
+                                Header="# Calls" />
+                            <GridViewColumn Header="">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="project:NodeViewModel">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Command="{Binding OpenNodeCommand}"
+                                                    VerticalAlignment="Center"
+                                                    VerticalContentAlignment="Center"
+                                                    Width="30"
+                                                    Height="30"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Details anzeigen">
+                                                <md:PackIcon Kind="FolderOpenOutline" Width="20" Height="20" />
+                                            </Button>
+                                            <Button Command="{Binding DeleteNodeCommand}"
+                                                    VerticalAlignment="Center"
+                                                    VerticalContentAlignment="Center"
+                                                    Width="30"
+                                                    Height="30"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Gerät löschen">
+                                                <md:PackIcon Kind="Delete" Width="20" Height="20" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </StackPanel>
         </GroupBox>
     </Grid>
 </UserControl>

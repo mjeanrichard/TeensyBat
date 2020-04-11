@@ -25,7 +25,7 @@ using MaterialDesignThemes.Wpf;
 using TeensyBatExplorer.WPF.Annotations;
 using TeensyBatExplorer.WPF.Infrastructure;
 
-namespace TeensyBatExplorer.WPF.Views.Device
+namespace TeensyBatExplorer.WPF.Themes
 {
     public abstract class DialogViewModel<TResult> : INotifyPropertyChanged
     {

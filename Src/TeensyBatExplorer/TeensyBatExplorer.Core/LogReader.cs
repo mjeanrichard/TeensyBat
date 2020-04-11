@@ -49,11 +49,19 @@ namespace TeensyBatExplorer.Core
                     Match filenameMatch = FilenamePattern.Match(Path.GetFileNameWithoutExtension(filename));
                     if (filenameMatch.Success && filenameMatch.Groups["d"].Success)
                     {
-                        if (dataFile.StartTime == DateTime.UnixEpoch)
+                        if (dataFile.FileCreateTime == DateTime.UnixEpoch)
                         {
                             if (DateTime.TryParseExact(filenameMatch.Groups["d"].Value, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime parsedDate))
                             {
-                                dataFile.StartTime = parsedDate;
+                                dataFile.FileCreateTime = parsedDate;
+                            }
+                        }
+
+                        if (dataFile.ReferenceTime == DateTime.UnixEpoch)
+                        {
+                            if (DateTime.TryParseExact(filenameMatch.Groups["d"].Value, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime parsedDate))
+                            {
+                                dataFile.ReferenceTime = parsedDate;
                             }
                         }
 
@@ -89,10 +97,29 @@ namespace TeensyBatExplorer.Core
 
             reader.SkipBytes(4);
 
-            dataFile.StartTime = reader.ReadDateTimeWithMicroseconds();
-            dataFile.OriginalStartTime = dataFile.StartTime;
 
-            reader.SkipBytes(488);
+            if (dataFile.FirmwareVersion < 3)
+            {
+                // DataFile only has the timestamp of file creation in it.
+                dataFile.FileCreateTime = reader.ReadDateTime();
+
+                // the microseconds Offset is not usable in these versions.
+                reader.ReadUInt32();
+
+                // This is incorrect, but the best we have... It should later be
+                // fixed to the first date of the Node
+                dataFile.OriginalReferenceTime = dataFile.FileCreateTime;
+                dataFile.ReferenceTime = dataFile.FileCreateTime;
+                reader.ReadUInt32();
+            }
+            else
+            {
+                dataFile.ReferenceTime = reader.ReadDateTimeWithMicroseconds();
+                dataFile.OriginalReferenceTime = dataFile.ReferenceTime;
+                dataFile.FileCreateTime = reader.ReadDateTime();
+            }
+
+            reader.SkipBytes(484);
         }
 
         private void ReadData(BinaryReader reader, BatDataFile dataFile)
@@ -145,8 +172,8 @@ namespace TeensyBatExplorer.Core
         private void ReadCall(BatDataFileEntry dataFileEntry, BinaryReader reader, BatDataFile batDataFile)
         {
             dataFileEntry.FftCount = reader.ReadUInt16();
-            dataFileEntry.StartTimeMs = reader.ReadUInt32();
-            dataFileEntry.StartTime = batDataFile.StartTime.AddMilliseconds(dataFileEntry.StartTimeMs);
+            dataFileEntry.StartTimeMillis = reader.ReadUInt32();
+            dataFileEntry.StartTimeMicros = dataFileEntry.StartTimeMillis * 1000;
 
             // Error Counters
             batDataFile.ErrorCountCallBuffFull += reader.ReadByte();
@@ -204,7 +231,7 @@ namespace TeensyBatExplorer.Core
                 case AdditionalDataType.Temperature:
                     TemperatureData tData = new TemperatureData();
                     tData.Timestamp = timestamp;
-                    tData.DateTime = dataFile.StartTime.AddMilliseconds(timestamp);
+                    tData.DateTime = dataFile.ReferenceTime.AddMilliseconds(timestamp);
                     tData.Temperature = reader.ReadUInt16();
                     dataFile.TemperatureData.Add(tData);
                     reader.SkipBytes(1);
@@ -212,7 +239,7 @@ namespace TeensyBatExplorer.Core
                 case AdditionalDataType.Voltage:
                     BatteryData vData = new BatteryData();
                     vData.Timestamp = timestamp;
-                    vData.DateTime = dataFile.StartTime.AddMilliseconds(timestamp);
+                    vData.DateTime = dataFile.ReferenceTime.AddMilliseconds(timestamp);
                     vData.Voltage = reader.ReadUInt16();
                     dataFile.BatteryData.Add(vData);
                     reader.SkipBytes(1);

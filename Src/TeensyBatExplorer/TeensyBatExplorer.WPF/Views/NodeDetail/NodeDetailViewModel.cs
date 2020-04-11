@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,6 +28,7 @@ using OxyPlot.Series;
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
+using TeensyBatExplorer.WPF.Controls;
 using TeensyBatExplorer.WPF.Infrastructure;
 
 namespace TeensyBatExplorer.WPF.Views.NodeDetail
@@ -50,7 +52,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
             Title = $"Daten zu Gerät Nr. {_nodeNumber}";
 
-            AddToolbarButton(new ToolBarButton(ProcessNode, PackIconKind.MessageProcessing, "Daten analysieren"));
+            AddToolbarButton(new ToolBarButton(ProcessNode, PackIconKind.Cogs, "Daten analysieren"));
         }
 
         public BatCall SelectedCall
@@ -79,7 +81,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public IEnumerable<BatDataFile> DataFiles => Node?.DataFiles;
+        public List<DataFileViewModel> DataFiles { get; set; }
 
         public PlotModel BatteryPlot
         {
@@ -122,6 +124,8 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
+        public List<BarItemModel> BarItems { get; private set; } = new List<BarItemModel>();
+
         private async Task ProcessNode()
         {
             using (BusyState busyState = BeginBusy("Analysiere Gerätedaten..."))
@@ -145,11 +149,23 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             await busyState.Update(busyState.Text, 1, 10);
 
             Node = await _projectManager.GetBatNodeWithFiles(_nodeNumber, busyState.Token);
-            OnPropertyChanged(nameof(DataFiles));
             await busyState.Update(busyState.Text, 1, 10);
 
             Calls = await _projectManager.GetCalls(Node.Id, busyState.Token);
+            BarItems = Calls.Select(c => new BarItemModel(c.StartTimeMicros, 1)).ToList();
+            OnPropertyChanged(nameof(BarItems));
             await busyState.Update(busyState.Text, 8, 10);
+
+            List<DataFileViewModel> files = new List<DataFileViewModel>(Node.DataFiles.Count);
+            foreach (BatDataFile file in Node.DataFiles)
+            {
+                DataFileViewModel vm = new DataFileViewModel();
+                files.Add(vm);
+                vm.Load(file, Calls.Sum(c => c.Entries.Count(e => e.DataFileId == file.Id)));
+            }
+
+            DataFiles = files;
+            OnPropertyChanged(nameof(DataFiles));
 
             UpdateBatteryPlot(await _projectManager.GetBatteryData(Node.Id, busyState.Token));
             await busyState.Update(busyState.Text, 9, 10);
@@ -167,7 +183,9 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             pm.Axes.Add(new LinearAxis { Minimum = 0, Maximum = 6, Position = AxisPosition.Left, Title = "Spannung [V]" });
             pm.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Zeit" });
 
-            lineSeries.Points.AddRange(batteryData.Select((b, i) => DateTimeAxis.CreateDataPoint(b.DateTime, b.Voltage / 1000d)));
+            DateTime refTime = Node.StartTime;
+            lineSeries.Points.AddRange(batteryData.Select((b, i) => DateTimeAxis.CreateDataPoint(refTime.AddMilliseconds(b.Timestamp), b.Voltage / 1000d)));
+            lineSeries.CanTrackerInterpolatePoints = false;
 
             pm.PlotMargins = new OxyThickness(50, double.NaN, double.NaN, double.NaN);
 
@@ -189,7 +207,9 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             pm.Axes.Add(new LinearAxis { Minimum = minTemp, Position = AxisPosition.Left, Title = "CPU Temperatur [°C]" });
             pm.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Zeit" });
 
-            lineSeries.Points.AddRange(temperatureData.Select((b, i) => DateTimeAxis.CreateDataPoint(b.DateTime, b.Temperature / 10d)));
+            DateTime refTime = Node.StartTime;
+            lineSeries.Points.AddRange(temperatureData.Select((b, i) => DateTimeAxis.CreateDataPoint(refTime.AddMilliseconds(b.Timestamp), b.Temperature / 10d)));
+            lineSeries.CanTrackerInterpolatePoints = false;
 
             pm.PlotMargins = new OxyThickness(50, double.NaN, double.NaN, double.NaN);
 

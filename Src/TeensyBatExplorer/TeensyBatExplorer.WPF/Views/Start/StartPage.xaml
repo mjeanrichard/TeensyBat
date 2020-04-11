@@ -39,7 +39,7 @@
                                             Height="30"
                                             Style="{StaticResource MaterialDesignIconButton}"
                                             ToolTip="Sync">
-                                        <materialDesign:PackIcon Kind="OpenInApp" Width="20" Height="20" />
+                                        <materialDesign:PackIcon Kind="FolderOpenOutline" Width="20" Height="20" />
                                     </Button>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

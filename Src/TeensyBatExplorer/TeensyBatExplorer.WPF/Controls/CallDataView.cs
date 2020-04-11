@@ -26,6 +26,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.WPF.Controls
@@ -40,6 +41,15 @@ namespace TeensyBatExplorer.WPF.Controls
     [TemplatePart(Name = "PART_VerticalCursor2", Type = typeof(Line))]
     public class CallDataView : Control
     {
+        public static readonly DependencyProperty BatNodeProperty = DependencyProperty.Register(
+            "BatNode", typeof(BatNode), typeof(CallDataView), new PropertyMetadata(default(BatNode)));
+
+        public BatNode BatNode
+        {
+            get { return (BatNode)GetValue(BatNodeProperty); }
+            set { SetValue(BatNodeProperty, value); }
+        }
+
         public static readonly DependencyProperty BatCallProperty = DependencyProperty.Register(
             "BatCall", typeof(BatCall), typeof(CallDataView), new PropertyMetadata(default(BatCall), OnBatCallChanged));
 
@@ -54,22 +64,16 @@ namespace TeensyBatExplorer.WPF.Controls
             set { SetValue(BatCallProperty, value); }
         }
 
-        public static readonly DependencyProperty CollapsePausesProperty = DependencyProperty.Register(
-            "CollapsePauses", typeof(bool), typeof(CallDataView), new PropertyMetadata(default(bool)));
-
-        public bool CollapsePauses
-        {
-            get { return (bool)GetValue(CollapsePausesProperty); }
-            set { SetValue(CollapsePausesProperty, value); }
-        }
-
         private const int RowHeight = 3;
         private const int ColWidth = 3;
 
         private const int FftLowerBound = 128 * RowHeight;
         private const int CollapsedWidth = 5;
+        private const int PauseSizeInCols = 5;
+        private const int MicrosPerCol = 500;
         private const int LoudnessLowerBound = FftLowerBound + 15 + 200;
 
+        private static readonly Color PauseColor = Color.FromRgb(0x40, 0x40, 0x40);
 
         private WriteableBitmap _canvas;
         private Image _imageControl;
@@ -158,10 +162,20 @@ namespace TeensyBatExplorer.WPF.Controls
 
             if (_horizontalCursor1 != null)
             {
+                double y;
+                if (pos.Y < FftLowerBound)
+                {
+                    y = Math.Floor(pos.Y / RowHeight) * RowHeight + 2;
+                }
+                else
+                {
+                    y = Math.Round(pos.Y);
+                }
+
                 _horizontalCursor1.Visibility = Visibility.Visible;
                 _horizontalCursor1.X1 = 0;
                 _horizontalCursor1.X2 = ActualWidth;
-                _horizontalCursor1.Y1 = Math.Floor(pos.Y / RowHeight) * RowHeight + 2;
+                _horizontalCursor1.Y1 = y;
                 _horizontalCursor1.Y2 = _horizontalCursor1.Y1;
 
                 if (_horizontalCursor2 != null)
@@ -195,22 +209,26 @@ namespace TeensyBatExplorer.WPF.Controls
             if (_tooltip != null && _tooltipText != null)
             {
                 PointInfo info = GetInfo(pos);
+                _tooltip.HorizontalOffset = pos.X + _tooltipText.ActualWidth + 20;
+                _tooltip.VerticalOffset = pos.Y + _tooltipText.ActualHeight + 10;
+                _tooltip.IsOpen = true;
+
                 if (info.GapSize.HasValue)
                 {
                     _tooltipText.Text = $"{info.GapSize}ms Pause";
                 }
-                else if (info.Frequency.HasValue)
+                else if (info.Time.HasValue && info.Frequency.HasValue)
                 {
                     _tooltipText.Text = $"{info.Time:0.0}ms, {info.Frequency}kHz";
                 }
-                else if (info.Loudness.HasValue)
+                else if (info.Time.HasValue && info.Loudness.HasValue)
                 {
                     _tooltipText.Text = $"{info.Time:0.0}ms, {info.Loudness}";
                 }
-
-                _tooltip.HorizontalOffset = pos.X + _tooltipText.ActualWidth + 20;
-                _tooltip.VerticalOffset = pos.Y + _tooltipText.ActualHeight + 20;
-                _tooltip.IsOpen = true;
+                else
+                {
+                    _tooltip.IsOpen = false;
+                }
             }
         }
 
@@ -227,35 +245,52 @@ namespace TeensyBatExplorer.WPF.Controls
             HideCursor();
         }
 
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            if (_scrollBar == null)
+            {
+                return;
+            }
+
+            _scrollBar.Value -= e.Delta / 12;
+            e.Handled = true;
+        }
+
         private PointInfo GetInfo(Point position)
         {
-            if (_entries == null)
+            if (_entries == null || _scrollBar == null)
             {
                 return new PointInfo();
             }
 
             PointInfo info = new PointInfo();
 
-            int selectedCol = (int)Math.Floor(position.X / ColWidth);
+            int selectedCol = (int)(Math.Floor(position.X / ColWidth) + _scrollBar.Value) + 1;
             int col = 0;
             for (int i = 0; i < _entries.Length; i++)
             {
                 BatDataFileEntry entry = _entries[i];
-                if (selectedCol < col)
+
+                if (entry.PauseFromPrevEntryMicros.HasValue && entry.PauseFromPrevEntryMicros.Value > 0)
+                {
+                    col += CollapsedWidth;
+                }
+
+                if (selectedCol <= col && i > 0)
                 {
                     // Pointed at a gap
-                    info.GapSize = (entry.StartTime - BatCall.StartTime).TotalMilliseconds;
+                    info.GapSize = entry.PauseFromPrevEntryMicros / 1000d;
                     return info;
                 }
 
                 if (col + entry.FftCount >= selectedCol)
                 {
-                    double delta = (_scrollBar.Value + selectedCol - col) / 2d;
-                    info.Time = (entry.StartTime - BatCall.StartTime).TotalMilliseconds + delta;
+                    long delta = (selectedCol - col) * MicrosPerCol;
+                    info.Time = (entry.StartTimeMicros + delta - BatCall.StartTimeMicros)  / 1000d;
                     break;
                 }
 
-                col += entry.FftCount + CollapsedWidth;
+                col += entry.FftCount;
             }
 
 
@@ -290,6 +325,7 @@ namespace TeensyBatExplorer.WPF.Controls
                     _imageControl.Source = _canvas;
                 }
             }
+            UpdateScrollBar();
 
             return base.ArrangeOverride(arrangeBounds);
         }
@@ -298,24 +334,32 @@ namespace TeensyBatExplorer.WPF.Controls
         {
             if (BatCall != null)
             {
-                _entries = BatCall.Entries.OrderBy(e => e.StartTime).ToArray();
+                _entries = BatCall.Entries.OrderBy(e => e.StartTimeMicros).ToArray();
             }
             else
             {
                 _entries = null;
             }
 
-            if (_scrollBar != null && BatCall != null && _entries != null)
+            if (_scrollBar != null)
             {
-                BatDataFileEntry lastEntry = _entries.Last();
-                int sum = (int)((lastEntry.StartTime - BatCall.StartTime).TotalMilliseconds * 2 + lastEntry.FftCount) - (int)Math.Ceiling(_canvas.Width / ColWidth);
-                _scrollBar.Maximum = sum;
-                _scrollBar.SmallChange = 1;
-                _scrollBar.LargeChange = 10;
                 _scrollBar.Value = 0;
             }
 
             InvalidateVisual();
+        }
+
+        private void UpdateScrollBar()
+        {
+            if (_scrollBar != null && BatCall != null && _entries != null)
+            {
+                int totalFftCount = _entries.Sum(e => e.FftCount);
+                int pauseCount = _entries.Count(e => e.PauseFromPrevEntryMicros.HasValue && e.PauseFromPrevEntryMicros.Value > 0);
+                int sum = totalFftCount + pauseCount * CollapsedWidth - (int)Math.Floor(ActualWidth / ColWidth);
+                _scrollBar.Maximum = sum;
+                _scrollBar.SmallChange = 1;
+                _scrollBar.LargeChange = 10;
+            }
         }
 
         protected override void OnRender(DrawingContext drawingContext)
@@ -332,9 +376,6 @@ namespace TeensyBatExplorer.WPF.Controls
                 return;
             }
 
-            Debug.WriteLine("Invalidate");
-            bool collapse = CollapsePauses;
-
             using (BitmapContext context = _canvas.GetBitmapContext())
             {
                 context.Clear();
@@ -345,57 +386,48 @@ namespace TeensyBatExplorer.WPF.Controls
                     startOffsetCol = (int)_scrollBar.Value;
                 }
 
-                DateTime startTime = batCall.StartTime;
-
                 int endCol = (int)Math.Ceiling(_canvas.Width / ColWidth) + startOffsetCol;
 
                 int iCol = 0;
                 int lastLoudness = 0;
+                int tickPos = 0;
                 for (int iEntry = 0; iEntry < _entries.Length; iEntry++)
                 {
-                    BatDataFileEntry entry = _entries[iEntry];
-                    if (iEntry > 0)
+                    if (iCol > endCol)
                     {
-                        if (collapse)
+                        break;
+                    }
+
+                    BatDataFileEntry entry = _entries[iEntry];
+                    if (iEntry > 0 && entry.PauseFromPrevEntryMicros.HasValue)
+                    {
+                        if (entry.PauseFromPrevEntryMicros.Value > 0)
                         {
-                            if (iCol + CollapsedWidth >= startOffsetCol)
+                            // Is a part of this pause visible?
+                            if (iCol + PauseSizeInCols >= startOffsetCol)
                             {
                                 int x1 = iCol - startOffsetCol;
-                                int x2 = x1 + CollapsedWidth;
+                                int x2 = x1 + PauseSizeInCols;
                                 if (iCol <= startOffsetCol)
                                 {
                                     x1 = 0;
                                 }
 
-                                _canvas.FillRectangle(x1 * ColWidth, 0, x2 * ColWidth, FftLowerBound, Color.FromRgb(0x40, 0x40, 0x40));
-                                iCol += CollapsedWidth;
+                                _canvas.FillRectangle(x1 * ColWidth, 0, x2 * ColWidth, FftLowerBound, PauseColor);
                             }
+
+                            iCol += PauseSizeInCols;
+                            tickPos = 0;
                         }
-                        else
+                        else if (iCol - 1 >= startOffsetCol)
                         {
-                            int entryStartCol = (int)(entry.StartTime - startTime).TotalMilliseconds * 2;
-                            if (entryStartCol > iCol)
-                            {
-                                if (entryStartCol >= startOffsetCol)
-                                {
-                                    int x1 = iCol - startOffsetCol;
-                                    int x2 = entryStartCol - startOffsetCol;
-
-                                    if (iCol <= startOffsetCol)
-                                    {
-                                        x1 = 0;
-                                    }
-
-                                    _canvas.FillRectangle(x1 * ColWidth, 0, x2 * ColWidth, FftLowerBound, Color.FromRgb(0x40, 0x40, 0x40));
-                                }
-
-                                iCol = entryStartCol;
-                            }
+                            // Zero width pause: draw single pixel width line onto last column
+                            int x = (iCol - startOffsetCol) * ColWidth - 1;
+                            _canvas.DrawLine(x, 0, x, FftLowerBound, PauseColor);
                         }
                     }
 
                     IList<FftBlock> fftBlocks = entry.FftData;
-                    int tickPos = 0;
                     for (int fftIndex = 0; fftIndex < fftBlocks.Count; fftIndex++)
                     {
                         if (iCol < startOffsetCol)
@@ -406,7 +438,7 @@ namespace TeensyBatExplorer.WPF.Controls
 
                         if (iCol > endCol)
                         {
-                            return;
+                            break;
                         }
 
                         int columnStart = (iCol - startOffsetCol) * ColWidth;
@@ -434,17 +466,31 @@ namespace TeensyBatExplorer.WPF.Controls
                         {
                             if (tickPos % 20 == 0)
                             {
-                                _canvas.DrawLine(columnStart + 1, FftLowerBound, columnStart + 1, FftLowerBound + 15, Colors.Black);
+                                _canvas.DrawLine(columnStart, FftLowerBound, columnStart, FftLowerBound + 15, Colors.Black);
+                            }
+                            else if (tickPos % 10 == 0)
+                            {
+                                _canvas.DrawLine(columnStart, FftLowerBound, columnStart, FftLowerBound + 10, Colors.Black);
                             }
                             else
                             {
-                                _canvas.DrawLine(columnStart + 1, FftLowerBound, columnStart + 1, FftLowerBound + 5, Colors.Black);
+                                _canvas.DrawLine(columnStart, FftLowerBound, columnStart, FftLowerBound + 5, Colors.Black);
                             }
                         }
 
                         tickPos++;
                         iCol++;
                     }
+                }
+
+                BatNode batNode = BatNode;
+                if (batNode != null)
+                {
+                    int callStartThreshold = batNode.CallStartThreshold / 21;
+                    int callEndThreshold = batNode.CallEndThreshold / 21;
+
+                    _canvas.DrawLine(0, LoudnessLowerBound - callStartThreshold, (iCol - startOffsetCol) * ColWidth, LoudnessLowerBound - callStartThreshold, Colors.Green);
+                    _canvas.DrawLine(0, LoudnessLowerBound - callEndThreshold, (iCol - startOffsetCol) * ColWidth, LoudnessLowerBound - callEndThreshold, Colors.Red);
                 }
 
                 //float width = 1f;

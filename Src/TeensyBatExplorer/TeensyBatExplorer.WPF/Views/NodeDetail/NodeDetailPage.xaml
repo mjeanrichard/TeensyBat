@@ -24,12 +24,14 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top">
                         <TextBox Text="{Binding Node.NodeNumber, Mode=OneWay}"
                                  md:HintAssist.Hint="Geräte Nummer"
                                  IsReadOnly="True"
+                                 Width="100"
                                  Margin="0 10 20 10"
                                  HorizontalContentAlignment="Right"
                                  VerticalContentAlignment="Top"
@@ -38,13 +40,28 @@
                         <TextBox Text="{Binding Node.DataFiles.Count, Mode=OneWay}"
                                  md:HintAssist.Hint="Anzahl Log Files"
                                  IsReadOnly="True"
+                                 Width="100"
                                  Margin="0 10 20 10"
                                  HorizontalContentAlignment="Right"
                                  md:TextFieldAssist.DecorationVisibility="Hidden"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
                     </StackPanel>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Top">
+                        <DatePicker Width="100"
+                                    Margin="0 10 20 10"
+                                    md:HintAssist.Hint="Referenzdatum"
+                                    SelectedDate="{Binding Node.StartTime}"
+                                    Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
+                        <md:TimePicker md:HintAssist.Hint="Zeit"
+                                       Width="100"
+                                       Margin="0 10 20 10"
+                                       Is24Hours="true"
+                                       SelectedTime="{Binding Node.StartTime}"
+                                       WithSeconds="True"
+                                       Style="{StaticResource MaterialDesignFloatingHintTimePicker}" />
+                    </StackPanel>
 
-                    <GroupBox Header="Logdateien" Grid.Row="1" Margin="0 16">
+                    <GroupBox Header="Logdateien" Grid.Row="2" Margin="0 16">
                         <ListView ItemsSource="{Binding DataFiles, Mode=OneWay}">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
@@ -57,33 +74,33 @@
                                         DisplayMemberBinding="{Binding Filename, Mode=OneWay}"
                                         Header="Datei" />
                                     <GridViewColumn
-                                        DisplayMemberBinding="{Binding Entries.Count, Mode=OneWay}"
+                                        DisplayMemberBinding="{Binding EntryCount, Mode=OneWay}"
                                         Header="Anzahl Rufe" />
                                     <GridViewColumn
-                                        DisplayMemberBinding="{Binding StartTime, Mode=OneWay}"
-                                        Header="Startzeit" />
+                                        DisplayMemberBinding="{Binding FileCreateTime, Mode=OneWay}"
+                                        Header="Erstellt am" />
                                     <GridViewColumn
-                                        DisplayMemberBinding="{Binding HardwareVersion, Mode=OneWay}"
-                                        Header="HW Version" />
+                                        DisplayMemberBinding="{Binding ReferenceTime, Mode=OneWay}"
+                                        Header="Referenzdatum" />
                                     <GridViewColumn
-                                        DisplayMemberBinding="{Binding FirmwareVersion, Mode=OneWay}"
-                                        Header="FW Version" />
-                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountCallBuffFull, Mode=OneWay}">
+                                        DisplayMemberBinding="{Binding Version, Mode=OneWay}"
+                                        Header="Version" />
+                                    <GridViewColumn DisplayMemberBinding="{Binding DataFile.ErrorCountCallBuffFull, Mode=OneWay}">
                                         <GridViewColumn.Header>
                                             <TextBlock Text="CBF" ToolTip="Anzahl 'Call Buffer Full' Fehler" />
                                         </GridViewColumn.Header>
                                     </GridViewColumn>
-                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountDataBufferFull, Mode=OneWay}">
+                                    <GridViewColumn DisplayMemberBinding="{Binding DataFile.ErrorCountDataBufferFull, Mode=OneWay}">
                                         <GridViewColumn.Header>
                                             <TextBlock Text="DBF" ToolTip="Anzahl 'Data Buffer Full' Fehler" />
                                         </GridViewColumn.Header>
                                     </GridViewColumn>
-                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountPointerBufferFull, Mode=OneWay}">
+                                    <GridViewColumn DisplayMemberBinding="{Binding DataFile.ErrorCountPointerBufferFull, Mode=OneWay}">
                                         <GridViewColumn.Header>
                                             <TextBlock Text="PBF" ToolTip="Anzahl 'Pointer Buffer Full' Fehler" />
                                         </GridViewColumn.Header>
                                     </GridViewColumn>
-                                    <GridViewColumn DisplayMemberBinding="{Binding ErrorCountProcessOverlap, Mode=OneWay}">
+                                    <GridViewColumn DisplayMemberBinding="{Binding DataFile.ErrorCountProcessOverlap, Mode=OneWay}">
                                         <GridViewColumn.Header>
                                             <TextBlock Text="PO" ToolTip="Anzahl 'Process Overlap' Fehler" />
                                         </GridViewColumn.Header>
@@ -100,8 +117,13 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="200" />
+                    </Grid.RowDefinitions>
+                    
                     <ListView
-                        Grid.Column="0"
+                        Grid.Column="0" Grid.Row="0"
                         SelectedItem="{Binding SelectedCall, Mode=TwoWay}"
                         ItemsSource="{Binding Calls, Mode=OneWay}">
                         <ListView.ItemContainerStyle>
@@ -117,10 +139,33 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <GroupBox Grid.Column="1"
+                    <GroupBox Grid.Column="1" Grid.Row="0"
                               Header="Details">
-                        <controls:CallDataView CollapsePauses="True" BatCall="{Binding SelectedCall}" />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top">
+                                <TextBox Text="{Binding SelectedCall.StartTime, Mode=OneWay}"
+                                         md:HintAssist.Hint="Start"
+                                         IsReadOnly="True"
+                                         Width="100"
+                                         Margin="0 10 20 10"
+                                         HorizontalContentAlignment="Right"
+                                         VerticalContentAlignment="Top"
+                                         md:TextFieldAssist.DecorationVisibility="Hidden"
+                                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                            </StackPanel>
+
+                            <controls:CallDataView Grid.Row="0"  BatCall="{Binding SelectedCall}" BatNode="{Binding Node}" />
+                        </Grid>
                     </GroupBox>
+
+                    <controls:BarControl Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" 
+                                         Items="{Binding BarItems, Mode=OneWay}"
+                                         CurrentPosition="{Binding SelectedCall.StartTimeMicros}"
+                                         />
                 </Grid>
             </TabItem>
             <TabItem Header="Batterie">

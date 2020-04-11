@@ -29,6 +29,13 @@ namespace TeensyBatExplorer.Core.Commands
 {
     public class AddLogsCommand
     {
+        private readonly NodeProcessor _nodeProcessor;
+
+        public AddLogsCommand(NodeProcessor nodeProcessor)
+        {
+            _nodeProcessor = nodeProcessor;
+        }
+
         public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatDataFile> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
         {
             if (progress == null)
@@ -43,7 +50,7 @@ namespace TeensyBatExplorer.Core.Commands
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 i++;
-                progress.Report(new CountProgress { Current = i, Total = batLogs.Length, Text = $"'{batLog.Filename}'..." });
+                progress.Report(new CountProgress { Current = i, Total = batLogs.Length, Text = $"Importiere '{batLog.Filename}'..." });
 
                 using (ProjectContext db = projectManager.GetContext())
                 {
@@ -55,6 +62,14 @@ namespace TeensyBatExplorer.Core.Commands
                     }
                 }
             }
+
+            int[] nodeIds = batLogs.Select(b => b.NodeId).Distinct().ToArray();
+            for (int index = 0; index < nodeIds.Length; index++)
+            {
+                int nodeId = nodeIds[index];
+                progress.Report($"Analysiere Gerätedaten {index+1}/{nodeIds.Length}", 0, 100);
+                await _nodeProcessor.Process(nodeId, progress, cancellationToken);
+            }
         }
 
         private async Task AddBatLog(ProjectContext db, BatDataFile batDataFile, CancellationToken cancellationToken)
@@ -64,7 +79,15 @@ namespace TeensyBatExplorer.Core.Commands
             if (batNode == null)
             {
                 batNode = new BatNode { NodeNumber = batDataFile.NodeNumber };
+                batNode.CallEndThreshold = batDataFile.CallEndThreshold;
+                batNode.CallStartThreshold = batDataFile.CallStartThreshold;
+                batNode.StartTime = batDataFile.ReferenceTime;
                 db.Nodes.Add(batNode);
+            }
+
+            if (batNode.StartTime > batDataFile.ReferenceTime)
+            {
+                batNode.StartTime = batDataFile.ReferenceTime;
             }
 
             batDataFile.Node = batNode;

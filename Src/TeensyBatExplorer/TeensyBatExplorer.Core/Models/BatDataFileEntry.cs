@@ -23,10 +23,12 @@ namespace TeensyBatExplorer.Core.Models
     {
         public int Id { get; set; }
         public int FftCount { get; set; }
-        public long StartTimeMs { get; set; }
+        public long StartTimeMillis { get; set; }
+        public long StartTimeMicros { get; set; }
+        public long? PauseFromPrevEntryMicros { get; set; }
+
         public double MaxPeakFrequency { get; set; }
         public double AvgPeakFrequency { get; set; }
-        public DateTime StartTime { get; set; }
         public bool IsBat { get; set; }
 
         public int HighFreqSampleCount { get; set; }

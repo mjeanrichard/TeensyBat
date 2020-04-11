@@ -64,37 +64,53 @@ namespace TeensyBatExplorer.Core
             foreach (BatDataFile dataFile in node.DataFiles)
             {
                 List<BatDataFileEntry> entries = await context.DataFileEntries.Include(e => e.FftData)
-                    .OrderBy(e => e.StartTime)
+                    .OrderBy(e => e.StartTimeMicros)
                     .Where(e => e.DataFileId == dataFile.Id).ToListAsync(cancellationToken).ConfigureAwait(false);
                 
-                AddDataFile(node, entries, context);
+                AddDataFile(node, dataFile, entries, context);
                 await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 i++;
                 progress.Report((int)(i * pp), 100);
             }
         }
 
-        private void AddDataFile(BatNode node, IEnumerable<BatDataFileEntry> entries, ProjectContext context)
+        private void AddDataFile(BatNode node, BatDataFile dataFile, IEnumerable<BatDataFileEntry> entries, ProjectContext context)
         {
             BatDataFileEntry[] fileEntries = entries.ToArray();
 
-            DateTime previousEndTime = DateTime.MinValue;
+            if (dataFile.FirmwareVersion < 3)
+            {
+                // These Files have an incorrect ReferenceTime. Use the on from the Node...
+                dataFile.ReferenceTime = node.StartTime;
+            }
+
+            long previousEndTime = 0;
             BatCall currentCall = null;
-            int i = 0;
             foreach (BatDataFileEntry entry in fileEntries)
             {
-                double callDiff = (entry.StartTime - previousEndTime).TotalMilliseconds;
-                if (callDiff > 1000)
+                long callDiff = entry.StartTimeMicros - previousEndTime;
+                if (callDiff <= 0)
+                {
+                    entry.StartTimeMicros = previousEndTime;
+                    entry.PauseFromPrevEntryMicros = 0;
+                }
+                else if (callDiff > 1000 * 1000)
                 {
                     currentCall = new BatCall();
-                    currentCall.StartTime = entry.StartTime;
+                    currentCall.StartTime = dataFile.ReferenceTime.AddMicros(entry.StartTimeMicros);
+
+                    currentCall.StartTimeMicros = entry.StartTimeMicros;
                     currentCall.Node = node;
+                    entry.PauseFromPrevEntryMicros = null;
+                }
+                else
+                {
+                    entry.PauseFromPrevEntryMicros = callDiff;
                 }
 
                 entry.Call = currentCall;
 
-                int durationMs = entry.FftCount / 2;
-                previousEndTime = entry.StartTime.AddMilliseconds(durationMs);
+                previousEndTime = entry.StartTimeMicros + (entry.FftCount * 500);
             }
         }
     }

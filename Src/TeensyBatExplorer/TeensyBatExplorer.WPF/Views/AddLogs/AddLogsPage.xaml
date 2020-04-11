@@ -32,8 +32,11 @@
                         DisplayMemberBinding="{Binding Node, Mode=OneWay}"
                         Header="Geräte Nr." />
                     <GridViewColumn
-                        DisplayMemberBinding="{Binding Datum, Mode=OneWay}"
-                        Header="Datum" />
+                        DisplayMemberBinding="{Binding CreateDatum, Mode=OneWay}"
+                        Header="Erstellt" />
+                    <GridViewColumn
+                        DisplayMemberBinding="{Binding ReferenceDatum, Mode=OneWay}"
+                        Header="Referenz" />
                     <GridViewColumn
                         DisplayMemberBinding="{Binding CallCount, Mode=OneWay}"
                         Header="Anzahl Rufe" />

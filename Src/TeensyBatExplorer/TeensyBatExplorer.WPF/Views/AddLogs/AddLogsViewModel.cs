@@ -78,9 +78,9 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
             {
                 await Task.Run(async () =>
                 {
-                    Progress<CountProgress> progress = new Progress<CountProgress>(async p => await busyState.Update(p));
-                    await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Where(b => b.Selected).Select(v => v.DataFile), progress, CancellationToken.None);
+                    await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Where(b => b.Selected).Select(v => v.DataFile), busyState.GetProgress(), CancellationToken.None);
                 });
+                await _navigationService.NavigateToProjectPage();
             }
         }
 
