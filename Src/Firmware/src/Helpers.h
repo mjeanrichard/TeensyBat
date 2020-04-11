@@ -15,8 +15,11 @@ void FatalError(uint8_t errorCode, const __FlashStringHelper *f);
 extern bool SerialEnabled;
 extern void EnableSerial();
 
-extern void WriteInt16(uint8_t * buffer, uint16_t data);
-extern void WriteInt32(uint8_t * buffer, uint32_t data);
+extern void WriteUInt16(uint8_t * buffer, uint16_t data);
+extern void WriteUInt32(uint8_t * buffer, uint32_t data);
+
+extern uint16_t ReadUInt16(uint8_t * buffer);
+extern uint32_t ReadUInt32(uint8_t * buffer);
 
 
 #define MESSAGE(m) if (SerialEnabled) Serial.print(F(m));

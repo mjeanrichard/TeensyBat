@@ -48,7 +48,10 @@ private:
 	friend void software_isr(void);
 	friend void adc1_isr(void);
 
+	// Value that was last read by ADC1
 	volatile uint16_t _lastEnvelopeValue;
+	// This is set right before the Software INterrupt is fired. 
+	volatile uint16_t _envelopeValueAfterSampleRead;
 	
 	bool _isEnabled = false;
 
@@ -110,7 +113,7 @@ private:
 	
 
 	int16_t _fftBuffer[TB_FFT_RESULT_SIZE*4] __attribute__((aligned(4)));
-	void computeFFT(uint8_t * dest, CallPointer * callPointer);
+	void computeFFT(uint8_t * dest, CallPointer * callPointer, uint16_t envelopeValue);
 	void copyToCallBuffer(uint8_t * src);
 	void increaseCallBuffer();
 

@@ -12,11 +12,8 @@ void LogWriter::Process()
         {
             FatalError(TB_ERR_SD_WRITE_BLOCK, F("Ups, should have opened new file..."));
         }
-        if (!_sd.card()->writeStart(_firstBlock + _blocksWritten, TB_FILE_BLOCK_COUNT))
-        {
-            FatalError(TB_ERR_SD_WRITE_BLOCK, F("Could not write Block (writeStart failed)."));
-        }
 
+        StartBlock();
         bool lastResult = true;
         while (_batAudio->hasDataAvailable())
         {
@@ -27,15 +24,28 @@ void LogWriter::Process()
             }
             DEBUG_F(". %u\n", _blocksWritten)
         }
+        EndBlock();
 
-        if (!_sd.card()->writeStop())
-        {
-            FatalError(TB_ERR_SD_WRITE_BLOCK, F("Could not write Block (writeStop failed)."));
-        }
         if (!lastResult)
         {
             CloseFile();
         }
+    }
+}
+
+void LogWriter::StartBlock()
+{
+    if (!_sd.card()->writeStart(_firstBlock + _blocksWritten, TB_FILE_BLOCK_COUNT))
+    {
+        FatalError(TB_ERR_SD_WRITE_BLOCK, F("Could not write Block (writeStart failed)."));
+    }
+}
+
+void LogWriter::EndBlock()
+{
+    if (!_sd.card()->writeStop())
+    {
+        FatalError(TB_ERR_SD_WRITE_BLOCK, F("Could not write Block (writeStop failed)."));
     }
 }
 
@@ -98,8 +108,12 @@ void LogWriter::OpenNewFile()
 {
     char filename[TB_FILENAME_LEN];
 
+    _blocksWritten = 0;
+    _isFileOpen = false;
+
+    long clockTime = Teensy3Clock.get();
     tmElements_t time;
-    breakTime(Teensy3Clock.get(), time);
+    breakTime(clockTime, time);
     GenerateFilename(filename, time);
 
     if (!_file.createContiguous(filename, TB_SD_BUFFER_SIZE * TB_FILE_BLOCK_COUNT))
@@ -127,13 +141,12 @@ void LogWriter::OpenNewFile()
     _file.timestamp(T_CREATE | T_ACCESS | T_WRITE, 1970 + time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second);
     
     EraseFile();
-    WriteFileHeader();
-    _blocksWritten = 1;
+    WriteFileHeader(clockTime);
     _isFileOpen = true;
     DEBUG("Created File.\n");
 }
 
-void LogWriter::WriteFileHeader()
+void LogWriter::WriteFileHeader(uint32_t time)
 {
     uint8_t *pBuffer = (uint8_t *)_sd.vol()->cacheClear();
     
@@ -147,18 +160,21 @@ void LogWriter::WriteFileHeader()
     pBuffer[6] = TB_PRE_CALL_BUFFER_COUNT;
     pBuffer[7] = TB_AFTER_CALL_SAMPLES;
 
-    WriteInt16(pBuffer + 8, TB_CALL_START_THRESHOLD);
-    WriteInt16(pBuffer + 10, TB_CALL_STOP_THRESHOLD);
+    WriteUInt16(pBuffer + 8, TB_CALL_START_THRESHOLD);
+    WriteUInt16(pBuffer + 10, TB_CALL_STOP_THRESHOLD);
 
     pBuffer[13] = 0;
     pBuffer[14] = 0;
     pBuffer[15] = 0;
     pBuffer[16] = 0;
 
-  	uint32_t time = Teensy3Clock.get();
-    uint32_t offset = micros();
-    WriteInt32(pBuffer + 16, time);
-    WriteInt32(pBuffer + 20, offset);
+    WriteUInt32(pBuffer + 16, _startTime);
+    WriteUInt32(pBuffer + 20, _startTimeOffset);
+    WriteUInt32(pBuffer + 24, time);
+    StartBlock();
+    _sd.card()->writeData(pBuffer);
+    EndBlock();
+    _blocksWritten++;
 }
 
 void LogWriter::CardError()

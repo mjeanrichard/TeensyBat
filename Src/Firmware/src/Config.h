@@ -4,7 +4,7 @@
 #include "WProgram.h"
 
 #define TB_HW_VERSION 5
-#define TB_FW_VERSION 1
+#define TB_FW_VERSION 3
 
 #define TB_DEBUG 1
 #define TB_CALL_LED TB_PIN_LED_GREEN
@@ -20,7 +20,7 @@ static const uint32_t TB_AUTO_SWITCH_OFF_MS = 5 * 60 * 1000;
 static const uint16_t TB_FFT_RESULT_SIZE = TB_AUDIO_SAMPLE_BUFFER_SIZE;
 static const uint16_t TB_CALL_DATA_SIZE = TB_FFT_RESULT_SIZE + 4;
 
-static const uint8_t TB_PRE_CALL_BUFFER_COUNT = 8;
+static const uint8_t TB_PRE_CALL_BUFFER_COUNT = 4;
 static const uint8_t TB_AFTER_CALL_SAMPLES = 4;
 
 static const uint16_t TB_CALL_START_THRESHOLD = 2400; // Max Value is 4095
@@ -31,7 +31,7 @@ static const uint8_t TB_CALL_MIN_POWER = 50; // Min Power in a bin above TB_CALL
 static const uint16_t TB_CALL_POWERCOUNTER_THRESHOLD = 2400;
 
 static const uint16_t TB_CALL_BUFFER_COUNT = 340;
-static const uint16_t TB_CALL_POINTER_COUNT = 10;
+static const uint16_t TB_CALL_POINTER_COUNT = 50;
 
 static const uint32_t TB_MS_BETWEEN_BATTERY_READS = 2 * 60 * 1000;
 static const uint32_t TB_MS_BETWEEN_TEMP_READS = 2 * 60 * 1000;

@@ -76,9 +76,9 @@ void setup()
 
   #if TB_DEBUG > 0
   // This delay is needed somehow. Otherwise a Hardfault is generated
-  // delay(500);
-  // ram.initialize();
-  // Serial.println(ram.free());
+  delay(500);
+  ram.initialize();
+  Serial.println(ram.free());
   #endif
 
   DEBUG_LN("Start!");
@@ -96,7 +96,7 @@ void setup()
   checkFormatRequested();
 
   #if TB_DEBUG > 0
-  // Serial.println(ram.free());
+  Serial.println(ram.free());
   #endif
 
   _b->start();

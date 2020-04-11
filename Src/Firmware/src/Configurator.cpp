@@ -3,12 +3,13 @@
 void Configurator::SetTime(uint8_t buffer[USB_BUF_SIZE])
 {
 	elapsedMillis ms = 0;
-	uint32_t time = (buffer[1] << 24) | (buffer[2] << 16) | (buffer[3] << 8) | (buffer[4]);
-	uint16_t offset = (buffer[5] << 8) | buffer[6];
+	uint32_t time = ReadUInt32(buffer + 1);
+	uint16_t offset = ReadUInt16(buffer + 5);
 	while (ms < offset && ms < 3000)
 	{
 	}
 	Teensy3Clock.set(time);
+	_timeMs = 0;
 	if (ms >= 3000)
 	{
 		Serial.println(F("Error waiting for Offset!"));
@@ -22,7 +23,7 @@ void Configurator::SetTime(uint8_t buffer[USB_BUF_SIZE])
 
 void Configurator::SetVoltage(uint8_t buffer[USB_BUF_SIZE])
 {
-	uint16_t newVoltage = (buffer[1] << 8) | buffer[2];
+	uint16_t newVoltage = ReadUInt16(buffer + 1);
 	uint16_t rawVoltage = _batAudio->readRawBatteryVoltage();
 	uint16_t factor = (newVoltage * 1000) / rawVoltage;
 	EEPROM.put(TB_EEPROM_V_FACT, factor);
@@ -48,26 +49,31 @@ void Configurator::SetNodeId(uint8_t buffer[USB_BUF_SIZE])
 void Configurator::SendConfig(uint8_t buffer[USB_BUF_SIZE])
 {
 	uint8_t nodeId = EEPROM.read(TB_EEPROM_NODE_ID);
-	buffer[0] = DATA_DEVICE_INFO;
-	buffer[1] = nodeId;
+	uint8_t i = 0;
+	buffer[i++] = DATA_DEVICE_INFO;
+	buffer[i++] = TB_FW_VERSION;
+	buffer[i++] = TB_HW_VERSION;
+	buffer[i++] = nodeId;
 
 	uint32_t time = Teensy3Clock.get();
 	uint16_t delta = _timeMs;
-	buffer[2] = (uint8_t)(time >> 24);
-	buffer[3] = (uint8_t)(time >> 16);
-	buffer[4] = (uint8_t)(time >> 8);
-	buffer[5] = (uint8_t)(time);
-
-	buffer[6] = (uint8_t)(delta >> 8);
-	buffer[7] = (uint8_t)(delta);
+	WriteUInt32(buffer + i, time);
+	i += 4;
+	WriteUInt16(buffer + i, delta);
+	i += 2;
 
 	uint16_t voltage = ReadVoltage();
-	buffer[8] = (uint8_t)(voltage >> 8);
-	buffer[9] = (uint8_t)(voltage);
+	WriteUInt16(buffer + i, voltage);
+	i += 2;
 
 	int16_t temp = _batAudio->readTempC();
-	buffer[10] = (uint8_t)(temp >> 8);
-	buffer[11] = (uint8_t)(temp);
+	WriteUInt16(buffer + i, temp);
+	i += 2;
+
+	uint32_t setTime = 0;
+	EEPROM.get(TB_EEPROM_TIME, setTime);
+	WriteUInt32(buffer + i, setTime);
+	i += 4;
 
 	DEBUG_F("Id: %hhu, V: %hu mV, %.1f C, %lu\n", nodeId, voltage, temp/10.0, time)
 }
@@ -99,7 +105,6 @@ void Configurator::Start()
 	uint8_t inBuffer[64];
 	bool exitConfigurator = false;
 	bool sendBuffer = false;
-	elapsedMillis timeTimer = 0;
 	unsigned long lastTime = Teensy3Clock.get();
 	_timeMs = 0;
 
@@ -118,16 +123,26 @@ void Configurator::Start()
 			{
 			case CMD_SET_TIME:
 				SetTime(inBuffer);
+				SendConfig(outBuffer);
+				sendBuffer = true;
 				break;
 			case CMD_SET_VOLTAGE:
 				SetVoltage(inBuffer);
+				SendConfig(outBuffer);
+				sendBuffer = true;
 				break;
 			case CMD_SET_NODEID:
 				SetNodeId(inBuffer);
+				SendConfig(outBuffer);
+				sendBuffer = true;
 				break;
 			case CMD_EXIT_CONFIG:
 				Serial.println(F("OK: Exiting Configuration Mode..."));
 				return;
+			case CMD_GET_INFO:
+				SendConfig(outBuffer);
+				sendBuffer = true;
+				break;
 			}
 		}
 		if (sendBuffer)
@@ -140,14 +155,6 @@ void Configurator::Start()
 		{
 			_timeMs = 0;
 			lastTime = Teensy3Clock.get();
-		}
-
-		if (timeTimer > 490)
-		{
-			memset(outBuffer, 0, sizeof(outBuffer));
-			SendConfig(outBuffer);
-			RawHID.send(outBuffer, 0);
-			timeTimer = 0;
 		}
 
 		if (digitalReadFast(TB_PIN_S2) == LOW)

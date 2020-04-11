@@ -12,6 +12,7 @@
 #define CMD_SET_NODEID 1
 #define CMD_SET_TIME 2
 #define CMD_SET_VOLTAGE 3
+#define CMD_GET_INFO 4
 #define CMD_EXIT_CONFIG 250
 
 #define DATA_DEVICE_INFO 1

@@ -23,14 +23,20 @@ private:
     uint32_t _lastBlock;
     uint16_t _blocksWritten;
 
+    uint32_t _startTime;
+    uint32_t _startTimeOffset;
+
     bool _isFileOpen;
 
     void GenerateFilename(char * filename, tmElements_t time);
     void EraseFile();
     void CardError();
     void OpenNewFile();
-    void WriteFileHeader();
+    void WriteFileHeader(uint32_t time);
     void CloseFile();
+
+    void StartBlock();
+    void EndBlock();
 public:
     LogWriter(uint8_t nodeId, BatAudio * b) : 
         _sd(),
@@ -39,6 +45,8 @@ public:
 		_batAudio = b;
         _nodeId = nodeId;
         _isFileOpen = false;
+  	    _startTime = Teensy3Clock.get();
+        _startTimeOffset = micros();
 	};
 
     void Process();
