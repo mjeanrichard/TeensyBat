@@ -16,14 +16,9 @@
 
 namespace TeensyBatExplorer.Core.Models
 {
-    public class DataFileMessage
+    public enum MessageTypes
     {
-        public int Id { get; set; }
-        public string Message { get;set; }
-        public long Position{ get;set; }
-        public BatLogMessageLevel Level { get; set; }
-
-        public int DataFileId { get; set; }
-        public BatDataFile DataFile { get; set; }
+        LogFile,
+        NodeAnalysis
     }
 }

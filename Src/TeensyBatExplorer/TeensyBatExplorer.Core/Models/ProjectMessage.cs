@@ -14,24 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-
 namespace TeensyBatExplorer.Core.Models
 {
-    public class BatCall
+    public class ProjectMessage
     {
         public int Id { get; set; }
+        public string Message { get;set; }
+        public long? Position{ get;set; }
+        public BatLogMessageLevel Level { get; set; }
+        public MessageTypes MessageType { get; set; }
 
-        public int NodeId { get; set; }
-        public BatNode Node { get; set; }
-
-        public DateTime StartTime { get; set; }
-        public long StartTimeMicros { get; set; }
-        
-        public long DurationMicros { get; set; }
-        public int PeakFrequency { get; set; }
-
-        public IList<BatDataFileEntry> Entries { get; set; } = new List<BatDataFileEntry>();
+        public int? DataFileId { get; set; }
+        public BatDataFile DataFile { get; set; }
     }
 }

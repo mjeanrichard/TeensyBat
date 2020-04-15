@@ -50,7 +50,7 @@ namespace TeensyBatExplorer.Core.Models
 
         public ICollection<TemperatureData> TemperatureData { get; set; } = new HashSet<TemperatureData>();
         
-        public IList<DataFileMessage> LogMessages { get; set; } = new List<DataFileMessage>();
+        public IList<ProjectMessage> LogMessages { get; set; } = new List<ProjectMessage>();
 
         public int NodeId { get; set; }
         public BatNode Node { get; set; }

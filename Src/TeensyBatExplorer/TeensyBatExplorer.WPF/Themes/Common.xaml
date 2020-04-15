@@ -37,4 +37,7 @@
         </StackPanel>
     </DataTemplate>
 
+    <Style BasedOn="{StaticResource MaterialDesignListView}" TargetType="{x:Type ListView}">
+        <Setter Property="md:DataGridAssist.ColumnHeaderPadding" Value="8 4 8 4" />
+    </Style>
 </ResourceDictionary>

@@ -16,8 +16,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
+using MapControl;
 
 using MaterialDesignThemes.Wpf;
 
@@ -26,8 +30,10 @@ using OxyPlot.Axes;
 using OxyPlot.Series;
 
 using TeensyBatExplorer.Core;
+using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
+using TeensyBatExplorer.WPF.Annotations;
 using TeensyBatExplorer.WPF.Controls;
 using TeensyBatExplorer.WPF.Infrastructure;
 
@@ -37,12 +43,14 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
     {
         private readonly ProjectManager _projectManager;
         private readonly NodeProcessor _nodeProcessor;
-        private readonly int _nodeNumber;
         private BatNode _node;
         private PlotModel _batteryPlot;
-        private BatCall _selectedCall;
+        private CallViewModel _selectedCall;
         private PlotModel _temperaturePlot;
-        private List<BatCall> _calls;
+        private List<CallViewModel> _calls;
+
+        private Location _currentMapCenter = new Location(47.3925, 8.0616);
+        private int _nodeNumber;
 
         public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, NodeProcessor nodeProcessor)
         {
@@ -53,9 +61,10 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             Title = $"Daten zu Gerät Nr. {_nodeNumber}";
 
             AddToolbarButton(new ToolBarButton(ProcessNode, PackIconKind.Cogs, "Daten analysieren"));
+            AddToolbarButton(new ToolBarButton(SaveNode, PackIconKind.ContentSave, "Speichern"));
         }
 
-        public BatCall SelectedCall
+        public CallViewModel SelectedCall
         {
             get => _selectedCall;
             set
@@ -64,6 +73,23 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
                 {
                     _selectedCall = value;
                     OnPropertyChanged();
+                }
+            }
+        }
+
+        public string NodeNumber
+        {
+            get => Node?.NodeNumber.ToString() ?? _nodeNumber.ToString();
+            set
+            {
+                if (Node != null && int.TryParse(value, out int intValue))
+                {
+                    if (Node.NodeNumber != intValue)
+                    {
+                        Node.NodeNumber = intValue;
+                        OnPropertyChanged();
+                        OnPropertyChanged(nameof(MapPushpinText));
+                    }
                 }
             }
         }
@@ -77,11 +103,54 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
                 {
                     _node = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(NodeLocation));
+                    OnPropertyChanged(nameof(MapPushpinText));
+                    OnPropertyChanged(nameof(NodeNumber));
                 }
             }
         }
 
         public List<DataFileViewModel> DataFiles { get; set; }
+
+
+        public Location CurrentMapCenter
+        {
+            get => _currentMapCenter;
+            private set
+            {
+                if (Equals(value, _currentMapCenter))
+                {
+                    return;
+                }
+
+                _currentMapCenter = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string MapPushpinText
+        {
+            get => $"Gerät {NodeNumber}";
+        }
+
+        public Location NodeLocation
+        {
+            get
+            {
+                if (Node?.Longitude != null && Node.Latitude.HasValue)
+                {
+                    return new Location(Node.Latitude.Value, Node.Longitude.Value);
+                }
+
+                return null;
+            }
+            set
+            {
+                Node.Longitude = value.Longitude;
+                Node.Latitude = value.Latitude;
+                OnPropertyChanged();
+            }
+        }
 
         public PlotModel BatteryPlot
         {
@@ -109,7 +178,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public List<BatCall> Calls
+        public List<CallViewModel> Calls
         {
             get => _calls;
             set
@@ -125,6 +194,16 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         }
 
         public List<BarItemModel> BarItems { get; private set; } = new List<BarItemModel>();
+
+        private async Task SaveNode()
+        {
+            using (BusyState busyState = BeginBusy("Speichere Gerät..."))
+            {
+                UpdateNodeCommand cmd = new UpdateNodeCommand();
+                await cmd.ExecuteAsync(_projectManager, Node, busyState.GetProgress(), busyState.Token);
+                _nodeNumber = Node.NodeNumber;
+            }
+        }
 
         private async Task ProcessNode()
         {
@@ -151,8 +230,15 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             Node = await _projectManager.GetBatNodeWithFiles(_nodeNumber, busyState.Token);
             await busyState.Update(busyState.Text, 1, 10);
 
-            Calls = await _projectManager.GetCalls(Node.Id, busyState.Token);
-            BarItems = Calls.Select(c => new BarItemModel(c.StartTimeMicros, 1)).ToList();
+            if (Node.Longitude.HasValue && Node.Latitude.HasValue)
+            {
+                NodeLocation = new Location(Node.Latitude.Value, Node.Longitude.Value);
+                CurrentMapCenter = NodeLocation;
+            }
+
+            List<BatCall> calls = await _projectManager.GetCalls(Node.Id, busyState.Token);
+            Calls = calls.Select(c => new CallViewModel(c)).ToList();
+            BarItems = calls.Select(c => new BarItemModel(c.StartTimeMicros, 1)).ToList();
             OnPropertyChanged(nameof(BarItems));
             await busyState.Update(busyState.Text, 8, 10);
 
@@ -161,7 +247,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             {
                 DataFileViewModel vm = new DataFileViewModel();
                 files.Add(vm);
-                vm.Load(file, Calls.Sum(c => c.Entries.Count(e => e.DataFileId == file.Id)));
+                vm.Load(file, calls.Sum(c => c.Entries.Count(e => e.DataFileId == file.Id)));
             }
 
             DataFiles = files;
@@ -214,6 +300,27 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             pm.PlotMargins = new OxyThickness(50, double.NaN, double.NaN, double.NaN);
 
             TemperaturePlot = pm;
+        }
+    }
+
+    public class CallViewModel : INotifyPropertyChanged
+    {
+        public CallViewModel(BatCall call)
+        {
+            Call = call;
+        }
+
+        public BatCall Call { get; private set; }
+
+        public int Duration => (int)(Call.DurationMicros / 1000);
+        public string Time => Call.StartTime.ToString("HH:mm:ss");
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

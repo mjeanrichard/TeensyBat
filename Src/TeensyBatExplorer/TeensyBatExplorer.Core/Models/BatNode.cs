@@ -28,6 +28,9 @@ namespace TeensyBatExplorer.Core.Models
         public int CallEndThreshold { get; set; }
         public DateTime StartTime { get; set; }
 
+        public double? Longitude { get; set; }
+        public double? Latitude { get; set; }
+
         public IList<BatDataFile> DataFiles { get; set; } = new List<BatDataFile>();
         public IList<BatCall> Calls { get; set; } = new List<BatCall>();
     }

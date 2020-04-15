@@ -30,7 +30,7 @@ namespace TeensyBatExplorer.Core
 
         private void AddMessage(BatDataFile dataFile, BatLogMessageLevel level, string message, BinaryReader reader)
         {
-            dataFile.LogMessages.Add(new DataFileMessage { Message = message, Level = level, Position = reader.BaseStream.Position });
+            dataFile.LogMessages.Add(new ProjectMessage { Message = message, MessageType = MessageTypes.LogFile, Level = level, Position = reader?.BaseStream.Position });
         }
 
         public async Task Load(string filename, BatDataFile dataFile)
@@ -53,6 +53,7 @@ namespace TeensyBatExplorer.Core
                         {
                             if (DateTime.TryParseExact(filenameMatch.Groups["d"].Value, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime parsedDate))
                             {
+                                AddMessage(dataFile, BatLogMessageLevel.Information, "Datei Erstellungsdatum aus Dateiname geladen.", null);
                                 dataFile.FileCreateTime = parsedDate;
                             }
                         }
@@ -61,6 +62,7 @@ namespace TeensyBatExplorer.Core
                         {
                             if (DateTime.TryParseExact(filenameMatch.Groups["d"].Value, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime parsedDate))
                             {
+                                AddMessage(dataFile, BatLogMessageLevel.Warning, "Datei Referenzdatum aus Dateiname geladen.", null);
                                 dataFile.ReferenceTime = parsedDate;
                             }
                         }
@@ -69,6 +71,7 @@ namespace TeensyBatExplorer.Core
                         {
                             if (int.TryParse(filenameMatch.Groups["nn"].Value, out int parsedNodeNumber))
                             {
+                                AddMessage(dataFile, BatLogMessageLevel.Information, "Gerätenummer aus Dateinamen geladen.", null);
                                 dataFile.NodeNumber = parsedNodeNumber;
                             }
                         }
@@ -139,7 +142,8 @@ namespace TeensyBatExplorer.Core
 
                 if (markOne != 0xFF || markTwo != 0xFE)
                 {
-                    throw new LogFileFormatException($"Call marker erwartet (0xFFFE) aber 0x{markOne:X2}{markTwo:X2} gefunden.", reader.BaseStream.Position);
+                    AddMessage(dataFile, BatLogMessageLevel.Error, $"Call marker erwartet (0xFFFE) aber 0x{markOne:X2}{markTwo:X2} gefunden.", reader);
+                    return;
                 }
 
                 BatDataFileEntry dataFileEntry = new BatDataFileEntry();
@@ -253,63 +257,63 @@ namespace TeensyBatExplorer.Core
 
         private void ProcessCall(BatDataFileEntry dataFileEntry, BatDataFile dataFile)
         {
-            int noisiness = 0;
-            bool[] check = new bool[40];
-            int[] values = new int[40];
-            int peak = 0;
-            int pwrAbove = 0;
-            for (int i = 0; i < dataFileEntry.FftData.Count; i++)
-            {
-                FftBlock fftBlock = dataFileEntry.FftData[i];
-                for (int j = 10; j < fftBlock.Data.Length; j++)
-                {
-                    byte value = fftBlock.Data[j];
-                    if (j > 25)
-                    {
-                        if (value > 50)
-                        {
-                            pwrAbove++;
-                        }
-                    }
+            //int noisiness = 0;
+            //bool[] check = new bool[40];
+            //int[] values = new int[40];
+            //int peak = 0;
+            //int pwrAbove = 0;
+            //for (int i = 0; i < dataFileEntry.FftData.Count; i++)
+            //{
+            //    FftBlock fftBlock = dataFileEntry.FftData[i];
+            //    for (int j = 10; j < fftBlock.Data.Length; j++)
+            //    {
+            //        byte value = fftBlock.Data[j];
+            //        if (j > 25)
+            //        {
+            //            if (value > 50)
+            //            {
+            //                pwrAbove++;
+            //            }
+            //        }
 
-                    if (j < 25)
-                    {
-                        if (i == 0)
-                        {
-                            values[j] = value;
-                        }
-                        else
-                        {
-                            int delta = values[j] - value;
-                            if (check[j] && delta > 10)
-                            {
-                                noisiness++;
-                            }
-                            else if (!check[j] && delta < -10)
-                            {
-                                noisiness++;
-                            }
+            //        if (j < 25)
+            //        {
+            //            if (i == 0)
+            //            {
+            //                values[j] = value;
+            //            }
+            //            else
+            //            {
+            //                int delta = values[j] - value;
+            //                if (check[j] && delta > 10)
+            //                {
+            //                    noisiness++;
+            //                }
+            //                else if (!check[j] && delta < -10)
+            //                {
+            //                    noisiness++;
+            //                }
 
-                            values[j] = value;
-                            check[j] = value < 0;
-                        }
-                    }
-                }
+            //                values[j] = value;
+            //                check[j] = value < 0;
+            //            }
+            //        }
+            //    }
 
-                if (fftBlock.Loudness >= 2400)
-                {
-                    peak++;
-                }
-            }
+            //    if (fftBlock.Loudness >= 2400)
+            //    {
+            //        peak++;
+            //    }
+            //}
 
 
-            dataFileEntry.AvgPeakFrequency = Math.Round(noisiness / (double)dataFileEntry.FftData.Count, 1);
-            dataFileEntry.MaxPeakFrequency = peak;
+            //dataFileEntry.AvgPeakFrequency = Math.Round(noisiness / (double)dataFileEntry.FftData.Count, 1);
+            //dataFileEntry.MaxPeakFrequency = peak;
 
-            if (pwrAbove >= 2 || dataFileEntry.AvgPeakFrequency < 1 || peak > 30 && dataFileEntry.AvgPeakFrequency < 2)
-            {
-                dataFileEntry.IsBat = true;
-            }
+            //if (pwrAbove >= 2 || dataFileEntry.AvgPeakFrequency < 1 || peak > 30 && dataFileEntry.AvgPeakFrequency < 2)
+            //{
+            //    dataFileEntry.IsBat = true;
+            //}
 
 
             //int pwrAbove = 0;

@@ -224,6 +224,11 @@ namespace TeensyBatExplorer.WPF.Controls
             {
                 context.Clear();
 
+                if (_barModel.Bars.Length <= 0)
+                {
+                    return;
+                }
+
                 if (ShowDetails && _detailModel.Bars.Any())
                 {
                     int barHeight = _canvas.PixelHeight / 2 - 2;
@@ -430,7 +435,7 @@ namespace TeensyBatExplorer.WPF.Controls
 
             public int GetIndex(long time)
             {
-                if (time >= Start && time < Start + TotalDuration)
+                if (time >= Start && time <= Start + TotalDuration)
                 {
                     return (int)((time - Start) / BarDuration);
                 }

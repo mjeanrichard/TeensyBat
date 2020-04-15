@@ -67,11 +67,15 @@ namespace TeensyBatExplorer.WPF.Controls
         private const int RowHeight = 3;
         private const int ColWidth = 3;
 
-        private const int FftLowerBound = 128 * RowHeight;
+        private const int MaxVisibleFreq = 100;
+        private const int FftLowerBound = MaxVisibleFreq * RowHeight;
         private const int CollapsedWidth = 5;
         private const int PauseSizeInCols = 5;
         private const int MicrosPerCol = 500;
-        private const int LoudnessLowerBound = FftLowerBound + 15 + 200;
+        private const int LoudnessScale = 45;
+        private const int LoudnessLowerBound = FftLowerBound + 15 + (4095/LoudnessScale);
+        private const int StaticColOffset = 15;
+        private const int IntensityLineWidth = 8;
 
         private static readonly Color PauseColor = Color.FromRgb(0x40, 0x40, 0x40);
 
@@ -193,7 +197,7 @@ namespace TeensyBatExplorer.WPF.Controls
                 _verticalCursor1.Visibility = Visibility.Visible;
                 _verticalCursor1.Y1 = 0;
                 _verticalCursor1.Y2 = LoudnessLowerBound;
-                _verticalCursor1.X1 = Math.Floor(pos.X / ColWidth) * ColWidth + 2;
+                _verticalCursor1.X1 = Math.Floor((pos.X - StaticColOffset) / ColWidth) * ColWidth + 2 + StaticColOffset;
                 _verticalCursor1.X2 = _verticalCursor1.X1;
 
                 if (_verticalCursor2 != null)
@@ -265,42 +269,45 @@ namespace TeensyBatExplorer.WPF.Controls
 
             PointInfo info = new PointInfo();
 
-            int selectedCol = (int)(Math.Floor(position.X / ColWidth) + _scrollBar.Value) + 1;
-            int col = 0;
-            for (int i = 0; i < _entries.Length; i++)
+            int selectedCol = (int)(Math.Floor((position.X - StaticColOffset) / ColWidth) + _scrollBar.Value) + 1;
+            if (selectedCol >= 0)
             {
-                BatDataFileEntry entry = _entries[i];
-
-                if (entry.PauseFromPrevEntryMicros.HasValue && entry.PauseFromPrevEntryMicros.Value > 0)
+                int col = 0;
+                for (int i = 0; i < _entries.Length; i++)
                 {
-                    col += CollapsedWidth;
-                }
+                    BatDataFileEntry entry = _entries[i];
 
-                if (selectedCol <= col && i > 0)
-                {
-                    // Pointed at a gap
-                    info.GapSize = entry.PauseFromPrevEntryMicros / 1000d;
-                    return info;
-                }
+                    if (entry.PauseFromPrevEntryMicros.HasValue && entry.PauseFromPrevEntryMicros.Value > 0)
+                    {
+                        col += CollapsedWidth;
+                    }
 
-                if (col + entry.FftCount >= selectedCol)
-                {
-                    long delta = (selectedCol - col) * MicrosPerCol;
-                    info.Time = (entry.StartTimeMicros + delta - BatCall.StartTimeMicros)  / 1000d;
-                    break;
-                }
+                    if (selectedCol <= col && i > 0)
+                    {
+                        // Pointed at a gap
+                        info.GapSize = entry.PauseFromPrevEntryMicros / 1000d;
+                        return info;
+                    }
 
-                col += entry.FftCount;
+                    if (col + entry.FftCount >= selectedCol)
+                    {
+                        long delta = (selectedCol - col) * MicrosPerCol;
+                        info.Time = (entry.StartTimeMicros + delta - BatCall.StartTimeMicros) / 1000d;
+                        break;
+                    }
+
+                    col += entry.FftCount;
+                }
             }
 
 
             if (position.Y <= FftLowerBound)
             {
-                info.Frequency = (128 - (int)Math.Floor(position.Y / RowHeight)) * 2 - 1;
+                info.Frequency = (MaxVisibleFreq - (int)Math.Floor(position.Y / RowHeight)) - 1;
             }
             else
             {
-                info.Loudness = (int)(LoudnessLowerBound - position.Y) * 21;
+                info.Loudness = (int)(LoudnessLowerBound - position.Y) * LoudnessScale;
             }
 
             return info;
@@ -318,7 +325,7 @@ namespace TeensyBatExplorer.WPF.Controls
 
             if ((int)_canvas.Width != width)
             {
-                _canvas = BitmapFactory.New(width, 1024);
+                _canvas = BitmapFactory.New(width, LoudnessLowerBound);
                 if (_imageControl != null)
                 {
                     _imageControl.InvalidateArrange();
@@ -391,6 +398,7 @@ namespace TeensyBatExplorer.WPF.Controls
                 int iCol = 0;
                 int lastLoudness = 0;
                 int tickPos = 0;
+
                 for (int iEntry = 0; iEntry < _entries.Length; iEntry++)
                 {
                     if (iCol > endCol)
@@ -413,7 +421,7 @@ namespace TeensyBatExplorer.WPF.Controls
                                     x1 = 0;
                                 }
 
-                                _canvas.FillRectangle(x1 * ColWidth, 0, x2 * ColWidth, FftLowerBound, PauseColor);
+                                _canvas.FillRectangle(x1 * ColWidth + StaticColOffset, 0, x2 * ColWidth + StaticColOffset, FftLowerBound, PauseColor);
                             }
 
                             iCol += PauseSizeInCols;
@@ -441,11 +449,12 @@ namespace TeensyBatExplorer.WPF.Controls
                             break;
                         }
 
-                        int columnStart = (iCol - startOffsetCol) * ColWidth;
+                        int columnStart = StaticColOffset + (iCol - startOffsetCol) * ColWidth;
 
                         FftBlock fftBlock = fftBlocks[fftIndex];
-                        for (int i = 0; i < fftBlock.Data.Length; i++)
+                        for (int i = 0; i < MaxVisibleFreq; i++)
                         {
+
                             Color pixelColor = ColorPalettes.BlueVioletRed[Math.Min(127, (int)fftBlock.Data[i])];
 
                             int x = columnStart;
@@ -453,7 +462,7 @@ namespace TeensyBatExplorer.WPF.Controls
                             _canvas.FillRectangle(x, y, x + ColWidth, y + RowHeight, pixelColor);
                         }
 
-                        int currentLoudness = fftBlock.Loudness / 21;
+                        int currentLoudness = fftBlock.Loudness / LoudnessScale;
                         if (iCol > 0)
                         {
                             _canvas.FillRectangle(columnStart, LoudnessLowerBound - lastLoudness, columnStart + ColWidth, LoudnessLowerBound, Colors.CornflowerBlue);
@@ -483,24 +492,32 @@ namespace TeensyBatExplorer.WPF.Controls
                     }
                 }
 
+                int[] totalIntensity = new int[128];
+                foreach (FftBlock fftBlock in _entries.SelectMany(e => e.FftData))
+                {
+                    for (int i = 0; i < fftBlock.Data.Length; i++)
+                    {
+                        totalIntensity[i] += fftBlock.Data[i];
+                    }
+                }
+                int localMax = totalIntensity.Skip(10).Max();
+                for (int i = 0; i < totalIntensity.Length; i++)
+                {
+                    Color pixelColor = ColorPalettes.BlueVioletRed[(int)Math.Min(127, (totalIntensity[i] * 127) / localMax)];
+
+                    int y = FftLowerBound - RowHeight - i * RowHeight;
+                    _canvas.FillRectangle(0, y, IntensityLineWidth, y + RowHeight, pixelColor);
+                }
+
                 BatNode batNode = BatNode;
                 if (batNode != null)
                 {
-                    int callStartThreshold = batNode.CallStartThreshold / 21;
-                    int callEndThreshold = batNode.CallEndThreshold / 21;
+                    int callStartThreshold = batNode.CallStartThreshold / LoudnessScale;
+                    int callEndThreshold = batNode.CallEndThreshold / LoudnessScale;
 
                     _canvas.DrawLine(0, LoudnessLowerBound - callStartThreshold, (iCol - startOffsetCol) * ColWidth, LoudnessLowerBound - callStartThreshold, Colors.Green);
                     _canvas.DrawLine(0, LoudnessLowerBound - callEndThreshold, (iCol - startOffsetCol) * ColWidth, LoudnessLowerBound - callEndThreshold, Colors.Red);
                 }
-
-                //float width = 1f;
-                //for (int i = 0; i < 10; i++)
-                //{
-                //    int y = FftLowerBound - i * 10 * RowHeight;
-                //    _canvas.DrawLine(0, y, fftData.Count * ColWidth, y, Colors.White);
-                //}
-
-                //_canvas.DrawLine(0, LoudnessLowerBound - 2400 / 21, fftData.Count * ColWidth, LoudnessLowerBound - 2400 / 21, Colors.Green);
             }
         }
 

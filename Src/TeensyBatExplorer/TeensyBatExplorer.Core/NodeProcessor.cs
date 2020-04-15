@@ -89,29 +89,68 @@ namespace TeensyBatExplorer.Core
             foreach (BatDataFileEntry entry in fileEntries)
             {
                 long callDiff = entry.StartTimeMicros - previousEndTime;
-                if (callDiff <= 0)
+                if (currentCall == null || callDiff > 1000 * 1000)
                 {
-                    entry.StartTimeMicros = previousEndTime;
-                    entry.PauseFromPrevEntryMicros = 0;
-                }
-                else if (callDiff > 1000 * 1000)
-                {
+                    if (currentCall != null)
+                    {
+                        AnalyzeCall(currentCall);
+                    }
+
                     currentCall = new BatCall();
                     currentCall.StartTime = dataFile.ReferenceTime.AddMicros(entry.StartTimeMicros);
-
                     currentCall.StartTimeMicros = entry.StartTimeMicros;
                     currentCall.Node = node;
                     entry.PauseFromPrevEntryMicros = null;
                 }
-                else
+                else if (callDiff <= 0)
+                {
+                    entry.StartTimeMicros = previousEndTime;
+                    entry.PauseFromPrevEntryMicros = 0;
+                }
+                else 
                 {
                     entry.PauseFromPrevEntryMicros = callDiff;
                 }
 
                 entry.Call = currentCall;
+                currentCall.Entries.Add(entry);
 
                 previousEndTime = entry.StartTimeMicros + (entry.FftCount * 500);
             }
+        }
+
+        private void AnalyzeCall(BatCall call)
+        {
+            long lastEntryEndTime = 0;
+            int[] freqs = new int[128];
+
+            foreach (BatDataFileEntry entry in call.Entries)
+            {
+                lastEntryEndTime = entry.StartTimeMicros + entry.FftCount * 500;
+
+                for (int i = 0; i < entry.FftData.Count; i++)
+                {
+                    byte[] fftData = entry.FftData[i].Data;
+                    for (int j = 10; j < fftData.Length; j++)
+                    {
+                        freqs[j] += fftData[j];
+                    }
+                }
+            }
+
+            call.DurationMicros = lastEntryEndTime - call.StartTimeMicros;
+
+            int localMax = 0;
+            int maxIndex = 0;
+            for (int i = 0; i < freqs.Length; i++)
+            {
+                if (freqs[i] > localMax)
+                {
+                    localMax = freqs[i];
+                    maxIndex = i;
+                }
+            }
+            call.PeakFrequency = maxIndex;
         }
     }
 }

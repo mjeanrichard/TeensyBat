@@ -134,13 +134,17 @@ namespace TeensyBatExplorer.Core
                     'NodeNumber' INTEGER NOT NULL,
                     'StartTime' TEXT NOT NULL,
                     'CallStartThreshold' INTEGER NOT NULL,
-                    'CallEndThreshold' INTEGER NOT NULL
+                    'CallEndThreshold' INTEGER NOT NULL,
+                    'Longitude' REAL NULL,
+                    'Latitude' REAL NULL
                 );
 
                 CREATE TABLE 'Calls' (
 	                'Id'                INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     'StartTime'         TEXT NOT NULL,
                     'StartTimeMicros'   INTEGER NOT NULL,
+                    'DurationMicros'    INTEGER NOT NULL,
+                    'PeakFrequency'     INTEGER NOT NULL,
                     'NodeId'            INTEGER NULL
                 );
 
@@ -166,10 +170,11 @@ namespace TeensyBatExplorer.Core
                     'NodeId'    INTEGER NULL
                 );
 
-                CREATE TABLE 'DataFileMessages' (
+                CREATE TABLE 'ProjectMessage' (
 	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'DataFileId' INTEGER NOT NULL,
+                    'DataFileId' INTEGER NULL,
                     'Message' TEXT NOT NULL,
+                    'MessageType' TEXT NOT NULL,
                     'Level' TEXT NOT NULL,
                     'Position' INTEGER NULL
                 );

@@ -11,6 +11,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using MapControl;
+
 namespace TeensyBatExplorer.WPF.Views.NodeDetail
 {
     /// <summary>
@@ -20,7 +22,17 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
     {
         public NodeDetailPage()
         {
+            ImageLoader.HttpClient.DefaultRequestHeaders.Add("User-Agent", "XAML Map Control Test Application");
+            TileImageLoader.Cache = new MapControl.Caching.ImageFileCache(TileImageLoader.DefaultCacheFolder);
             InitializeComponent();
+        }
+
+        private void MapMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount >= 2)
+            {
+                ((NodeDetailViewModel)DataContext).NodeLocation = Map.ViewToLocation(e.GetPosition(Map));
+            }
         }
     }
 }

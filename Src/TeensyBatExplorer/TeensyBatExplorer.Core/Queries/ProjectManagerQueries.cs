@@ -55,13 +55,17 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
+                List<BatCall> calls;
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    return await db.Calls.Where(c => c.NodeId == nodeId)
-                        .Include(c => c.Entries).ThenInclude(c => c.FftData)
+                    calls = await db.Calls.Where(c => c.NodeId == nodeId)
+                        .Include(c => c.Entries)
+                        .ThenInclude(c => c.FftData)
                         .OrderBy(c => c.StartTime)
                         .ToListAsync(cancellationToken);
                 }
+
+                return calls;
             }, cancellationToken);
         }
 

@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
 
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
+using MapControl;
 
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
