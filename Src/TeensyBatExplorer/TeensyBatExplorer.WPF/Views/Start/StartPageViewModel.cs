@@ -100,8 +100,11 @@ namespace TeensyBatExplorer.WPF.Views.Start
 
         public override async Task Load()
         {
-            List<ProjectMruEntry> mruEntries = await _getProjectMruQuery.Execute();
-            MruEntries = mruEntries.Select(m => new MruViewModel(m, _projectManager, this, _navigationService)).ToList();
+            using (BeginBusy("Lade kürzlich verwendete Projekte..."))
+            {
+                List<ProjectMruEntry> mruEntries = await _getProjectMruQuery.Execute();
+                MruEntries = mruEntries.Select(m => new MruViewModel(m, _projectManager, this, _navigationService)).ToList();
+            }
         }
     }
 }

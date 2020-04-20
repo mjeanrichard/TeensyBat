@@ -23,12 +23,6 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn
-                            DisplayMemberBinding="{Binding Name}"
-                            Header="Projekt Name" />
-                        <GridViewColumn
-                            DisplayMemberBinding="{Binding Filename}"
-                            Header="Projekt Name" />
                         <GridViewColumn Header="">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="start:MruViewModel">
@@ -44,6 +38,15 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+                        <GridViewColumn
+                            DisplayMemberBinding="{Binding Name, Mode=OneWay}"
+                            Header="Projekt Name" />
+                        <GridViewColumn
+                            DisplayMemberBinding="{Binding LastAccess, Mode=OneWay}"
+                            Header="Letzter Zugriff" />
+                        <GridViewColumn
+                            DisplayMemberBinding="{Binding Filename, Mode=OneWay}"
+                            Header="Datei" />
                     </GridView>
                 </ListView.View>
             </ListView>

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 using MapControl;
@@ -31,6 +32,7 @@ using OxyPlot.Series;
 
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Commands;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
 using TeensyBatExplorer.WPF.Annotations;
@@ -42,7 +44,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
     public class NodeDetailViewModel : BaseViewModel
     {
         private readonly ProjectManager _projectManager;
-        private readonly NodeProcessor _nodeProcessor;
+        private readonly AnalyzeNodeCommand _analyzeNodeCommand;
         private BatNode _node;
         private PlotModel _batteryPlot;
         private CallViewModel _selectedCall;
@@ -52,10 +54,10 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         private Location _currentMapCenter = new Location(47.3925, 8.0616);
         private int _nodeNumber;
 
-        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, NodeProcessor nodeProcessor)
+        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, AnalyzeNodeCommand analyzeNodeCommand)
         {
             _projectManager = projectManager;
-            _nodeProcessor = nodeProcessor;
+            _analyzeNodeCommand = analyzeNodeCommand;
             _nodeNumber = navigationArgument.Data;
 
             Title = $"Daten zu Gerät Nr. {_nodeNumber}";
@@ -209,9 +211,10 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         {
             using (BusyState busyState = BeginBusy("Analysiere Gerätedaten..."))
             {
-                await _nodeProcessor.Process(_node.Id, busyState.GetProgress(), busyState.Token);
-                await busyState.Update("Daten neu laden...", 0, 10);
-                await LoadNode(busyState);
+                StackableProgress progress = busyState.GetProgress();
+                await _analyzeNodeCommand.Process(_node.Id, progress.Stack(50), busyState.Token);
+                progress.Report(50);
+                await LoadNode(progress.Stack(50), busyState.Token);
             }
         }
 
@@ -219,16 +222,14 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         {
             using (BusyState busyState = BeginBusy("Lade Gerätedaten..."))
             {
-                await LoadNode(busyState);
+                await LoadNode(busyState.GetProgress(), busyState.Token);
             }
         }
 
-        private async Task LoadNode(BusyState busyState)
+        private async Task LoadNode(StackableProgress progress, CancellationToken cancellationToken)
         {
-            await busyState.Update(busyState.Text, 1, 10);
-
-            Node = await _projectManager.GetBatNodeWithFiles(_nodeNumber, busyState.Token);
-            await busyState.Update(busyState.Text, 1, 10);
+            Node = await _projectManager.GetBatNodeWithFiles(_nodeNumber, cancellationToken);
+            progress.Report(10);
 
             if (Node.Longitude.HasValue && Node.Latitude.HasValue)
             {
@@ -236,11 +237,12 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
                 CurrentMapCenter = NodeLocation;
             }
 
-            List<BatCall> calls = await _projectManager.GetCalls(Node.Id, busyState.Token);
+            List<BatCall> calls = await _projectManager.GetCalls(Node.Id, progress.Stack(70), cancellationToken);
             Calls = calls.Select(c => new CallViewModel(c)).ToList();
             BarItems = calls.Select(c => new BarItemModel(c.StartTimeMicros, 1)).ToList();
+            SelectedCall = Calls.FirstOrDefault();
             OnPropertyChanged(nameof(BarItems));
-            await busyState.Update(busyState.Text, 8, 10);
+            progress.Report(80);
 
             List<DataFileViewModel> files = new List<DataFileViewModel>(Node.DataFiles.Count);
             foreach (BatDataFile file in Node.DataFiles)
@@ -253,11 +255,11 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             DataFiles = files;
             OnPropertyChanged(nameof(DataFiles));
 
-            UpdateBatteryPlot(await _projectManager.GetBatteryData(Node.Id, busyState.Token));
-            await busyState.Update(busyState.Text, 9, 10);
+            UpdateBatteryPlot(await _projectManager.GetBatteryData(Node.Id, cancellationToken));
+            progress.Report(90);
 
-            UpdateTemperaturePlot(await _projectManager.GetTemperatureData(Node.Id, busyState.Token));
-            await busyState.Update(busyState.Text, 10, 10);
+            UpdateTemperaturePlot(await _projectManager.GetTemperatureData(Node.Id, cancellationToken));
+            progress.Report(100);
         }
 
         private void UpdateBatteryPlot(List<BatteryData> batteryData)
@@ -300,6 +302,18 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             pm.PlotMargins = new OxyThickness(50, double.NaN, double.NaN, double.NaN);
 
             TemperaturePlot = pm;
+        }
+
+        public void PositionChanged(in long newPosition)
+        {
+            foreach (CallViewModel call in Calls)
+            {
+                if (call.Call.StartTimeMicros >= newPosition)
+                {
+                    SelectedCall = call;
+                    break;
+                }
+            }
         }
     }
 

@@ -40,4 +40,9 @@
     <Style BasedOn="{StaticResource MaterialDesignListView}" TargetType="{x:Type ListView}">
         <Setter Property="md:DataGridAssist.ColumnHeaderPadding" Value="8 4 8 4" />
     </Style>
+
+    <Style x:Key="MaterialDesignGridViewItem" TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+
 </ResourceDictionary>

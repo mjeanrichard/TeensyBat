@@ -23,17 +23,18 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.Core.Commands
 {
     public class AddLogsCommand
     {
-        private readonly NodeProcessor _nodeProcessor;
+        private readonly AnalyzeNodeCommand _analyzeNodeCommand;
 
-        public AddLogsCommand(NodeProcessor nodeProcessor)
+        public AddLogsCommand(AnalyzeNodeCommand analyzeNodeCommand)
         {
-            _nodeProcessor = nodeProcessor;
+            _analyzeNodeCommand = analyzeNodeCommand;
         }
 
         public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatDataFile> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
@@ -67,8 +68,8 @@ namespace TeensyBatExplorer.Core.Commands
             for (int index = 0; index < nodeIds.Length; index++)
             {
                 int nodeId = nodeIds[index];
-                progress.Report($"Analysiere Gerätedaten {index+1}/{nodeIds.Length}", 0, 100);
-                await _nodeProcessor.Process(nodeId, progress, cancellationToken);
+                progress.Report($"Analysiere Gerätedaten {index + 1}/{nodeIds.Length}", 0, 100);
+                await _analyzeNodeCommand.Process(nodeId, progress, cancellationToken);
             }
         }
 

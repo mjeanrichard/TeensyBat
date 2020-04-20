@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using TeensyBatExplorer.Core;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.WPF.Annotations;
 

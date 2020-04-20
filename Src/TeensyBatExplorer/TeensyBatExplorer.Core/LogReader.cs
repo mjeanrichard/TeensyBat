@@ -20,6 +20,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.Core
@@ -30,7 +31,7 @@ namespace TeensyBatExplorer.Core
 
         private void AddMessage(BatDataFile dataFile, BatLogMessageLevel level, string message, BinaryReader reader)
         {
-            dataFile.LogMessages.Add(new ProjectMessage { Message = message, MessageType = MessageTypes.LogFile, Level = level, Position = reader?.BaseStream.Position });
+            dataFile.LogMessages.Add(new ProjectMessage (level, MessageTypes.LogFile, message) { Position = reader?.BaseStream.Position });
         }
 
         public async Task Load(string filename, BatDataFile dataFile)
@@ -114,6 +115,7 @@ namespace TeensyBatExplorer.Core
                 dataFile.OriginalReferenceTime = dataFile.FileCreateTime;
                 dataFile.ReferenceTime = dataFile.FileCreateTime;
                 reader.ReadUInt32();
+                AddMessage(dataFile, BatLogMessageLevel.Warning, "Firmwareversion < 3: Refernzdatum nicht vorhanden, verwende Erstellungsdatum.", null);
             }
             else
             {

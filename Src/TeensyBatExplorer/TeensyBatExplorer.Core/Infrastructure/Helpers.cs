@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,25 +16,18 @@
 
 using System;
 
-namespace TeensyBatExplorer.Core.Commands
+namespace TeensyBatExplorer.Core.Infrastructure
 {
-    public class CountProgress
+    public static class Helpers
     {
-        public int Total { get; set; }
-        public int Current { get; set; }
-        public string Text { get; set; }
-    }
-
-    public static class ProgressHelper
-    {
-        public static void Report(this IProgress<CountProgress> progress, string message, int current, int total)
+        public static DateTime AddMicros(this DateTime dateTime, long microseconds)
         {
-            progress.Report(new CountProgress { Current = current, Total = total, Text = message });
+            return dateTime.AddTicks(microseconds * 10);
         }
-
-        public static void Report(this IProgress<CountProgress> progress, int current, int total)
+        
+        public static string ToFormattedString(this DateTime dateTime)
         {
-            progress.Report(new CountProgress { Current = current, Total = total });
+            return dateTime.ToString("dd.MM.yy HH:mm:ss");
         }
     }
 }

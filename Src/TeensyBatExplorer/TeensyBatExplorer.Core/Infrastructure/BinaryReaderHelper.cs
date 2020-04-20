@@ -17,7 +17,7 @@
 using System;
 using System.IO;
 
-namespace TeensyBatExplorer.Core
+namespace TeensyBatExplorer.Core.Infrastructure
 {
     public static class BinaryReaderHelper
     {

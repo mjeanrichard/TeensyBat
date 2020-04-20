@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using TeensyBatExplorer.Core.Commands;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.WPF.Annotations;
 
 namespace TeensyBatExplorer.WPF.Infrastructure
@@ -115,9 +116,11 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public IProgress<CountProgress> GetProgress()
+        public StackableProgress GetProgress(int total = 100)
         {
-            return new Progress<CountProgress>(async p => await Update(p));
+            StackableProgress progress = new StackableProgress(async p => await Update(p));
+            progress.Report(Text, 0, total);
+            return progress;
         }
     }
 }

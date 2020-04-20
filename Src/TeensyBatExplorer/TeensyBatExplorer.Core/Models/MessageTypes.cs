@@ -19,6 +19,7 @@ namespace TeensyBatExplorer.Core.Models
     public enum MessageTypes
     {
         LogFile,
-        NodeAnalysis
+        NodeAnalysis,
+        Database
     }
 }

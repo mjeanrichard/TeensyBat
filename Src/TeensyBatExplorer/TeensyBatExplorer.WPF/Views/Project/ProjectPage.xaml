@@ -10,14 +10,6 @@
              d:DataContext="{d:DesignInstance Type=project:ProjectPageViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
 
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <DataTemplate x:Key="GridViewCellTemplateStyle">
-                <TextBlock Text="{Binding}" Background="Yellow" />
-            </DataTemplate>
-        </ResourceDictionary>
-    </UserControl.Resources>
-
     <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -25,7 +17,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
-            <TextBox Text="{Binding BatProject.Name, Mode=TwoWay}"
+            <TextBox Text="{Binding BatProject.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      md:HintAssist.Hint="Project Name"
                      Style="{StaticResource MaterialDesignFilledTextFieldTextBox}" />
         </StackPanel>
@@ -45,6 +37,21 @@
                     </ListView.ItemContainerStyle>
                     <ListView.View>
                         <GridView>
+                            <GridViewColumn Header="">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="project:NodeViewModel">
+                                        <Button Command="{Binding OpenNodeCommand}"
+                                                VerticalAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                Width="30"
+                                                Height="30"
+                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                ToolTip="Details anzeigen">
+                                            <md:PackIcon Kind="FolderOpenOutline" Width="20" Height="20" />
+                                        </Button>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                             <GridViewColumn
                                 DisplayMemberBinding="{Binding NodeNumber, Mode=OneWay}"
                                 Header="Nr" />
@@ -61,15 +68,6 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate DataType="project:NodeViewModel">
                                         <StackPanel Orientation="Horizontal">
-                                            <Button Command="{Binding OpenNodeCommand}"
-                                                    VerticalAlignment="Center"
-                                                    VerticalContentAlignment="Center"
-                                                    Width="30"
-                                                    Height="30"
-                                                    Style="{StaticResource MaterialDesignIconButton}"
-                                                    ToolTip="Details anzeigen">
-                                                <md:PackIcon Kind="FolderOpenOutline" Width="20" Height="20" />
-                                            </Button>
                                             <Button Command="{Binding DeleteNodeCommand}"
                                                     VerticalAlignment="Center"
                                                     VerticalContentAlignment="Center"

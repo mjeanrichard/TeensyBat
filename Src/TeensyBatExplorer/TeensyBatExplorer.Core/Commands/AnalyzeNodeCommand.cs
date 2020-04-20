@@ -22,16 +22,16 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
-using TeensyBatExplorer.Core.Commands;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 
-namespace TeensyBatExplorer.Core
+namespace TeensyBatExplorer.Core.Commands
 {
-    public class NodeProcessor
+    public class AnalyzeNodeCommand
     {
         private readonly ProjectManager _projectManager;
 
-        public NodeProcessor(ProjectManager projectManager)
+        public AnalyzeNodeCommand(ProjectManager projectManager)
         {
             _projectManager = projectManager;
         }
@@ -80,7 +80,8 @@ namespace TeensyBatExplorer.Core
 
             if (dataFile.FirmwareVersion < 3)
             {
-                // These Files have an incorrect ReferenceTime. Use the on from the Node...
+                // These Files have an incorrect ReferenceTime. Use the one from the Node...
+                AddMessage(context, node, BatLogMessageLevel.Warning, "Firmwareversion < 3: Verwende Referenzzeit vom Gerät.");
                 dataFile.ReferenceTime = node.StartTime;
             }
 
@@ -117,6 +118,13 @@ namespace TeensyBatExplorer.Core
 
                 previousEndTime = entry.StartTimeMicros + (entry.FftCount * 500);
             }
+            // analyze the last Call...
+            AnalyzeCall(currentCall);
+        }
+
+        private void AddMessage(ProjectContext context, BatNode node, BatLogMessageLevel level, string message, params object[] args)
+        {
+            context.ProjectMessages.Add(new ProjectMessage(level, MessageTypes.NodeAnalysis, message, args) { Node = node });
         }
 
         private void AnalyzeCall(BatCall call)

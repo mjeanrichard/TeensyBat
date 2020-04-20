@@ -16,7 +16,7 @@
 
 using System;
 
-namespace TeensyBatExplorer.Core.Commands
+namespace TeensyBatExplorer.Core.Infrastructure
 {
     public class NoopProgress<T> : IProgress<T>
     {

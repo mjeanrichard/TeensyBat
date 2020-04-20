@@ -14,37 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
-using TeensyBatExplorer.Core.Infrastructure;
+using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.Core.Commands
 {
-    public class DeleteNodeCommand
+    public class SaveProjectCommand
     {
-        public async Task ExecuteAsync(ProjectManager projectManager, int nodeId, IProgress<CountProgress> progress, CancellationToken cancellationToken)
-        {
-            if (progress == null)
-            {
-                progress = new NoopProgress<CountProgress>();
-            }
+        private readonly AddToMruCommand _addToMruCommand;
 
+        public SaveProjectCommand(AddToMruCommand addToMruCommand)
+        {
+            _addToMruCommand = addToMruCommand;
+        }
+
+        public async Task Execute(ProjectManager projectManager, BatProject project, CancellationToken cancellationToken)
+        {
             using (ProjectContext db = projectManager.GetContext())
             {
-                using (IDbContextTransaction transaction = await db.Database.BeginTransactionAsync(cancellationToken))
-                {
-                    await db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM Calls WHERE NodeId = {nodeId}", cancellationToken);
-                    await db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM Nodes WHERE Id = {nodeId}", cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                }
+                BatProject dbProject = await db.Projects.SingleAsync(cancellationToken);
+                dbProject.Name = project.Name;
+                await db.SaveChangesAsync(cancellationToken);
+                await _addToMruCommand.Execute(dbProject, projectManager.Filename);
             }
-
         }
     }
 }

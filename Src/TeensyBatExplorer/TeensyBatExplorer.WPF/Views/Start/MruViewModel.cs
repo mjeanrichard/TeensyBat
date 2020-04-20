@@ -3,6 +3,7 @@
 using Nito.Mvvm;
 
 using TeensyBatExplorer.Core;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.WPF.Infrastructure;
 
 namespace TeensyBatExplorer.WPF.Views.Start
@@ -36,5 +37,6 @@ namespace TeensyBatExplorer.WPF.Views.Start
 
         public string Name => _projectMruEntry.ProjectName;
         public string Filename => _projectMruEntry.FullPath;
+        public string LastAccess => _projectMruEntry.LastAccessTime.ToFormattedString();
     }
 }

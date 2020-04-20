@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using MapControl;
@@ -24,6 +25,7 @@ using MapControl;
 using MaterialDesignThemes.Wpf;
 
 using TeensyBatExplorer.Core;
+using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
 using TeensyBatExplorer.WPF.Infrastructure;
@@ -35,13 +37,15 @@ namespace TeensyBatExplorer.WPF.Views.Project
         private readonly NavigationService _navigationService;
         private readonly ProjectManager _projectManager;
         private readonly Func<NodeViewModel> _nodeViewModelFactory;
+        private readonly SaveProjectCommand _saveProjectCommand;
         private IEnumerable<NodeViewModel> _nodes;
 
-        public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager, Func<NodeViewModel> nodeViewModelFactory)
+        public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager, Func<NodeViewModel> nodeViewModelFactory, SaveProjectCommand saveProjectCommand)
         {
             _navigationService = navigationService;
             _projectManager = projectManager;
             _nodeViewModelFactory = nodeViewModelFactory;
+            _saveProjectCommand = saveProjectCommand;
 
             AddToolbarButton(new ToolBarButton(AddLog, PackIconKind.PlusBoxMultipleOutline, "Logs hinzufügen"));
             AddToolbarButton(new ToolBarButton(SaveProject, PackIconKind.ContentSave, "Speichern"));
@@ -68,22 +72,28 @@ namespace TeensyBatExplorer.WPF.Views.Project
 
         private async Task SaveProject()
         {
-            //SaveProjectCommand command = new SaveProjectCommand();
-            //await command.ExecuteAsyc(BatProject, _projectFile);
+            using (BusyState busyState = BeginBusy("Speichere Projekt"))
+            {
+                await _saveProjectCommand.Execute(_projectManager, BatProject, busyState.Token);
+            }
         }
 
         public override async Task Load()
         {
             using (BusyState busyState = BeginBusy("Lade Projekt..."))
             {
+                Title = $"Projekt {_projectManager.Project.Name}";
+
                 List<BatNode> nodes = await _projectManager.GetNodes(busyState.Token);
-                Nodes = nodes.Select(n =>
+                List<NodeViewModel> vmNodes = new List<NodeViewModel>(nodes.Count);
+                foreach (BatNode node in nodes)
                 {
                     NodeViewModel vm = _nodeViewModelFactory();
-                    vm.Load(n, this);
-                    return vm;
-                });
-                Title = $"Projekt {_projectManager.Project.Name}";
+                    await vm.Load(node, this);
+                    vmNodes.Add(vm);
+                }
+
+                Nodes = vmNodes;
             }
         }
 

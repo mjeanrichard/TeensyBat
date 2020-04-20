@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
+using TeensyBatExplorer.Core.Commands;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.Core.Queries
@@ -51,21 +53,38 @@ namespace TeensyBatExplorer.Core.Queries
             }, cancellationToken);
         }
 
-        public static async Task<List<BatCall>> GetCalls(this ProjectManager projectManager, int nodeId, CancellationToken cancellationToken)
+        public static async Task<List<BatCall>> GetCalls(this ProjectManager projectManager, int nodeId, StackableProgress progress, CancellationToken cancellationToken)
         {
             return await Task.Run(async () =>
             {
-                List<BatCall> calls;
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    calls = await db.Calls.Where(c => c.NodeId == nodeId)
-                        .Include(c => c.Entries)
-                        .ThenInclude(c => c.FftData)
-                        .OrderBy(c => c.StartTime)
-                        .ToListAsync(cancellationToken);
+                    int count = await db.Calls.Where(c => c.NodeId == nodeId).CountAsync(cancellationToken);
+                    List<BatCall> calls = new List<BatCall>(count);
+                    progress.Report(0, count);
+
+                    bool hasMoreData = true;
+                    while (hasMoreData)
+                    {
+                        List<BatCall> list = await db.Calls.AsNoTracking().Where(c => c.NodeId == nodeId)
+                            .Include(c => c.Entries)
+                            .ThenInclude(e => e.FftData)
+                            .OrderBy(c => c.StartTime)
+                            .Skip(calls.Count).Take(500).ToListAsync(cancellationToken);
+
+                        if (list.Any())
+                        {
+                            calls.AddRange(list);
+                            progress.Report(calls.Count);
+                        }
+                        else
+                        {
+                            hasMoreData = false;
+                        }
+                    }
+                    return calls;
                 }
 
-                return calls;
             }, cancellationToken);
         }
 

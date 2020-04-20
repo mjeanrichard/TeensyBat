@@ -13,6 +13,8 @@ using System.Windows.Shapes;
 
 using MapControl;
 
+using TeensyBatExplorer.WPF.Controls;
+
 namespace TeensyBatExplorer.WPF.Views.NodeDetail
 {
     /// <summary>
@@ -27,12 +29,19 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             InitializeComponent();
         }
 
+        private NodeDetailViewModel ViewModel => (NodeDetailViewModel)DataContext;
+
         private void MapMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount >= 2)
             {
-                ((NodeDetailViewModel)DataContext).NodeLocation = Map.ViewToLocation(e.GetPosition(Map));
+                ViewModel.NodeLocation = Map.ViewToLocation(e.GetPosition(Map));
             }
+        }
+
+        private void BarControl_OnPositionChanged(object? sender, PositionEventArgs e)
+        {
+            ViewModel.PositionChanged(e.NewPosition);
         }
     }
 }

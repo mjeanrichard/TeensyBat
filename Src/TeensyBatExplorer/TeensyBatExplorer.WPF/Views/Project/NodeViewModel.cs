@@ -23,6 +23,7 @@ using Nito.Mvvm;
 
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Commands;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
 using TeensyBatExplorer.WPF.Annotations;

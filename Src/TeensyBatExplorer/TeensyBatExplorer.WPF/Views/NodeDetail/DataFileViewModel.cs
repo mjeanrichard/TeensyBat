@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using MapControl;
 
 using TeensyBatExplorer.Core;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.WPF.Annotations;
 

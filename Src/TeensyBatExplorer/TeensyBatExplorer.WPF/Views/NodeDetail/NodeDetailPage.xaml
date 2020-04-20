@@ -15,7 +15,6 @@
     <Grid>
         <dragablz:TabablzControl Margin="0"
                                  FixedHeaderCount="5"
-                                 
                                  BorderThickness="0">
             <dragablz:TabablzControl.InterTabController>
                 <dragablz:InterTabController />
@@ -161,9 +160,26 @@
                                 <GridViewColumn
                                     DisplayMemberBinding="{Binding Time, Mode=OneWay}"
                                     Header="Zeit" />
-                                <GridViewColumn
-                                    DisplayMemberBinding="{Binding Call.PeakFrequency, Mode=OneWay}"
-                                    Header="Frequenz" />
+                                <GridViewColumn Header="Freq">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="local:CallViewModel">
+                                            <TextBlock TextAlignment="Right">
+                                                <Run Text="{Binding Call.PeakFrequency, Mode=OneWay}" />
+                                                <Run>kHz</Run>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Dauer">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="local:CallViewModel">
+                                            <TextBlock TextAlignment="Right">
+                                                <Run Text="{Binding Duration, Mode=OneWay}" />
+                                                <Run>ms</Run>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -206,7 +222,8 @@
                               Header="Verteilung">
 
                         <controls:BarControl Items="{Binding BarItems, Mode=OneWay}"
-                                             CurrentPosition="{Binding SelectedCall.Call.StartTimeMicros}" />
+                                             CurrentPosition="{Binding SelectedCall.Call.StartTimeMicros, Mode=OneWay}"
+                                             PositionChanged="BarControl_OnPositionChanged" />
                     </GroupBox>
                 </Grid>
             </TabItem>

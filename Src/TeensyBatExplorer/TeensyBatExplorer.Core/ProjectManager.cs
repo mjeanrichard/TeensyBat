@@ -15,10 +15,19 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
+using DbUp;
+using DbUp.Engine;
+using DbUp.Engine.Output;
+using DbUp.SQLite.Helpers;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Models;
@@ -28,14 +37,14 @@ namespace TeensyBatExplorer.Core
     public class ProjectManager : IDisposable
     {
         private readonly AddToMruCommand _addToMruCommand;
-
-        private string _filename;
         private BatProject _batProject;
 
         public ProjectManager(AddToMruCommand addToMruCommand)
         {
             _addToMruCommand = addToMruCommand;
         }
+
+        public string Filename { get; private set; }
 
         public bool IsProjectOpen { get; private set; }
 
@@ -50,9 +59,10 @@ namespace TeensyBatExplorer.Core
                 Close();
             }
 
-            _filename = filename;
+            Filename = filename;
             using (ProjectContext context = new ProjectContext(filename))
             {
+                await Upgrade(context);
                 _batProject = await context.Projects.AsNoTracking().SingleAsync();
             }
 
@@ -76,110 +86,7 @@ namespace TeensyBatExplorer.Core
 
             using (ProjectContext context = new ProjectContext(filename))
             {
-                await context.Database.ExecuteSqlRawAsync(@"
-                CREATE TABLE 'Projects' (
-	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	                'Name'	TEXT NOT NULL,
-	                'CreatedOn'	TEXT NOT NULL
-                );
-
-                CREATE TABLE 'DataFileEntries' (
-	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	                'FftCount'	INTEGER NOT NULL,
-                    'StartTimeMillis' INTEGER NOT NULL,
-                    'StartTimeMicros' INTEGER NOT NULL,
-                    'PauseFromPrevEntryMicros' INTEGER NULL,
-                    'MaxPeakFrequency' REAL NOT NULL,
-                    'AvgPeakFrequency' REAL NOT NULL,
-                    'IsBat' INTEGER NOT NULL,
-
-                    'HighFreqSampleCount' INTEGER NOT NULL,
-                    'HighPowerSampleCount' INTEGER NOT NULL,
-                    'MaxLevel' INTEGER NOT NULL,
-                   
-                    'DataFileId' INTEGER NOT NULL,
-                    'CallId' INTEGER NULL
-                );
-
-                CREATE TABLE 'BatteryData' (
-	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	                'Voltage'	INTEGER NOT NULL,
-                    'DateTime'    TEXT NOT NULL,
-                    'Timestamp'    INTEGER NOT NULL,
-
-                    'DataFileId' INTEGER NOT NULL
-                );
-
-                CREATE TABLE 'TemperatureData' (
-	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	                'Temperature'	INTEGER NOT NULL,
-                    'DateTime'    TEXT NOT NULL,
-                    'Timestamp'    INTEGER NOT NULL,
-                   
-                    'DataFileId' INTEGER NOT NULL
-                );
-
-                CREATE TABLE 'FftBlocks' (
-	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	                'Index'	INTEGER NOT NULL,
-	                'Loudness'	INTEGER NOT NULL,
-	                'SampleNr'	INTEGER NOT NULL,
-	                'Data'	BLOB NOT NULL,
-                   
-                    'DataFileEntryId' INTEGER NOT NULL
-                );
-
-                CREATE TABLE 'Nodes' (
-	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'NodeNumber' INTEGER NOT NULL,
-                    'StartTime' TEXT NOT NULL,
-                    'CallStartThreshold' INTEGER NOT NULL,
-                    'CallEndThreshold' INTEGER NOT NULL,
-                    'Longitude' REAL NULL,
-                    'Latitude' REAL NULL
-                );
-
-                CREATE TABLE 'Calls' (
-	                'Id'                INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'StartTime'         TEXT NOT NULL,
-                    'StartTimeMicros'   INTEGER NOT NULL,
-                    'DurationMicros'    INTEGER NOT NULL,
-                    'PeakFrequency'     INTEGER NOT NULL,
-                    'NodeId'            INTEGER NULL
-                );
-
-                CREATE TABLE 'DataFiles' (
-	                'Id'    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'NodeNumber'    INTEGER NOT NULL,
-                    'FirmwareVersion'    INTEGER NOT NULL,
-                    'HardwareVersion'    INTEGER NOT NULL,
-                    'Debug'    INTEGER NOT NULL,
-                    'OriginalReferenceTime'    TEXT NOT NULL,
-                    'ReferenceTime'    TEXT NOT NULL,
-                    'FileCreateTime'    TEXT NOT NULL,
-                    'PreCallBufferSize'    INTEGER NOT NULL,
-                    'AfterCallBufferSize'    INTEGER NOT NULL,
-                    'CallStartThreshold'    INTEGER NOT NULL,
-                    'CallEndThreshold'    INTEGER NOT NULL,
-                    'ErrorCountCallBuffFull'    INTEGER NOT NULL,
-                    'ErrorCountPointerBufferFull'    INTEGER NOT NULL,
-                    'ErrorCountDataBufferFull'    INTEGER NOT NULL,
-                    'ErrorCountProcessOverlap'    INTEGER NOT NULL,
-                    
-                    'Filename'    TEXT NOT NULL,
-                    'NodeId'    INTEGER NULL
-                );
-
-                CREATE TABLE 'ProjectMessage' (
-	                'Id'	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                    'DataFileId' INTEGER NULL,
-                    'Message' TEXT NOT NULL,
-                    'MessageType' TEXT NOT NULL,
-                    'Level' TEXT NOT NULL,
-                    'Position' INTEGER NULL
-                );
-
-            ");
+                await Upgrade(context);
 
                 BatProject project = new BatProject();
                 project.Name = "New Project";
@@ -190,11 +97,40 @@ namespace TeensyBatExplorer.Core
             await OpenProject(filename);
         }
 
+        private async Task Upgrade(ProjectContext context)
+        {
+            using (IDbContextTransaction transaction = await context.Database.BeginTransactionAsync())
+            {
+                using (SharedConnection sharedConnection = new SharedConnection(context.Database.GetDbConnection()))
+                {
+                    UpgradeLog upgradeLog = new UpgradeLog();
+                    UpgradeEngine upgrader = DeployChanges.To.SQLiteDatabase(sharedConnection)
+                        .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())
+                        .WithoutTransaction()
+                        .LogTo(upgradeLog)
+                        .Build();
+
+                    if (upgrader.IsUpgradeRequired())
+                    {
+                        DatabaseUpgradeResult result = upgrader.PerformUpgrade();
+                        if (!result.Successful)
+                        {
+                            throw result.Error;
+                        }
+
+                        upgradeLog.Save(context);
+                        await context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                    }
+                }
+            }
+        }
+
         public ProjectContext GetContext()
         {
             if (IsProjectOpen)
             {
-                return new ProjectContext(_filename);
+                return new ProjectContext(Filename);
             }
 
             return null;
@@ -215,6 +151,31 @@ namespace TeensyBatExplorer.Core
         protected virtual void OnProjectChanged()
         {
             ProjectChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private class UpgradeLog : IUpgradeLog
+        {
+            readonly List<ProjectMessage> _messages = new List<ProjectMessage>();
+
+            public void WriteInformation(string format, params object[] args)
+            {
+                _messages.Add(new ProjectMessage(BatLogMessageLevel.Information, MessageTypes.Database, format, args));
+            }
+
+            public void WriteError(string format, params object[] args)
+            {
+                _messages.Add(new ProjectMessage(BatLogMessageLevel.Error, MessageTypes.Database, format, args));
+            }
+
+            public void WriteWarning(string format, params object[] args)
+            {
+                _messages.Add(new ProjectMessage(BatLogMessageLevel.Warning, MessageTypes.Database, format, args));
+            }
+
+            public void Save(ProjectContext context)
+            {
+                context.ProjectMessages.AddRange(_messages);
+            }
         }
     }
 }

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -35,6 +36,7 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public long Time { get; set; }
         public int Value { get; set; }
+        public int Id { get; set; }
     }
 
 
@@ -124,6 +126,8 @@ namespace TeensyBatExplorer.WPF.Controls
             get { return (int)GetValue(MinDetailBarWidthProperty); }
             set { SetValue(MinDetailBarWidthProperty, value); }
         }
+
+        public event EventHandler<PositionEventArgs> PositionChanged; 
 
         private static readonly long[] BarDurations = 
         {
@@ -288,6 +292,35 @@ namespace TeensyBatExplorer.WPF.Controls
             canvas.DrawLine(1, barAreaBottom + 1, left, barAreaBottom + 1, Colors.Black);
         }
 
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            Point position = e.GetPosition(_imageControl);
+            if (position.Y < _imageControl.ActualHeight / 2)
+            {
+                // Detail Region
+                ProcessBarClick(position, _detailModel);
+            }
+            else
+            {
+                // Bar Region
+                ProcessBarClick(position, _barModel);
+            }
+            e.Handled = true;
+        }
+
+        private void ProcessBarClick(Point position, BarModel model)
+        {
+            if (model?.Bars?.Length <= 0)
+            {
+                return;
+            }
+
+            int barWidth = _canvas.PixelWidth / model.Bars.Length;
+            int barIndex = (int)(position.X / barWidth);
+            OnPositionChanged(model.BarDuration * barIndex + model.Start);
+        }
+
+
         private void RebuildBars()
         {
             BarItemModel[] items = Items.ToArray();
@@ -372,10 +405,6 @@ namespace TeensyBatExplorer.WPF.Controls
             return (start, stop);
         }
 
-        private void OnScrollBarChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-        }
-
         private class BarModel
         {
             public BarModel(long totalDuration, long start, int minBarWidth, int barPadding)
@@ -443,5 +472,20 @@ namespace TeensyBatExplorer.WPF.Controls
                 return -1;
             }
         }
+
+        protected virtual void OnPositionChanged(long newPosition)
+        {
+            PositionChanged?.Invoke(this, new PositionEventArgs(newPosition));
+        }
+    }
+
+    public class PositionEventArgs : EventArgs
+    {
+        public PositionEventArgs(long newPosition)
+        {
+            NewPosition = newPosition;
+        }
+
+        public long NewPosition { get; private set; }
     }
 }
