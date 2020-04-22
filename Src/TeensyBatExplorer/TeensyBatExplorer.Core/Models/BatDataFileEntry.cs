@@ -48,7 +48,7 @@ namespace TeensyBatExplorer.Core.Models
         public int DataFileId { get; set; }
         public BatDataFile DataFile { get; set; }
 
-        public int CallId { get; set; }
+        public int? CallId { get; set; }
         public BatCall Call { get; set; }
     }
 }

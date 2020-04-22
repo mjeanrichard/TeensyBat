@@ -501,12 +501,15 @@ namespace TeensyBatExplorer.WPF.Controls
                     }
                 }
                 int localMax = totalIntensity.Skip(10).Max();
-                for (int i = 0; i < totalIntensity.Length; i++)
+                if (localMax > 0)
                 {
-                    Color pixelColor = ColorPalettes.BlueVioletRed[(int)Math.Min(127, (totalIntensity[i] * 127) / localMax)];
+                    for (int i = 0; i < totalIntensity.Length; i++)
+                    {
+                        Color pixelColor = ColorPalettes.BlueVioletRed[(int)Math.Min(127, (totalIntensity[i] * 127) / localMax)];
 
-                    int y = FftLowerBound - RowHeight - i * RowHeight;
-                    _canvas.FillRectangle(0, y, IntensityLineWidth, y + RowHeight, pixelColor);
+                        int y = FftLowerBound - RowHeight - i * RowHeight;
+                        _canvas.FillRectangle(0, y, IntensityLineWidth, y + RowHeight, pixelColor);
+                    }
                 }
 
                 BatNode batNode = BatNode;

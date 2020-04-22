@@ -26,6 +26,7 @@ using MaterialDesignThemes.Wpf;
 
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Commands;
+using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
 using TeensyBatExplorer.WPF.Infrastructure;
@@ -38,19 +39,37 @@ namespace TeensyBatExplorer.WPF.Views.Project
         private readonly ProjectManager _projectManager;
         private readonly Func<NodeViewModel> _nodeViewModelFactory;
         private readonly SaveProjectCommand _saveProjectCommand;
+        private readonly AnalyzeNodeCommand _analyzeNodeCommand;
         private IEnumerable<NodeViewModel> _nodes;
 
-        public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager, Func<NodeViewModel> nodeViewModelFactory, SaveProjectCommand saveProjectCommand)
+        public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager, Func<NodeViewModel> nodeViewModelFactory, SaveProjectCommand saveProjectCommand, AnalyzeNodeCommand analyzeNodeCommand)
         {
             _navigationService = navigationService;
             _projectManager = projectManager;
             _nodeViewModelFactory = nodeViewModelFactory;
             _saveProjectCommand = saveProjectCommand;
+            _analyzeNodeCommand = analyzeNodeCommand;
 
             AddToolbarButton(new ToolBarButton(AddLog, PackIconKind.PlusBoxMultipleOutline, "Logs hinzufügen"));
             AddToolbarButton(new ToolBarButton(SaveProject, PackIconKind.ContentSave, "Speichern"));
+            AddToolbarButton(new ToolBarButton(AnalyzeAllNodes, PackIconKind.Cogs, "Alle Geräte analysieren"));
 
             Title = "Projekt";
+        }
+
+        private async Task AnalyzeAllNodes()
+        {
+            using (BusyState busyState = BeginBusy("Analysiere Geräte..."))
+            {
+                StackableProgress progress = busyState.GetProgress();
+                int i = 0;
+                foreach (NodeViewModel node in Nodes)
+                {
+                    progress.Report($"Analysiere Gerät {node.NodeNumber}...", i++, Nodes.Count() + 2);
+                    await _analyzeNodeCommand.Process(node.Node.Id, progress.Stack(1), busyState.Token);
+                }
+                await LoadNodes(busyState, progress.Stack(2));
+            }
         }
 
         public BatProject BatProject { get; private set; }
@@ -82,19 +101,27 @@ namespace TeensyBatExplorer.WPF.Views.Project
         {
             using (BusyState busyState = BeginBusy("Lade Projekt..."))
             {
+                StackableProgress progress = busyState.GetProgress();
                 Title = $"Projekt {_projectManager.Project.Name}";
-
-                List<BatNode> nodes = await _projectManager.GetNodes(busyState.Token);
-                List<NodeViewModel> vmNodes = new List<NodeViewModel>(nodes.Count);
-                foreach (BatNode node in nodes)
-                {
-                    NodeViewModel vm = _nodeViewModelFactory();
-                    await vm.Load(node, this);
-                    vmNodes.Add(vm);
-                }
-
-                Nodes = vmNodes;
+                await LoadNodes(busyState, progress);
             }
+        }
+
+        private async Task LoadNodes(BusyState busyState, StackableProgress progress)
+        {
+            List<BatNode> nodes = await _projectManager.GetNodes(busyState.Token);
+            List<NodeViewModel> vmNodes = new List<NodeViewModel>(nodes.Count);
+            int i = 0;
+            foreach (BatNode node in nodes)
+            {
+                progress.Report(i, nodes.Count);
+                NodeViewModel vm = _nodeViewModelFactory();
+                await vm.Load(node, this);
+                vmNodes.Add(vm);
+                i++;
+            }
+
+            Nodes = vmNodes;
         }
 
         public override Task Initialize()

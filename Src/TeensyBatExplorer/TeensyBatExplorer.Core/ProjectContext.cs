@@ -16,6 +16,8 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Debug;
 
 using TeensyBatExplorer.Core.Models;
 
@@ -23,6 +25,12 @@ namespace TeensyBatExplorer.Core
 {
     public class ProjectContext : DbContext
     {
+        public static readonly LoggerFactory MyLoggerFactory =
+            new LoggerFactory(new[]
+            {
+                new DebugLoggerProvider()
+            });
+
         private readonly string _filename;
 
         public ProjectContext(string filename)
@@ -56,7 +64,7 @@ namespace TeensyBatExplorer.Core
             modelBuilder.Entity<ProjectMessage>().Property(m => m.MessageType).HasConversion(new EnumToStringConverter<MessageTypes>());
             modelBuilder.Entity<ProjectMessage>().Property(m => m.Timestamp).ValueGeneratedOnAdd();
             modelBuilder.Entity<BatProject>().ToTable("Projects");
-            modelBuilder.Entity<FftBlock>().ToTable("FftBlocks");
+            modelBuilder.Entity<FftBlock>();
         }
     }
 }

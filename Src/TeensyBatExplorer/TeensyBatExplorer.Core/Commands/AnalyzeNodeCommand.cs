@@ -36,12 +36,12 @@ namespace TeensyBatExplorer.Core.Commands
             _projectManager = projectManager;
         }
 
-        public async Task Process(int nodeId, IProgress<CountProgress> progress, CancellationToken cancellationToken)
+        public async Task Process(int nodeId, StackableProgress progress, CancellationToken cancellationToken)
         {
             await Task.Run(async () => await ProcessInternal(nodeId, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task ProcessInternal(int nodeId, IProgress<CountProgress> progress, CancellationToken cancellationToken)
+        private async Task ProcessInternal(int nodeId, StackableProgress progress, CancellationToken cancellationToken)
         {
             using (ProjectContext context = _projectManager.GetContext())
             {
@@ -49,35 +49,30 @@ namespace TeensyBatExplorer.Core.Commands
                 await context.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM Calls WHERE NodeId = {nodeId}", cancellationToken).ConfigureAwait(false);
                 progress.Report(10, 100);
 
-                await ProcessNode(node, context, progress, cancellationToken).ConfigureAwait(false);
+                await ProcessNode(node, context, progress.Stack(90), cancellationToken).ConfigureAwait(false);
                 
-                progress.Report(80, 100);
-                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 progress.Report(100, 100);
             }
         }
 
-        private async Task ProcessNode(BatNode node, ProjectContext context, IProgress<CountProgress> progress, CancellationToken cancellationToken)
+        private async Task ProcessNode(BatNode node, ProjectContext context, StackableProgress progress, CancellationToken cancellationToken)
         {
-            double pp = 70d / node.DataFiles.Count;
+            progress.Report(0, node.DataFiles.Count);
             int i = 0;
             foreach (BatDataFile dataFile in node.DataFiles)
             {
-                List<BatDataFileEntry> entries = await context.DataFileEntries.Include(e => e.FftData)
+                IQueryable<BatDataFileEntry> entries = context.DataFileEntries
                     .OrderBy(e => e.StartTimeMicros)
-                    .Where(e => e.DataFileId == dataFile.Id).ToListAsync(cancellationToken).ConfigureAwait(false);
+                    .Where(e => e.DataFileId == dataFile.Id);
                 
-                AddDataFile(node, dataFile, entries, context);
+                await AddDataFile(node, dataFile, entries, context).ConfigureAwait(false);
                 await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                i++;
-                progress.Report((int)(i * pp), 100);
+                progress.Report(i++);
             }
         }
 
-        private void AddDataFile(BatNode node, BatDataFile dataFile, IEnumerable<BatDataFileEntry> entries, ProjectContext context)
+        private async Task AddDataFile(BatNode node, BatDataFile dataFile, IEnumerable<BatDataFileEntry> entries, ProjectContext context)
         {
-            BatDataFileEntry[] fileEntries = entries.ToArray();
-
             if (dataFile.FirmwareVersion < 3)
             {
                 // These Files have an incorrect ReferenceTime. Use the one from the Node...
@@ -87,14 +82,14 @@ namespace TeensyBatExplorer.Core.Commands
 
             long previousEndTime = 0;
             BatCall currentCall = null;
-            foreach (BatDataFileEntry entry in fileEntries)
+            foreach (BatDataFileEntry entry in entries)
             {
                 long callDiff = entry.StartTimeMicros - previousEndTime;
                 if (currentCall == null || callDiff > 1000 * 1000)
                 {
                     if (currentCall != null)
                     {
-                        AnalyzeCall(currentCall);
+                        await AnalyzeCall(currentCall, context).ConfigureAwait(false);
                     }
 
                     currentCall = new BatCall();
@@ -118,8 +113,12 @@ namespace TeensyBatExplorer.Core.Commands
 
                 previousEndTime = entry.StartTimeMicros + (entry.FftCount * 500);
             }
-            // analyze the last Call...
-            AnalyzeCall(currentCall);
+
+            if (currentCall != null)
+            {
+                // analyze the last Call...
+                await AnalyzeCall(currentCall, context).ConfigureAwait(false);
+            }
         }
 
         private void AddMessage(ProjectContext context, BatNode node, BatLogMessageLevel level, string message, params object[] args)
@@ -127,7 +126,7 @@ namespace TeensyBatExplorer.Core.Commands
             context.ProjectMessages.Add(new ProjectMessage(level, MessageTypes.NodeAnalysis, message, args) { Node = node });
         }
 
-        private void AnalyzeCall(BatCall call)
+        private async Task AnalyzeCall(BatCall call, ProjectContext context)
         {
             long lastEntryEndTime = 0;
             int[] freqs = new int[128];
@@ -135,10 +134,11 @@ namespace TeensyBatExplorer.Core.Commands
             foreach (BatDataFileEntry entry in call.Entries)
             {
                 lastEntryEndTime = entry.StartTimeMicros + entry.FftCount * 500;
+                IQueryable<FftBlock> blocks = context.FftBlocks.Where(f => f.DataFileEntryId == entry.Id).AsNoTracking();
 
-                for (int i = 0; i < entry.FftData.Count; i++)
+                foreach (FftBlock fftBlock in blocks)
                 {
-                    byte[] fftData = entry.FftData[i].Data;
+                    byte[] fftData = fftBlock.Data;
                     for (int j = 10; j < fftData.Length; j++)
                     {
                         freqs[j] += fftData[j];

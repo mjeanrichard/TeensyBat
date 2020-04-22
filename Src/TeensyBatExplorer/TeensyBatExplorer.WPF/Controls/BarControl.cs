@@ -48,12 +48,6 @@ namespace TeensyBatExplorer.WPF.Controls
         public static readonly DependencyProperty ShowDetailsProperty = DependencyProperty.Register(
             "ShowDetails", typeof(bool), typeof(BarControl), new PropertyMetadata(default(bool), OnLayoutChanged));
 
-        public bool ShowDetails
-        {
-            get { return (bool)GetValue(ShowDetailsProperty); }
-            set { SetValue(ShowDetailsProperty, value); }
-        }
-
         public static readonly DependencyProperty BarPaddingProperty = DependencyProperty.Register(
             "BarPadding", typeof(int), typeof(BarControl), new PropertyMetadata(1));
 
@@ -73,11 +67,11 @@ namespace TeensyBatExplorer.WPF.Controls
         }
 
         public static readonly DependencyProperty CurrentPositionProperty = DependencyProperty.Register(
-            "CurrentPosition", typeof(long), typeof(BarControl), new PropertyMetadata(default(long), OnLayoutChanged));
+            "CurrentPosition", typeof(long), typeof(BarControl), new PropertyMetadata(default(long), OnPositionChanged));
 
-        private static void OnLayoutChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnPositionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BarControl)d).Invalidate(true);
+            ((BarControl)d).Invalidate(false);
         }
 
         public long CurrentPosition
@@ -127,9 +121,20 @@ namespace TeensyBatExplorer.WPF.Controls
             set { SetValue(MinDetailBarWidthProperty, value); }
         }
 
-        public event EventHandler<PositionEventArgs> PositionChanged; 
 
-        private static readonly long[] BarDurations = 
+
+        private static void OnLayoutChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((BarControl)d).Invalidate(true);
+        }
+
+        public bool ShowDetails
+        {
+            get { return (bool)GetValue(ShowDetailsProperty); }
+            set { SetValue(ShowDetailsProperty, value); }
+        }
+
+        private static readonly long[] BarDurations =
         {
             2, 5, 10, 20, 30,
             60, 2 * 60, 5 * 60, 10 * 60, 20 * 60, 30 * 60
@@ -154,6 +159,8 @@ namespace TeensyBatExplorer.WPF.Controls
         {
             IsTabStop = false;
         }
+
+        public event EventHandler<PositionEventArgs> PositionChanged;
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
@@ -252,7 +259,7 @@ namespace TeensyBatExplorer.WPF.Controls
             int totalBarWidth = _canvas.PixelWidth / model.Bars.Length;
             int barWidth = totalBarWidth - model.BarPadding;
             int barAreaHeight = height - 3;
-            int barHeightFactor = barAreaHeight / model.MaxValue;
+            double barHeightFactor = barAreaHeight / (double)model.MaxValue;
             int barAreaBottom = top + barAreaHeight;
 
             int highlightIndex = model.GetIndex(CurrentPosition);
@@ -264,7 +271,7 @@ namespace TeensyBatExplorer.WPF.Controls
                 int bar = model.Bars[i];
                 if (bar > 0)
                 {
-                    int barHeight = Math.Max(bar * barHeightFactor, 1);
+                    int barHeight = (int)Math.Max(Math.Round(bar * barHeightFactor), 1);
                     if (i == highlightIndex)
                     {
                         canvas.DrawLine(barCenter, top, barCenter, barAreaBottom, highlightColor);
@@ -305,6 +312,7 @@ namespace TeensyBatExplorer.WPF.Controls
                 // Bar Region
                 ProcessBarClick(position, _barModel);
             }
+
             e.Handled = true;
         }
 
@@ -405,6 +413,11 @@ namespace TeensyBatExplorer.WPF.Controls
             return (start, stop);
         }
 
+        protected virtual void OnPositionChanged(long newPosition)
+        {
+            PositionChanged?.Invoke(this, new PositionEventArgs(newPosition));
+        }
+
         private class BarModel
         {
             public BarModel(long totalDuration, long start, int minBarWidth, int barPadding)
@@ -471,11 +484,6 @@ namespace TeensyBatExplorer.WPF.Controls
 
                 return -1;
             }
-        }
-
-        protected virtual void OnPositionChanged(long newPosition)
-        {
-            PositionChanged?.Invoke(this, new PositionEventArgs(newPosition));
         }
     }
 

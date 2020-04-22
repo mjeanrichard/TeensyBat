@@ -36,7 +36,7 @@ namespace TeensyBatExplorer.WPF.Views.Project
     {
         private readonly NavigationService _navigationService;
         private readonly ProjectManager _projectManager;
-        private BatNode _node;
+        public BatNode Node { get; private set; }
         private ProjectPageViewModel _parentViewModel;
 
         public NodeViewModel(NavigationService navigationService, ProjectManager projectManager)
@@ -53,39 +53,38 @@ namespace TeensyBatExplorer.WPF.Views.Project
 
         private async Task DeleteNode()
         {
-                YesNoDialogViewModel dialog = new YesNoDialogViewModel($"Soll das Gerät {_node.NodeNumber} wirklich entfernt werden?", _parentViewModel);
+                YesNoDialogViewModel dialog = new YesNoDialogViewModel($"Soll das Gerät {Node.NodeNumber} wirklich entfernt werden?", _parentViewModel);
                 DialogResult result = await dialog.Open();
                 if (result == DialogResult.Yes)
                 {
                     using (BusyState beginBusy = _parentViewModel.BeginBusy("Gerät entfernen..."))
                     {
                         DeleteNodeCommand cmd = new DeleteNodeCommand();
-                        await cmd.ExecuteAsync(_projectManager, _node.Id, beginBusy.GetProgress(), beginBusy.Token);
+                        await cmd.ExecuteAsync(_projectManager, Node.Id, beginBusy.GetProgress(), beginBusy.Token);
                     }
 
                     await _parentViewModel.Load();
                 }
         }
 
-        public int NodeNumber => _node.NodeNumber;
-        public string StartDatum => _node.StartTime.ToFormattedString();
+        public int NodeNumber => Node.NodeNumber;
+        public string StartDatum => Node.StartTime.ToFormattedString();
         public int CallCount { get; private set; }
 
         public int FileCount { get; private set; }
 
         private async Task OpenNode()
         {
-            await _navigationService.NavigateToNodeDetailPage(_node.NodeNumber);
+            await _navigationService.NavigateToNodeDetailPage(Node.NodeNumber);
         }
 
         public async Task Load(BatNode batNode, ProjectPageViewModel parentViewModel)
         {
-            _node = batNode;
+            Node = batNode;
             _parentViewModel = parentViewModel;
 
-            CallCount = await _projectManager.GetCallCount(_node.Id, CancellationToken.None);
-            FileCount = await _projectManager.GetDataFileCount(_node.Id, CancellationToken.None);
-
+            CallCount = await _projectManager.GetCallCount(Node.Id, CancellationToken.None);
+            FileCount = await _projectManager.GetDataFileCount(Node.Id, CancellationToken.None);
             OnPropertyChanged(nameof(NodeNumber));
             OnPropertyChanged(nameof(StartDatum));
             OnPropertyChanged(nameof(CallCount));

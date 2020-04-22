@@ -25,7 +25,6 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top">
@@ -70,7 +69,7 @@
                     </StackPanel>
 
                     <GroupBox Header="Logdateien" Grid.Row="2" Margin="0 16">
-                        <ListView ItemsSource="{Binding DataFiles, Mode=OneWay}">
+                        <ListView x:Name="DataFilesListView" ItemsSource="{Binding DataFiles, Mode=OneWay}">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
                                     <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -113,6 +112,24 @@
                                             <TextBlock Text="PO" ToolTip="Anzahl 'Process Overlap' Fehler" />
                                         </GridViewColumn.Header>
                                     </GridViewColumn>
+                                    <GridViewColumn Header="">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate DataType="local:DataFileViewModel">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Command="{Binding ElementName=DataFilesListView, Path=DataContext.RemoveFileCommand, Mode=OneWay}"
+                                                            CommandParameter="{Binding DataFile.Id, Mode=OneWay}"
+                                                            VerticalAlignment="Center"
+                                                            VerticalContentAlignment="Center"
+                                                            Width="30"
+                                                            Height="30"
+                                                            Style="{StaticResource MaterialDesignIconButton}"
+                                                            ToolTip="Datei entfernen">
+                                                        <md:PackIcon Kind="Delete" Width="20" Height="20" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
                                 </GridView>
                             </ListView.View>
                         </ListView>
@@ -145,7 +162,8 @@
                         <RowDefinition Height="150" />
                     </Grid.RowDefinitions>
 
-                    <ListView
+                    <controls:AutoScrollListView
+                        Style="{StaticResource MaterialDesignListView}"
                         Grid.Column="0" Grid.Row="0"
                         SelectedItem="{Binding SelectedCall, Mode=TwoWay}"
                         md:DataGridAssist.ColumnHeaderPadding="8 4 8 4"
@@ -182,7 +200,7 @@
                                 </GridViewColumn>
                             </GridView>
                         </ListView.View>
-                    </ListView>
+                    </controls:AutoScrollListView>
                     <GroupBox Grid.Column="1" Grid.Row="0"
                               Header="Details">
                         <Grid>
@@ -213,7 +231,8 @@
 
                             <controls:CallDataView Grid.Row="1" 
                                                    SnapsToDevicePixels="True"
-                                                   BatCall="{Binding SelectedCall.Call, Mode=OneWay}" 
+                                                   Visibility="{Binding SelectedCallLoading.IsCompleted, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                   BatCall="{Binding SelectedCallLoading.Result.Call, Mode=OneWay}" 
                                                    BatNode="{Binding Node, Mode=OneWay}" />
                         </Grid>
                     </GroupBox>

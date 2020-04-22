@@ -24,6 +24,7 @@ namespace TeensyBatExplorer.Core.Models
         public int SampleNr { get; set; }
         public byte[] Data { get; set; }
 
+        public int DataFileEntryId { get; set; }
         public BatDataFileEntry DataFileEntry { get; set; }
     }
 }

@@ -17,9 +17,8 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-using MapControl;
+using Nito.Mvvm;
 
-using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.WPF.Annotations;
@@ -34,6 +33,8 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         public string FileCreateTime => DataFile.FileCreateTime.ToFormattedString();
         public string ReferenceTime => DataFile.ReferenceTime.ToFormattedString();
         public string Version => $"FW:{DataFile.FirmwareVersion}, HW: {DataFile.HardwareVersion}";
+
+        public AsyncCommand DeleteFileCommand { get; private set; }
 
         public int EntryCount { get; private set; }
 

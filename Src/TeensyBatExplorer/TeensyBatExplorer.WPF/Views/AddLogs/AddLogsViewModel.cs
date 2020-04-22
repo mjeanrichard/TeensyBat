@@ -40,7 +40,6 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
         private readonly ProjectManager _projectManager;
         private readonly AddLogsCommand _addLogsCommand;
         private readonly ISnackbarMessageQueue _snackbarMessageQueue;
-        private readonly List<string> _filesToAdd = new List<string>();
         private BatLogViewModel _selectedLog;
 
         public AddLogsViewModel(NavigationService navigationService, LogReader logReader, ProjectManager projectManager, AddLogsCommand addLogsCommand, ISnackbarMessageQueue snackbarMessageQueue)
@@ -98,7 +97,6 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
                     int i = 0;
                     foreach (string file in openPicker.FileNames)
                     {
-                        _filesToAdd.Add(file);
                         BatDataFile batDataFile = new BatDataFile();
                         batDataFile.Filename = Path.GetFileName(file);
                         await busyState.Update($"Lade '{batDataFile.Filename}'...", i, openPicker.FileNames.Length);

@@ -29,13 +29,13 @@ namespace TeensyBatExplorer.Core.Queries
 {
     public static class ProjectManagerQueries
     {
-        public static async Task<BatNode> GetBatNode(this ProjectManager projectManager, int nodeNumber, CancellationToken cancellationToken)
+        public static async Task<int> CountDataFileEntries(this ProjectManager projectManager, int dataFileId, CancellationToken cancellationToken)
         {
             return await Task.Run(async () =>
             {
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    return await db.Nodes.AsNoTracking().SingleOrDefaultAsync(n => n.NodeNumber == nodeNumber, cancellationToken);
+                    return await db.DataFileEntries.CountAsync(e => e.DataFileId == dataFileId, cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -48,7 +48,7 @@ namespace TeensyBatExplorer.Core.Queries
                 {
                     return await db.Nodes
                         .Include(n => n.DataFiles)
-                        .SingleOrDefaultAsync(n => n.NodeNumber == nodeNumber, cancellationToken);
+                        .SingleOrDefaultAsync(n => n.NodeNumber == nodeNumber, cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -66,11 +66,10 @@ namespace TeensyBatExplorer.Core.Queries
                     bool hasMoreData = true;
                     while (hasMoreData)
                     {
-                        List<BatCall> list = await db.Calls.AsNoTracking().Where(c => c.NodeId == nodeId)
-                            .Include(c => c.Entries)
-                            .ThenInclude(e => e.FftData)
+                        IQueryable<BatCall> batCalls = db.Calls.AsNoTracking().Where(c => c.NodeId == nodeId)
                             .OrderBy(c => c.StartTime)
-                            .Skip(calls.Count).Take(500).ToListAsync(cancellationToken);
+                            .Skip(calls.Count).Take(200);
+                        List<BatCall> list = await batCalls.ToListAsync(cancellationToken).ConfigureAwait(false);
 
                         if (list.Any())
                         {
@@ -88,13 +87,32 @@ namespace TeensyBatExplorer.Core.Queries
             }, cancellationToken);
         }
 
+
+        public static async Task<List<BatDataFileEntry>> GetCall(this ProjectManager projectManager, int callId, StackableProgress progress, CancellationToken cancellationToken)
+        {
+            return await Task.Run(async () =>
+            {
+                using (ProjectContext db = projectManager.GetContext())
+                {
+                    List<BatDataFileEntry> entries = await db.DataFileEntries
+                        .Include(e => e.FftData)
+                        .Where(c => c.CallId == callId)
+                        .AsNoTracking()
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    return entries;
+                }
+
+            }, cancellationToken);
+        }
+
         public static async Task<List<BatteryData>> GetBatteryData(this ProjectManager projectManager, int nodeId, CancellationToken cancellationToken)
         {
             return await Task.Run(async () =>
             {
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    return await db.BatteryData.Where(b => b.DataFile.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken);
+                    return await db.BatteryData.Where(b => b.DataFile.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -105,7 +123,7 @@ namespace TeensyBatExplorer.Core.Queries
             {
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    return await db.TemperatureData.Where(b => b.DataFile.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken);
+                    return await db.TemperatureData.Where(b => b.DataFile.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -116,7 +134,7 @@ namespace TeensyBatExplorer.Core.Queries
             {
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    return await db.Nodes.OrderBy(n => n.NodeNumber).AsNoTracking().ToListAsync(cancellationToken);
+                    return await db.Nodes.OrderBy(n => n.NodeNumber).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -127,7 +145,7 @@ namespace TeensyBatExplorer.Core.Queries
             {
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    return await db.Calls.CountAsync(c => c.NodeId == nodeId, cancellationToken);
+                    return await db.Calls.CountAsync(c => c.NodeId == nodeId, cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -138,7 +156,7 @@ namespace TeensyBatExplorer.Core.Queries
             {
                 using (ProjectContext db = projectManager.GetContext())
                 {
-                    return await db.DataFiles.CountAsync(c => c.NodeId == nodeId, cancellationToken);
+                    return await db.DataFiles.CountAsync(c => c.NodeId == nodeId, cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }

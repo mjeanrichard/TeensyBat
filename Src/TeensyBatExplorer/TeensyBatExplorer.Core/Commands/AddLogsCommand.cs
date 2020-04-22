@@ -37,43 +37,41 @@ namespace TeensyBatExplorer.Core.Commands
             _analyzeNodeCommand = analyzeNodeCommand;
         }
 
-        public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatDataFile> loadedFiles, IProgress<CountProgress> progress, CancellationToken cancellationToken)
+        public async Task ExecuteAsync(ProjectManager projectManager, IEnumerable<BatDataFile> loadedFiles, StackableProgress progress, CancellationToken cancellationToken)
         {
-            if (progress == null)
-            {
-                progress = new NoopProgress<CountProgress>();
-            }
-
             int i = 0;
             BatDataFile[] batLogs = loadedFiles.ToArray();
+
+            StackableProgress addProgress = progress.Stack(80);
 
             foreach (BatDataFile batLog in batLogs)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                i++;
-                progress.Report(new CountProgress { Current = i, Total = batLogs.Length, Text = $"Importiere '{batLog.Filename}'..." });
+                addProgress.Report($"Importiere '{batLog.Filename}'...", i++, batLogs.Length);
 
                 using (ProjectContext db = projectManager.GetContext())
                 {
                     using (IDbContextTransaction transaction = await db.Database.BeginTransactionAsync(cancellationToken))
                     {
-                        await AddBatLog(db, batLog, cancellationToken);
+                        await AddBatLog(db, batLog, addProgress.Stack(1), cancellationToken);
                         await db.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
+                        await transaction.CommitAsync();
                     }
                 }
             }
+
+            StackableProgress analyzeProgress = progress.Stack(20);
 
             int[] nodeIds = batLogs.Select(b => b.NodeId).Distinct().ToArray();
             for (int index = 0; index < nodeIds.Length; index++)
             {
                 int nodeId = nodeIds[index];
-                progress.Report($"Analysiere Gerätedaten {index + 1}/{nodeIds.Length}", 0, 100);
-                await _analyzeNodeCommand.Process(nodeId, progress, cancellationToken);
+                analyzeProgress.Report($"Analysiere Gerätedaten {index + 1}/{nodeIds.Length}", index, nodeIds.Length);
+                await _analyzeNodeCommand.Process(nodeId, analyzeProgress.Stack(1), cancellationToken);
             }
         }
 
-        private async Task AddBatLog(ProjectContext db, BatDataFile batDataFile, CancellationToken cancellationToken)
+        private async Task AddBatLog(ProjectContext db, BatDataFile batDataFile, StackableProgress progress, CancellationToken cancellationToken)
         {
             BatNode batNode = await db.Nodes.SingleOrDefaultAsync(n => n.NodeNumber == batDataFile.NodeNumber, cancellationToken);
 
@@ -94,20 +92,34 @@ namespace TeensyBatExplorer.Core.Commands
             batDataFile.Node = batNode;
             db.DataFiles.Add(batDataFile);
 
+            progress.Report(10);
+
             foreach (BatDataFileEntry call in batDataFile.Entries)
             {
                 call.DataFile = batDataFile;
             }
 
+            progress.Report(20);
+
+            await db.SaveChangesAsync(cancellationToken);
+
+            progress.Report(70);
+
             foreach (BatteryData bat in batDataFile.BatteryData)
             {
                 bat.DataFile = batDataFile;
             }
+            await db.SaveChangesAsync(cancellationToken);
+
+            progress.Report(90);
 
             foreach (TemperatureData temp in batDataFile.TemperatureData)
             {
                 temp.DataFile = batDataFile;
             }
+            await db.SaveChangesAsync(cancellationToken);
+
+            progress.Report(100);
         }
     }
 }

@@ -26,6 +26,10 @@ using MapControl;
 
 using MaterialDesignThemes.Wpf;
 
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+
+using Nito.Mvvm;
+
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
@@ -45,6 +49,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
     {
         private readonly ProjectManager _projectManager;
         private readonly AnalyzeNodeCommand _analyzeNodeCommand;
+        private readonly RemoveLogFileCommand _removeLogFileCommand;
         private BatNode _node;
         private PlotModel _batteryPlot;
         private CallViewModel _selectedCall;
@@ -53,17 +58,33 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         private Location _currentMapCenter = new Location(47.3925, 8.0616);
         private int _nodeNumber;
+        private NotifyTask<CallViewModel> _selectedCallLoading;
 
-        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, AnalyzeNodeCommand analyzeNodeCommand)
+        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, AnalyzeNodeCommand analyzeNodeCommand, RemoveLogFileCommand removeLogFileCommand)
         {
             _projectManager = projectManager;
             _analyzeNodeCommand = analyzeNodeCommand;
+            _removeLogFileCommand = removeLogFileCommand;
             _nodeNumber = navigationArgument.Data;
 
             Title = $"Daten zu Gerät Nr. {_nodeNumber}";
 
             AddToolbarButton(new ToolBarButton(ProcessNode, PackIconKind.Cogs, "Daten analysieren"));
             AddToolbarButton(new ToolBarButton(SaveNode, PackIconKind.ContentSave, "Speichern"));
+            RemoveFileCommand = new AsyncCommand(o => RemoveFile((int)o));
+        }
+
+        public AsyncCommand RemoveFileCommand { get; set; }
+
+
+        private async Task RemoveFile(int dataFileId)
+        {
+            using (BusyState busyState = BeginBusy("Entferne Log Datei..."))
+            {
+                StackableProgress progress = busyState.GetProgress();
+                await _removeLogFileCommand.Execute(_projectManager, dataFileId, progress, busyState.Token);
+                await LoadNode(progress.Stack(50), busyState.Token);
+            }
         }
 
         public CallViewModel SelectedCall
@@ -75,8 +96,38 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
                 {
                     _selectedCall = value;
                     OnPropertyChanged();
+                    if (value != null)
+                    {
+                        SelectedCallLoading = NotifyTask.Create(LoadCallData(_selectedCall));
+                    }
+                    else
+                    {
+                        SelectedCallLoading = null;
+                    }
                 }
             }
+        }
+
+        public NotifyTask<CallViewModel> SelectedCallLoading
+        {
+            get => _selectedCallLoading;
+            set
+            {
+                if (Equals(value, _selectedCallLoading)) return;
+                _selectedCallLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private async Task<CallViewModel> LoadCallData(CallViewModel callViewModel)
+        {
+            if (!callViewModel.Call.Entries.Any())
+            {
+                List<BatDataFileEntry> entries = await _projectManager.GetCall(callViewModel.Call.Id, null, CancellationToken.None);
+                callViewModel.SetEntries(entries);
+            }
+
+            return callViewModel;
         }
 
         public string NodeNumber
@@ -212,9 +263,8 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             using (BusyState busyState = BeginBusy("Analysiere Gerätedaten..."))
             {
                 StackableProgress progress = busyState.GetProgress();
-                await _analyzeNodeCommand.Process(_node.Id, progress.Stack(50), busyState.Token);
-                progress.Report(50);
-                await LoadNode(progress.Stack(50), busyState.Token);
+                await _analyzeNodeCommand.Process(_node.Id, progress.Stack(70), busyState.Token);
+                await LoadNode(progress.Stack(30), busyState.Token);
             }
         }
 
@@ -237,33 +287,37 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
                 CurrentMapCenter = NodeLocation;
             }
 
-            List<BatCall> calls = await _projectManager.GetCalls(Node.Id, progress.Stack(70), cancellationToken);
+            List<BatCall> calls = await _projectManager.GetCalls(Node.Id, progress.Stack(80), cancellationToken);
             Calls = calls.Select(c => new CallViewModel(c)).ToList();
             BarItems = calls.Select(c => new BarItemModel(c.StartTimeMicros, 1)).ToList();
             SelectedCall = Calls.FirstOrDefault();
             OnPropertyChanged(nameof(BarItems));
-            progress.Report(80);
+            progress.Report(90);
 
             List<DataFileViewModel> files = new List<DataFileViewModel>(Node.DataFiles.Count);
-            foreach (BatDataFile file in Node.DataFiles)
+            foreach (BatDataFile file in Node.DataFiles.OrderBy(d => d.FileCreateTime))
             {
                 DataFileViewModel vm = new DataFileViewModel();
                 files.Add(vm);
-                vm.Load(file, calls.Sum(c => c.Entries.Count(e => e.DataFileId == file.Id)));
+                int count = await _projectManager.CountDataFileEntries(file.Id, cancellationToken);
+                vm.Load(file, count);
             }
 
             DataFiles = files;
             OnPropertyChanged(nameof(DataFiles));
 
             UpdateBatteryPlot(await _projectManager.GetBatteryData(Node.Id, cancellationToken));
-            progress.Report(90);
-
             UpdateTemperaturePlot(await _projectManager.GetTemperatureData(Node.Id, cancellationToken));
             progress.Report(100);
         }
 
         private void UpdateBatteryPlot(List<BatteryData> batteryData)
         {
+            if (!batteryData.Any())
+            {
+                return;
+            }
+
             PlotModel pm = new PlotModel();
             LineSeries lineSeries = new LineSeries();
             pm.Series.Add(lineSeries);
@@ -282,6 +336,11 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         private void UpdateTemperaturePlot(List<TemperatureData> temperatureData)
         {
+            if (!temperatureData.Any())
+            {
+                return;
+            }
+
             PlotModel pm = new PlotModel();
             LineSeries lineSeries = new LineSeries();
             pm.Series.Add(lineSeries);
@@ -335,6 +394,12 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void SetEntries(List<BatDataFileEntry> entries)
+        {
+            Call.Entries = entries;
+            OnPropertyChanged(nameof(Call));
         }
     }
 }

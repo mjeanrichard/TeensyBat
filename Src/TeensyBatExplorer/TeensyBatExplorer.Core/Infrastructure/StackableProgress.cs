@@ -7,6 +7,7 @@ namespace TeensyBatExplorer.Core.Infrastructure
         private readonly StackableProgress _parentProgress;
         private readonly int? _progressSpan;
         private CountProgress _lastProgress = new CountProgress();
+        private int _initialParentValue;
 
         public CountProgress LastProgress => _lastProgress;
 
@@ -15,6 +16,7 @@ namespace TeensyBatExplorer.Core.Infrastructure
             _parentProgress = parentProgress;
             _progressSpan = progressSpan;
             _lastProgress = new CountProgress { Text = parentProgress._lastProgress.Text, Current = 0, Total = 100 };
+            _initialParentValue = _parentProgress._lastProgress.Current;
         }
 
         public StackableProgress(Action<CountProgress> handler) : base(handler)
@@ -32,11 +34,12 @@ namespace TeensyBatExplorer.Core.Infrastructure
             if (_parentProgress != null && _progressSpan.HasValue)
             {
                 double factor = value.Current / (double)value.Total;
-                int current = _parentProgress._lastProgress.Current + (int)Math.Round(_progressSpan.Value * factor);
+                int current = _initialParentValue + (int)Math.Round(_progressSpan.Value * factor);
                 _parentProgress.OnReport(new CountProgress { Text = value.Text, Current = current, Total = _parentProgress._lastProgress.Total });
             }
             else
             {
+                _lastProgress = value;
                 base.OnReport(value);
             }
         }
