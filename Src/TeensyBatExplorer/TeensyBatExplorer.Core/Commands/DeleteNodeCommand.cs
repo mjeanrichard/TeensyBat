@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,12 +29,7 @@ namespace TeensyBatExplorer.Core.Commands
     {
         public async Task ExecuteAsync(ProjectManager projectManager, int nodeId, IProgress<CountProgress> progress, CancellationToken cancellationToken)
         {
-            if (progress == null)
-            {
-                progress = new NoopProgress<CountProgress>();
-            }
-
-            using (ProjectContext db = projectManager.GetContext())
+            using (ProjectContext db = projectManager.CreateContext())
             {
                 using (IDbContextTransaction transaction = await db.Database.BeginTransactionAsync(cancellationToken))
                 {
@@ -44,7 +38,6 @@ namespace TeensyBatExplorer.Core.Commands
                     await transaction.CommitAsync(cancellationToken);
                 }
             }
-
         }
     }
 }

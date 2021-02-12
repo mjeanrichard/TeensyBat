@@ -7,35 +7,44 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Green" SecondaryColor="LightGreen" />
+                
+                <materialDesign:MahAppsBundledTheme BaseTheme="Inherit" PrimaryColor="Green" SecondaryColor="LightGreen"/>
+
+                <!-- MahApps -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+
+                <!-- Material Design -->
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
 
-                <ResourceDictionary>
-                    <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="#60ad5e"/>
-                    <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="#FFFFFF"/>
-                    <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#2e7d32"/>
-                    <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="#FFFFFF"/>
-                    <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="#005005"/>
-                    <SolidColorBrush x:Key="PrimaryHueDarkForegroundBrush" Color="#FFFFFF"/>
+                <!-- Material Design: MahApps Compatibility -->
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.MahApps;component/Themes/MaterialDesignTheme.MahApps.Defaults.xaml"/>
 
-                    <SolidColorBrush x:Key="SecondaryHueLightBrush" Color="#9cff57"/>
-                    <SolidColorBrush x:Key="SecondaryHueLightForegroundBrush" Color="#000000"/>
-                    <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="#64dd17"/>
-                    <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush" Color="#000000"/>
-                    <SolidColorBrush x:Key="SecondaryHueDarkBrush" Color="#1faa00"/>
-                    <SolidColorBrush x:Key="SecondaryHueDarkForegroundBrush" Color="#000000"/>
-                </ResourceDictionary>
+                <!-- Dragablz Material Design -->
+                <ResourceDictionary Source="pack://application:,,,/Dragablz;component/Themes/materialdesign.xaml"/>
 
-                
-                <!-- Include the Dragablz Material Design style -->
-                <ResourceDictionary Source="pack://application:,,,/Dragablz;component/Themes/materialdesign.xaml" />
-                
                 <ResourceDictionary Source="Themes/Common.xaml" />
 
             </ResourceDictionary.MergedDictionaries>
 
+            <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="#60ad5e" />
+            <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#2e7d32" />
+            <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="#005005" />
+            <SolidColorBrush x:Key="PrimaryHueDarkForegroundBrush" Color="#FFFFFF" />
+
+            <SolidColorBrush x:Key="SecondaryHueLightBrush" Color="#9cff57" />
+            <SolidColorBrush x:Key="SecondaryHueLightForegroundBrush" Color="#000000" />
+            <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="#64dd17" />
+            <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush" Color="#000000" />
+            <SolidColorBrush x:Key="SecondaryHueDarkBrush" Color="#1faa00" />
+            <SolidColorBrush x:Key="SecondaryHueDarkForegroundBrush" Color="#000000" />
+
             <!-- tell Dragablz tab control to use the Material Design theme -->
             <Style TargetType="{x:Type dragablz:TabablzControl}" BasedOn="{StaticResource MaterialDesignTabablzControlStyle}" />
+
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -20,8 +20,6 @@ namespace TeensyBatExplorer.Core
 {
     public class LogFileFormatException : Exception
     {
-        public long Position { get; }
-
         public LogFileFormatException()
         {
         }
@@ -35,5 +33,7 @@ namespace TeensyBatExplorer.Core
         {
             Position = position;
         }
+
+        public long Position { get; }
     }
 }

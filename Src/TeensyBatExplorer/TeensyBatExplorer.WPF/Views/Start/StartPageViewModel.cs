@@ -15,9 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using MaterialDesignThemes.Wpf;
@@ -26,7 +24,6 @@ using Microsoft.Win32;
 
 using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Queries;
-using TeensyBatExplorer.WPF.Annotations;
 using TeensyBatExplorer.WPF.Infrastructure;
 
 namespace TeensyBatExplorer.WPF.Views.Start
@@ -36,7 +33,7 @@ namespace TeensyBatExplorer.WPF.Views.Start
         private readonly ProjectManager _projectManager;
         private readonly NavigationService _navigationService;
         private readonly GetProjectMruQuery _getProjectMruQuery;
-        private List<MruViewModel> _mruEntries;
+        private List<MruViewModel> _mruEntries = new();
 
         public StartPageViewModel(ProjectManager projectManager, NavigationService navigationService, GetProjectMruQuery getProjectMruQuery)
         {
@@ -69,7 +66,7 @@ namespace TeensyBatExplorer.WPF.Views.Start
         {
             using (BeginBusy("Neus Projekt erstellen..."))
             {
-                SaveFileDialog savePicker = new SaveFileDialog();
+                SaveFileDialog savePicker = new();
                 savePicker.CheckPathExists = true;
                 savePicker.DefaultExt = ".batproj";
                 bool? dialogResult = savePicker.ShowDialog();
@@ -85,7 +82,7 @@ namespace TeensyBatExplorer.WPF.Views.Start
         {
             using (BeginBusy("Projekt öffnen..."))
             {
-                OpenFileDialog openPicker = new OpenFileDialog();
+                OpenFileDialog openPicker = new();
                 openPicker.Multiselect = false;
                 openPicker.DefaultExt = ".batproj";
                 openPicker.CheckFileExists = true;

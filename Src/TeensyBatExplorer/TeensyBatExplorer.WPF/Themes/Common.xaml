@@ -4,14 +4,14 @@
                     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
                     xmlns:controls="clr-namespace:TeensyBatExplorer.WPF.Controls"
                     xmlns:infrastructure="clr-namespace:TeensyBatExplorer.WPF.Infrastructure">
-    
+
     <DataTemplate x:Key="RightAlignedColumn">
         <TextBlock Text="{Binding}" TextAlignment="Right" />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type local:YesNoDialogViewModel}">
         <StackPanel Margin="20">
-            <TextBlock Style="{StaticResource MaterialDesignBody1TextBlock}" 
+            <TextBlock Style="{StaticResource MaterialDesignBody1TextBlock}"
                        Margin="0 10"
                        Text="{Binding Message, Mode=OneWay}" />
             <StackPanel

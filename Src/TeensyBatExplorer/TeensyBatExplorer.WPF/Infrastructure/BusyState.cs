@@ -20,7 +20,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.WPF.Annotations;
 
@@ -32,7 +31,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         private readonly CancellationTokenSource _cancellationToken;
         private int? _total;
         private int? _current;
-        private string _text;
+        private string? _text;
 
         public BusyState(BaseViewModel baseViewModel)
         {
@@ -67,7 +66,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             }
         }
 
-        public string Text
+        public string? Text
         {
             get => _text;
             set
@@ -94,7 +93,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         }
 
 
-        public async Task Update(string text, int? current, int? total)
+        public async Task Update(string? text, int? current, int? total)
         {
             await _baseViewModel.RunOnUiThreadAsync(() =>
             {
@@ -108,17 +107,17 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             });
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public StackableProgress GetProgress(int total = 100)
         {
-            StackableProgress progress = new StackableProgress(async p => await Update(p));
+            StackableProgress progress = new(async p => await Update(p));
             progress.Report(Text, 0, total);
             return progress;
         }

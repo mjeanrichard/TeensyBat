@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 
 using Device.Net;
 
+using Hid.Net;
+
 namespace TeensyBatExplorer.Core.Devices
 {
     public class TeensyBatDevice
@@ -37,9 +39,9 @@ namespace TeensyBatExplorer.Core.Devices
         private const byte DATA_CALL_DATA1 = 2;
         private const byte DATA_CALL_DATA2 = 3;
 
-        private readonly SemaphoreSlim _readWriteLock = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _readWriteLock = new(1, 1);
 
-        private IDevice _batDevice;
+        private IHidDevice? _batDevice;
 
         public byte? NodeId { get; private set; }
         public DateTimeOffset? NodeTime { get; private set; }
@@ -54,13 +56,14 @@ namespace TeensyBatExplorer.Core.Devices
 
         public bool IsConnected { get; set; }
 
-        public event EventHandler DeviceUpdated;
+        public event EventHandler? DeviceUpdated;
 
         private void Update(byte[] data)
         {
             DateTimeOffset updateTime = DateTimeOffset.UtcNow;
-            using (BinaryReader reader = new BinaryReader(new MemoryStream(data)))
+            using (BinaryReader reader = new(new MemoryStream(data)))
             {
+                reader.ReadByte(); // HID ReportId
                 byte dataType = reader.ReadByte();
                 switch (dataType)
                 {
@@ -98,11 +101,11 @@ namespace TeensyBatExplorer.Core.Devices
         }
 
 
-        public async Task Connect(IDevice batDevice, CancellationToken cancellationToken)
+        public async Task Connect(IHidDevice batDevice, CancellationToken cancellationToken)
         {
             if (_batDevice != null)
             {
-                await Disconnect();
+                Disconnect();
             }
 
             _batDevice = batDevice;
@@ -113,13 +116,13 @@ namespace TeensyBatExplorer.Core.Devices
 
         public async Task Refresh(CancellationToken cancellationToken)
         {
-            BatDeviceCommand cmd = new BatDeviceCommand(CMD_SET_REFRESH);
+            BatDeviceCommand cmd = new(CMD_SET_REFRESH);
             await SendCommand(cmd, cancellationToken);
         }
 
         public async Task SetTime(CancellationToken cancellationToken)
         {
-            BatDeviceCommand cmd = new BatDeviceCommand(CMD_SET_TIME);
+            BatDeviceCommand cmd = new(CMD_SET_TIME);
             DateTimeOffset now = DateTimeOffset.UtcNow;
             long unixTimeStamp = now.ToUnixTimeSeconds() + 1;
             ushort offset = (ushort)(1000 - now.Millisecond);
@@ -137,14 +140,14 @@ namespace TeensyBatExplorer.Core.Devices
 
         public async Task SetVoltage(decimal voltage, CancellationToken cancellationToken)
         {
-            BatDeviceCommand cmd = new BatDeviceCommand(CMD_SET_VOLTAGE);
+            BatDeviceCommand cmd = new(CMD_SET_VOLTAGE);
             cmd.Write((ushort)Math.Round(voltage * 1000));
             await SendCommand(cmd, cancellationToken);
         }
 
         public async Task SetNodeNumber(byte nodeNumber, CancellationToken cancellationToken)
         {
-            BatDeviceCommand cmd = new BatDeviceCommand(CMD_SET_NODEID);
+            BatDeviceCommand cmd = new(CMD_SET_NODEID);
             cmd.Write(nodeNumber);
             await SendCommand(cmd, cancellationToken);
         }
@@ -152,13 +155,17 @@ namespace TeensyBatExplorer.Core.Devices
         private async Task SendCommand(BatDeviceCommand command, CancellationToken cancellationToken)
         {
             await _readWriteLock.WaitAsync(cancellationToken);
+            if (_batDevice == null)
+            {
+                return;
+            }
+
             try
             {
-                await _batDevice.WriteAsync(command.Buffer);
-                byte[] answer = await WaitForAnswer(cancellationToken);
-                if (answer != null)
+                TransferResult result = await _batDevice.WriteAndReadAsync(command.Buffer, cancellationToken).ConfigureAwait(false);
+                if (result.BytesTransferred > 0)
                 {
-                    Update(answer);
+                    Update(result.Data);
                 }
             }
             catch (TaskCanceledException)
@@ -178,28 +185,11 @@ namespace TeensyBatExplorer.Core.Devices
             DeviceUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        private async Task<byte[]> WaitForAnswer(CancellationToken cancellationToken)
-        {
-            while (_batDevice != null && _batDevice.IsInitialized)
-            {
-                ReadResult readResult = await _batDevice.ReadAsync();
-                if (readResult.BytesRead > 0)
-                {
-                    return readResult.Data;
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-
-            return null;
-        }
-
-        public async Task Disconnect()
+        public void Disconnect()
         {
             IsConnected = false;
 
             _batDevice = null;
-
 
             NodeId = null;
             NodeTime = null;

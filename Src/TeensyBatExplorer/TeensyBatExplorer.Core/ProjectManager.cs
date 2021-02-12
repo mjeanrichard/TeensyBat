@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -37,20 +36,20 @@ namespace TeensyBatExplorer.Core
     public class ProjectManager : IDisposable
     {
         private readonly AddToMruCommand _addToMruCommand;
-        private BatProject _batProject;
+        private BatProject? _batProject;
 
         public ProjectManager(AddToMruCommand addToMruCommand)
         {
             _addToMruCommand = addToMruCommand;
         }
 
-        public string Filename { get; private set; }
+        public string? Filename { get; private set; }
 
         public bool IsProjectOpen { get; private set; }
 
-        public BatProject Project => _batProject;
+        public BatProject? Project => _batProject;
 
-        public event EventHandler<EventArgs> ProjectChanged;
+        public event EventHandler<EventArgs>? ProjectChanged;
 
         public async Task OpenProject(string filename)
         {
@@ -60,7 +59,7 @@ namespace TeensyBatExplorer.Core
             }
 
             Filename = filename;
-            using (ProjectContext context = new ProjectContext(filename))
+            using (ProjectContext context = new(filename))
             {
                 await Upgrade(context);
                 _batProject = await context.Projects.AsNoTracking().SingleAsync();
@@ -84,11 +83,11 @@ namespace TeensyBatExplorer.Core
                 File.Delete(filename);
             }
 
-            using (ProjectContext context = new ProjectContext(filename))
+            using (ProjectContext context = new(filename))
             {
                 await Upgrade(context);
 
-                BatProject project = new BatProject();
+                BatProject project = new();
                 project.Name = "New Project";
                 context.Projects.Add(project);
                 await context.SaveChangesAsync();
@@ -101,9 +100,9 @@ namespace TeensyBatExplorer.Core
         {
             using (IDbContextTransaction transaction = await context.Database.BeginTransactionAsync())
             {
-                using (SharedConnection sharedConnection = new SharedConnection(context.Database.GetDbConnection()))
+                using (SharedConnection sharedConnection = new(context.Database.GetDbConnection()))
                 {
-                    UpgradeLog upgradeLog = new UpgradeLog();
+                    UpgradeLog upgradeLog = new();
                     UpgradeEngine upgrader = DeployChanges.To.SQLiteDatabase(sharedConnection)
                         .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())
                         .WithoutTransaction()
@@ -126,14 +125,14 @@ namespace TeensyBatExplorer.Core
             }
         }
 
-        public ProjectContext GetContext()
+        public ProjectContext CreateContext()
         {
-            if (IsProjectOpen)
+            if (!IsProjectOpen || Filename == null)
             {
-                return new ProjectContext(Filename);
+                throw new InvalidOperationException("Es ist kein Projekt offen!");
             }
 
-            return null;
+            return new ProjectContext(Filename);
         }
 
         public void Close()
@@ -155,7 +154,7 @@ namespace TeensyBatExplorer.Core
 
         private class UpgradeLog : IUpgradeLog
         {
-            readonly List<ProjectMessage> _messages = new List<ProjectMessage>();
+            private readonly List<ProjectMessage> _messages = new();
 
             public void WriteInformation(string format, params object[] args)
             {

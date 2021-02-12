@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,7 +25,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-using TeensyBatExplorer.Core;
 using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.WPF.Controls
@@ -42,26 +40,27 @@ namespace TeensyBatExplorer.WPF.Controls
     public class CallDataView : Control
     {
         public static readonly DependencyProperty BatNodeProperty = DependencyProperty.Register(
-            "BatNode", typeof(BatNode), typeof(CallDataView), new PropertyMetadata(default(BatNode)));
-
-        public BatNode BatNode
-        {
-            get { return (BatNode)GetValue(BatNodeProperty); }
-            set { SetValue(BatNodeProperty, value); }
-        }
+            "BatNode", typeof(BatNode), typeof(CallDataView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty BatCallProperty = DependencyProperty.Register(
-            "BatCall", typeof(BatCall), typeof(CallDataView), new PropertyMetadata(default(BatCall), OnBatCallChanged));
+            "BatCall", typeof(BatCall), typeof(CallDataView), new PropertyMetadata(null, OnBatCallChanged));
 
         private static void OnBatCallChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((CallDataView)d).Invalidate();
         }
 
-        public BatCall BatCall
+        public BatCall? BatCall
         {
-            get { return (BatCall)GetValue(BatCallProperty); }
-            set { SetValue(BatCallProperty, value); }
+            get => (BatCall?)GetValue(BatCallProperty);
+            set => SetValue(BatCallProperty, value);
+        }
+
+
+        public BatNode? BatNode
+        {
+            get => (BatNode?)GetValue(BatNodeProperty);
+            set => SetValue(BatNodeProperty, value);
         }
 
         private const int RowHeight = 3;
@@ -73,22 +72,22 @@ namespace TeensyBatExplorer.WPF.Controls
         private const int PauseSizeInCols = 5;
         private const int MicrosPerCol = 500;
         private const int LoudnessScale = 45;
-        private const int LoudnessLowerBound = FftLowerBound + 15 + (4095/LoudnessScale);
+        private const int LoudnessLowerBound = FftLowerBound + 15 + 4095 / LoudnessScale;
         private const int StaticColOffset = 15;
         private const int IntensityLineWidth = 8;
 
         private static readonly Color PauseColor = Color.FromRgb(0x40, 0x40, 0x40);
 
         private WriteableBitmap _canvas;
-        private Image _imageControl;
-        private ScrollBar _scrollBar;
-        private BatDataFileEntry[] _entries;
-        private Popup _tooltip;
-        private TextBlock _tooltipText;
-        private Line _horizontalCursor1;
-        private Line _verticalCursor1;
-        private Line _horizontalCursor2;
-        private Line _verticalCursor2;
+        private Image? _imageControl;
+        private ScrollBar? _scrollBar;
+        private BatDataFileEntry[]? _entries;
+        private Popup? _tooltip;
+        private TextBlock? _tooltipText;
+        private Line? _horizontalCursor1;
+        private Line? _verticalCursor1;
+        private Line? _horizontalCursor2;
+        private Line? _verticalCursor2;
 
         static CallDataView()
         {
@@ -262,12 +261,12 @@ namespace TeensyBatExplorer.WPF.Controls
 
         private PointInfo GetInfo(Point position)
         {
-            if (_entries == null || _scrollBar == null)
+            if (_entries == null || _scrollBar == null || BatCall == null)
             {
                 return new PointInfo();
             }
 
-            PointInfo info = new PointInfo();
+            PointInfo info = new();
 
             int selectedCol = (int)(Math.Floor((position.X - StaticColOffset) / ColWidth) + _scrollBar.Value) + 1;
             if (selectedCol >= 0)
@@ -303,7 +302,7 @@ namespace TeensyBatExplorer.WPF.Controls
 
             if (position.Y <= FftLowerBound)
             {
-                info.Frequency = (MaxVisibleFreq - (int)Math.Floor(position.Y / RowHeight)) - 1;
+                info.Frequency = MaxVisibleFreq - (int)Math.Floor(position.Y / RowHeight) - 1;
             }
             else
             {
@@ -320,7 +319,6 @@ namespace TeensyBatExplorer.WPF.Controls
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
-            int height = (int)arrangeBounds.Height;
             int width = (int)arrangeBounds.Width;
 
             if ((int)_canvas.Width != width)
@@ -332,6 +330,7 @@ namespace TeensyBatExplorer.WPF.Controls
                     _imageControl.Source = _canvas;
                 }
             }
+
             UpdateScrollBar();
 
             return base.ArrangeOverride(arrangeBounds);
@@ -377,8 +376,8 @@ namespace TeensyBatExplorer.WPF.Controls
 
         private void Draw()
         {
-            BatCall batCall = BatCall;
-            if (_imageControl == null || batCall == null)
+            BatCall? batCall = BatCall;
+            if (_imageControl == null || batCall == null || _entries == null)
             {
                 return;
             }
@@ -454,7 +453,6 @@ namespace TeensyBatExplorer.WPF.Controls
                         FftBlock fftBlock = fftBlocks[fftIndex];
                         for (int i = 0; i < MaxVisibleFreq; i++)
                         {
-
                             Color pixelColor = ColorPalettes.BlueVioletRed[Math.Min(127, (int)fftBlock.Data[i])];
 
                             int x = columnStart;
@@ -500,19 +498,20 @@ namespace TeensyBatExplorer.WPF.Controls
                         totalIntensity[i] += fftBlock.Data[i];
                     }
                 }
+
                 int localMax = totalIntensity.Skip(10).Max();
                 if (localMax > 0)
                 {
                     for (int i = 0; i < totalIntensity.Length; i++)
                     {
-                        Color pixelColor = ColorPalettes.BlueVioletRed[(int)Math.Min(127, (totalIntensity[i] * 127) / localMax)];
+                        Color pixelColor = ColorPalettes.BlueVioletRed[Math.Min(127, totalIntensity[i] * 127 / localMax)];
 
                         int y = FftLowerBound - RowHeight - i * RowHeight;
                         _canvas.FillRectangle(0, y, IntensityLineWidth, y + RowHeight, pixelColor);
                     }
                 }
 
-                BatNode batNode = BatNode;
+                BatNode? batNode = BatNode;
                 if (batNode != null)
                 {
                     int callStartThreshold = batNode.CallStartThreshold / LoudnessScale;

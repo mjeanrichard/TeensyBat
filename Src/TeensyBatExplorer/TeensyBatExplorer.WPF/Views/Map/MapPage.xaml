@@ -1,0 +1,269 @@
+﻿<UserControl x:Class="TeensyBatExplorer.WPF.Views.Map.MapPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:map="clr-namespace:TeensyBatExplorer.WPF.Views.Map"
+             xmlns:mapControl="clr-namespace:MapControl;assembly=MapControl.WPF"
+             xmlns:controls="clr-namespace:TeensyBatExplorer.WPF.Controls"
+             xmlns:dragablz="http://dragablz.net/winfx/xaml/dragablz"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=map:MapViewModel, IsDesignTimeCreatable=False}"
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <controls:LocationToVisibilityConverter x:Key="LocationToVisibilityConverter" />
+            <controls:OffsetConverter x:Key="OffsetConverter" Offset="25" Factor="2" />
+
+            <Style x:Key="NodeItemStyle" TargetType="mapControl:MapItem">
+                <Setter Property="mapControl:MapPanel.Location" Value="{Binding Location}" />
+                <Setter Property="Visibility">
+                    <Setter.Value>
+                        <MultiBinding Converter="{StaticResource LocationToVisibilityConverter}">
+                            <Binding Path="(mapControl:MapPanel.ParentMap)" RelativeSource="{RelativeSource Self}" />
+                            <Binding Path="(mapControl:MapPanel.ViewPosition)" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <!--<Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="mapControl:MapItem">
+                            <Grid>
+                                <Ellipse Fill="Red" Width="20" Height="20" />
+                                --><!--<mapControl:Pushpin Content="{Binding NodeNumber}" Background="Orange" Visibility="{Binding IsSelected, Converter={StaticResource InverseBoolToVisConverter}}" />
+                                <mapControl:Pushpin Content="{Binding NodeNumber}" Background="Red" FontWeight="Bold" Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />--><!--
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>-->
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="8">
+        <dragablz:TabablzControl Margin="0"
+                                 FixedHeaderCount="5"
+                                 BorderThickness="0">
+            <dragablz:TabablzControl.InterTabController>
+                <dragablz:InterTabController />
+            </dragablz:TabablzControl.InterTabController>
+
+            <TabItem Header="Karte" IsSelected="True">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Vertical" />
+
+                    <mapControl:Map x:Name="Map"
+                                    Grid.Column="0"
+                                    Grid.Row="1"
+                                    Center="{Binding MapCenter}"
+                                    MouseRightButtonDown="Map_OnMouseRightButtonDown"
+                                    ZoomLevel="14">
+                        <mapControl:Map.MapLayer>
+                            <mapControl:MapTileLayer>
+                                <mapControl:MapTileLayer.TileSource>
+                                    <mapControl:TileSource UriFormat="http://{c}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png" />
+                                </mapControl:MapTileLayer.TileSource>
+                            </mapControl:MapTileLayer>
+                        </mapControl:Map.MapLayer>
+
+                        <mapControl:MapItemsControl ItemsSource="{Binding MapNodes}"
+                                                    ItemContainerStyle="{StaticResource NodeItemStyle}">
+                            <mapControl:MapItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Grid.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" Command="{Binding ElementName=Map, Path=DataContext.SelectNodeCommand}" CommandParameter="{Binding Node.Id}" />
+                                        </Grid.InputBindings>
+                                        <Ellipse HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Fill="Blue"
+
+                                                 Opacity="{Binding CurrentValue, Mode=OneWay}"
+                                                 Width="35" Height="35" />
+                                        <Ellipse HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Fill="DarkGray"
+                                                 Visibility="{Binding IsSelected, Mode=OneWay, Converter={StaticResource InverseBoolToVisConverter} }"
+                                                 Width="25" Height="25" />
+                                        <Ellipse HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Fill="DarkSlateGray"
+                                                 Visibility="{Binding IsSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter} }"
+                                                 Width="25" Height="25" />
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="White"
+                                                   Text="{Binding NodeNumber, Mode=OneWay}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </mapControl:MapItemsControl.ItemTemplate>
+                        </mapControl:MapItemsControl>
+
+                        <mapControl:Map.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Click="PlaceDeviceMenu_OnClick">
+                                    <MenuItem.Header>
+                                        <TextBlock>
+                                            <Run>Gerät</Run>
+                                            <Run Text="{Binding SelectedMapNode.NodeNumber, Mode=OneWay}" />
+                                            <Run>hier plazieren</Run>
+                                        </TextBlock>
+                                    </MenuItem.Header>
+                                </MenuItem>
+                            </ContextMenu>
+                        </mapControl:Map.ContextMenu>
+
+                    </mapControl:Map>
+                    <Expander
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Grid.RowSpan="2"
+                        HorizontalAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        IsExpanded="False"
+                        BorderThickness="1"
+                        ExpandDirection="Right">
+                        <Expander.Header>
+                            <TextBlock>
+                                <TextBlock.LayoutTransform>
+                                    <RotateTransform Angle="-90" />
+                                </TextBlock.LayoutTransform>
+                                <TextBlock.Text>Geräte</TextBlock.Text>
+                            </TextBlock>
+                        </Expander.Header>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <controls:AutoScrollListView ItemsSource="{Binding MapNodes, Mode=OneWay}"
+                                                         Style="{StaticResource MaterialDesignListView}"
+                                                         SelectedItem="{Binding SelectedMapNode}"
+                                                         Grid.Row="0">
+                                <controls:AutoScrollListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem" BasedOn="{StaticResource MaterialDesignGridViewItem}">
+                                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    </Style>
+                                </controls:AutoScrollListView.ItemContainerStyle>
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn
+                                            DisplayMemberBinding="{Binding NodeNumber, Mode=OneWay}"
+                                            Header="Gerät" />
+                                        <GridViewColumn
+                                            DisplayMemberBinding="{Binding CurrentValue, Mode=OneWay}"
+                                            Header="#" />
+                                        <GridViewColumn
+                                            Header="Ort?">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate DataType="map:MapNodeViewModel">
+                                                    <md:PackIcon Kind="Check" Visibility="{Binding HasLocation, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </controls:AutoScrollListView>
+                            <GroupBox Margin="0" Grid.Row="1" Header="{Binding SelectedMapNode.NodeNumber, Mode=OneWay}" Visibility="{Binding IsNodeSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox Text="{Binding SelectedMapNode.SwissGridX, Mode=TwoWay}"
+                                                 md:HintAssist.Hint="X"
+                                                 Width="50"
+                                                 Margin="0 10 20 10"
+                                                 HorizontalContentAlignment="Left"
+                                                 md:TextFieldAssist.DecorationVisibility="Hidden"
+                                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                                        <TextBox Text="{Binding SelectedMapNode.SwissGridY, Mode=TwoWay}"
+                                                 md:HintAssist.Hint="Y"
+                                                 Width="50"
+                                                 Margin="0 10 20 10"
+                                                 HorizontalContentAlignment="Left"
+                                                 md:TextFieldAssist.DecorationVisibility="Hidden"
+                                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox Text="{Binding SelectedMapNode.Latitude, Mode=TwoWay}"
+                                                 md:HintAssist.Hint="Latitude"
+                                                 Width="150"
+                                                 Margin="0 10 20 10"
+                                                 HorizontalContentAlignment="Left"
+                                                 md:TextFieldAssist.DecorationVisibility="Hidden"
+                                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                                        <TextBox Text="{Binding SelectedMapNode.Longitude, Mode=TwoWay}"
+                                                 md:HintAssist.Hint="Longitude"
+                                                 Width="150"
+                                                 Margin="0 10 20 10"
+                                                 HorizontalContentAlignment="Left"
+                                                 md:TextFieldAssist.DecorationVisibility="Hidden"
+                                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                        </Grid>
+                    </Expander>
+
+                    <controls:BarControl Grid.Row="2"
+                                         Grid.ColumnSpan="2"
+                                         Grid.Column="0"
+                                         Height="200"
+                                         Focusable="True"
+                                         Items="{Binding BarItems, Mode=OneWay}"
+                                         StartTime="{Binding ReferenceTime, Mode=OneWay}"
+                                         ShowDetails="True"
+                                         CurrentPosition="{Binding CurrentPosition, Mode=TwoWay}"
+                                         CurrentDetailBarDuration="{Binding DetailBarDuration, Mode=OneWayToSource}" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Filter">
+                <Grid>
+                    <mah:RangeSlider Maximum="100" Minimum="0" AutoToolTipPlacement="TopLeft">
+                        <mah:RangeSlider.AutoToolTipRangeValuesTemplate>
+                            <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                                <UniformGrid Columns="2" Rows="2">
+                                    <TextBlock HorizontalAlignment="Right" Text="From:" />
+                                    <TextBlock HorizontalAlignment="Right" Text="{Binding LowerValue, StringFormat='{}{0:N2}'}" />
+                                    <TextBlock HorizontalAlignment="Right" Text="To:" />
+                                    <TextBlock HorizontalAlignment="Right" Text="{Binding UpperValue, StringFormat='{}{0:N2}'}" />
+                                </UniformGrid>
+                            </DataTemplate>
+                        </mah:RangeSlider.AutoToolTipRangeValuesTemplate>
+                    </mah:RangeSlider>
+                    <!--<TextBox Margin="0 8 0 10"
+                             md:HintAssist.Hint="Geräte Nr"
+                             HorizontalContentAlignment="Right"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             HorizontalAlignment="Stretch">
+                        <TextBox.Text>
+                            <Binding
+                                Path="Filter.MinFrequency"
+                                UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <controls:IntegerValidationRule MaxValue="150" MinValue="0" ValidatesOnTargetUpdated="True" />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>-->
+                </Grid>
+            </TabItem>
+        </dragablz:TabablzControl>
+    </Grid>
+</UserControl>

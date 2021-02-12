@@ -31,14 +31,13 @@ namespace TeensyBatExplorer.WPF
     /// </summary>
     public partial class App : Application
     {
-        private IUnityContainer _rootContainer;
-        private ISnackbarMessageQueue _snackbarMessageQueue;
+        private readonly IUnityContainer _rootContainer = new UnityContainer();
+        private ISnackbarMessageQueue? _snackbarMessageQueue;
 
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            _rootContainer = new UnityContainer();
             RegisterServices(_rootContainer);
 
             _snackbarMessageQueue = _rootContainer.Resolve<ISnackbarMessageQueue>();
@@ -54,7 +53,7 @@ namespace TeensyBatExplorer.WPF
 
         private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            _snackbarMessageQueue.Enqueue(e.Exception.Message);
+            _snackbarMessageQueue?.Enqueue(e.Exception.Message);
             e.Handled = true;
         }
 

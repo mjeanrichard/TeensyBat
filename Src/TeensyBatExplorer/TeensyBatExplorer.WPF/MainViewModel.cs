@@ -31,7 +31,7 @@ namespace TeensyBatExplorer.WPF
         private readonly NavigationService _navigationService;
         private readonly ProjectManager _projectManager;
         private readonly ISnackbarMessageQueue _snackbarMessageQueue;
-        private BaseViewModel _currentPage;
+        private BaseViewModel? _currentPage;
 
         public MainViewModel(NavigationService navigationService, ProjectManager projectManager, ISnackbarMessageQueue snackbarMessageQueue)
         {
@@ -42,6 +42,7 @@ namespace TeensyBatExplorer.WPF
 
             GoHomeCommand = new AsyncCommand(GoHome);
             GoToProjectCommand = new AsyncCommand(GoToProject);
+            GoToMapCommand = new AsyncCommand(GoToMap);
             GoToDeviceCommand = new AsyncCommand(GoToDevice);
             Cancel = new CustomAsyncCommand(CancelOperation, () => !IsCancellationRequested);
 
@@ -54,12 +55,13 @@ namespace TeensyBatExplorer.WPF
 
         public AsyncCommand GoHomeCommand { get; set; }
         public AsyncCommand GoToProjectCommand { get; set; }
+        public AsyncCommand GoToMapCommand { get; set; }
         public AsyncCommand GoToDeviceCommand { get; set; }
         public CustomAsyncCommand Cancel { get; set; }
 
         public ISnackbarMessageQueue SnackbarMessageQueue => _snackbarMessageQueue;
 
-        public BaseViewModel CurrentPage
+        public BaseViewModel? CurrentPage
         {
             get => _currentPage;
             private set
@@ -72,6 +74,11 @@ namespace TeensyBatExplorer.WPF
                 _currentPage = value;
                 OnPropertyChanged();
             }
+        }
+
+        private async Task GoToMap()
+        {
+            await _navigationService.NavigateToMapPage();
         }
 
         private async Task GoToDevice()

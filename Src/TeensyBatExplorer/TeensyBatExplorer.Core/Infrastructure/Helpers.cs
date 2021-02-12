@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ namespace TeensyBatExplorer.Core.Infrastructure
         {
             return dateTime.AddTicks(microseconds * 10);
         }
-        
+
         public static string ToFormattedString(this DateTime dateTime)
         {
             return dateTime.ToString("dd.MM.yy HH:mm:ss");

@@ -23,7 +23,7 @@ namespace TeensyBatExplorer.Core
 {
     public class ApplicationContext : DbContext
     {
-        public DbSet<ProjectMruEntry> ProjectMruEntries { get; set; }
+        public DbSet<ProjectMruEntry> ProjectMruEntries { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {

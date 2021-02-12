@@ -174,6 +174,65 @@ namespace TeensyBatExplorer.WPF.Annotations
   }
 
   /// <summary>
+  /// Indicates that the integral value falls into the specified interval.
+  /// It's allowed to specify multiple non-intersecting intervals.
+  /// Values of interval boundaries are inclusive.
+  /// </summary>
+  /// <example><code>
+  /// void Foo([ValueRange(0, 100)] int value) {
+  ///   if (value == -1) { // Warning: Expression is always 'false'
+  ///     ...
+  ///   }
+  /// }
+  /// </code></example>
+  [AttributeUsage(
+    AttributeTargets.Parameter | AttributeTargets.Field | AttributeTargets.Property |
+    AttributeTargets.Method | AttributeTargets.Delegate,
+    AllowMultiple = true)]
+  public sealed class ValueRangeAttribute : Attribute
+  {
+    public object From { get; }
+    public object To { get; }
+
+    public ValueRangeAttribute(long from, long to)
+    {
+      From = from;
+      To = to;
+    }
+
+    public ValueRangeAttribute(ulong from, ulong to)
+    {
+      From = from;
+      To = to;
+    }
+
+    public ValueRangeAttribute(long value)
+    {
+      From = To = value;
+    }
+
+    public ValueRangeAttribute(ulong value)
+    {
+      From = To = value;
+    }
+  }
+
+  /// <summary>
+  /// Indicates that the integral value never falls below zero.
+  /// </summary>
+  /// <example><code>
+  /// void Foo([NonNegativeValue] int value) {
+  ///   if (value == -1) { // Warning: Expression is always 'false'
+  ///     ...
+  ///   }
+  /// }
+  /// </code></example>
+  [AttributeUsage(
+    AttributeTargets.Parameter | AttributeTargets.Field | AttributeTargets.Property |
+    AttributeTargets.Method | AttributeTargets.Delegate)]
+  public sealed class NonNegativeValueAttribute : Attribute { }
+
+  /// <summary>
   /// Indicates that the function argument should be a string literal and match one
   /// of the parameters of the caller function. For example, ReSharper annotates
   /// the parameter of <see cref="System.ArgumentNullException"/>.
@@ -234,7 +293,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       ParameterName = parameterName;
     }
 
-    [CanBeNull] public string ParameterName { get; }
+    public string? ParameterName { get; }
   }
 
   /// <summary>
@@ -370,7 +429,7 @@ namespace TeensyBatExplorer.WPF.Annotations
   /// Indicates that the marked symbol is used implicitly (e.g. via reflection, in external library),
   /// so this symbol will not be reported as unused (as well as by other usage inspections).
   /// </summary>
-  [AttributeUsage(AttributeTargets.All, Inherited = false)]
+  [AttributeUsage(AttributeTargets.All)]
   public sealed class UsedImplicitlyAttribute : Attribute
   {
     public UsedImplicitlyAttribute()
@@ -454,6 +513,8 @@ namespace TeensyBatExplorer.WPF.Annotations
     Itself = 1,
     /// <summary>Members of entity marked with attribute are considered used.</summary>
     Members = 2,
+    /// <summary> Inherited entities are considered used. </summary>
+    WithInheritors = 4,
     /// <summary>Entity marked with attribute and all its members considered used.</summary>
     WithMembers = Itself | Members
   }
@@ -473,7 +534,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       Comment = comment;
     }
 
-    [CanBeNull] public string Comment { get; }
+    public string? Comment { get; }
   }
 
   /// <summary>
@@ -492,7 +553,7 @@ namespace TeensyBatExplorer.WPF.Annotations
   /// [Pure] int Multiply(int x, int y) => x * y;
   /// 
   /// void M() {
-  ///   Multiply(123, 42); // Waring: Return value of pure method is not used
+  ///   Multiply(123, 42); // Warning: Return value of pure method is not used
   /// }
   /// </code></example>
   [AttributeUsage(AttributeTargets.Method)]
@@ -519,7 +580,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       Justification = justification;
     }
 
-    [CanBeNull] public string Justification { get; }
+    public string? Justification { get; }
   }
 
   /// <summary>
@@ -556,7 +617,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       BasePath = basePath;
     }
 
-    [CanBeNull] public string BasePath { get; }
+    public string? BasePath { get; }
   }
 
   /// <summary>
@@ -620,7 +681,7 @@ namespace TeensyBatExplorer.WPF.Annotations
     /// Allows specifying a macro that will be executed for a <see cref="SourceTemplateAttribute">source template</see>
     /// parameter when the template is expanded.
     /// </summary>
-    [CanBeNull] public string Expression { get; set; }
+    public string? Expression { get; set; }
 
     /// <summary>
     /// Allows specifying which occurrence of the target parameter becomes editable when the template is deployed.
@@ -636,7 +697,7 @@ namespace TeensyBatExplorer.WPF.Annotations
     /// Identifies the target parameter of a <see cref="SourceTemplateAttribute">source template</see> if the
     /// <see cref="MacroAttribute"/> is applied on a template method.
     /// </summary>
-    [CanBeNull] public string Target { get; set; }
+    public string? Target { get; set; }
   }
 
   [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
@@ -702,7 +763,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       Format = format;
     }
 
-    [NotNull] public string Format { get; }
+    public string? Format { get; }
   }
 
   /// <summary>
@@ -721,7 +782,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       AnonymousProperty = anonymousProperty;
     }
 
-    [CanBeNull] public string AnonymousProperty { get; }
+    public string? AnonymousProperty { get; }
   }
 
   /// <summary>
@@ -739,7 +800,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       AnonymousProperty = anonymousProperty;
     }
 
-    [CanBeNull] public string AnonymousProperty { get; }
+    public string? AnonymousProperty { get; }
   }
 
   /// <summary>
@@ -758,7 +819,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       AnonymousProperty = anonymousProperty;
     }
 
-    [CanBeNull] public string AnonymousProperty { get; }
+    public string? AnonymousProperty { get; }
   }
 
   /// <summary>
@@ -861,7 +922,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       Name = name;
     }
 
-    [CanBeNull] public string Name { get; }
+    public string? Name { get; }
   }
 
   [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Field | AttributeTargets.Property)]
@@ -1016,7 +1077,7 @@ namespace TeensyBatExplorer.WPF.Annotations
   /// <summary>
   /// Indicates that the marked parameter is a regular expression pattern.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Parameter)]
+  [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Field | AttributeTargets.Property)]
   public sealed class RegexPatternAttribute : Attribute { }
 
   /// <summary>
@@ -1047,6 +1108,18 @@ namespace TeensyBatExplorer.WPF.Annotations
   /// </remarks>
   [AttributeUsage(AttributeTargets.Property)]
   public sealed class XamlItemBindingOfItemsControlAttribute : Attribute { }
+
+  /// <summary>
+  /// XAML attribute. Indicates the property of some <c>Style</c>-derived type, that
+  /// is used to style items of <c>ItemsControl</c>-derived type. This annotation will
+  /// enable the <c>DataContext</c> type resolve for XAML bindings for such properties.
+  /// </summary>
+  /// <remarks>
+  /// Property should have the tree ancestor of the <c>ItemsControl</c> type or
+  /// marked with the <see cref="XamlItemsControlAttribute"/> attribute.
+  /// </remarks>
+  [AttributeUsage(AttributeTargets.Property)]
+  public sealed class XamlItemStyleOfItemsControlAttribute : Attribute { }
 
   [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
   public sealed class AspChildControlTypeAttribute : Attribute
@@ -1143,7 +1216,7 @@ namespace TeensyBatExplorer.WPF.Annotations
       }
 
       [NotNull] public string BaseType { get; }
-      [CanBeNull] public string PageName { get; }
+      public string? PageName { get; }
   }
 
   [AttributeUsage(AttributeTargets.Method)]

@@ -1,15 +1,31 @@
-﻿using System;
+﻿// 
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+using System;
 
 namespace TeensyBatExplorer.Core.Infrastructure
 {
     public class StackableProgress : Progress<CountProgress>, IProgress<CountProgress>
     {
-        private readonly StackableProgress _parentProgress;
-        private readonly int? _progressSpan;
-        private CountProgress _lastProgress = new CountProgress();
-        private int _initialParentValue;
+        public static readonly StackableProgress NoProgress = new(p => { });
 
-        public CountProgress LastProgress => _lastProgress;
+        private readonly StackableProgress? _parentProgress;
+        private readonly int? _progressSpan;
+        private CountProgress _lastProgress = new();
+        private readonly int _initialParentValue;
 
         public StackableProgress(StackableProgress parentProgress, int progressSpan)
         {
@@ -23,7 +39,9 @@ namespace TeensyBatExplorer.Core.Infrastructure
         {
         }
 
-        public void Report(string message, int current, int total)
+        public CountProgress LastProgress => _lastProgress;
+
+        public void Report(string? message, int current, int total)
         {
             _lastProgress = new CountProgress { Current = current, Total = total, Text = message };
             OnReport(_lastProgress);
@@ -44,7 +62,10 @@ namespace TeensyBatExplorer.Core.Infrastructure
             }
         }
 
-        void IProgress<CountProgress>.Report(CountProgress value) { OnReport(value); }
+        void IProgress<CountProgress>.Report(CountProgress value)
+        {
+            OnReport(value);
+        }
 
         public void Report(int current, int total)
         {
@@ -55,6 +76,5 @@ namespace TeensyBatExplorer.Core.Infrastructure
         {
             Report(_lastProgress.Text, current, _lastProgress.Total);
         }
-
     }
 }

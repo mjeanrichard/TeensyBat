@@ -24,7 +24,7 @@ using TeensyBatExplorer.WPF.Themes;
 
 namespace TeensyBatExplorer.WPF.Views.Device
 {
-    public class SetVoltageViewModel : DialogViewModel<object>
+    public class SetVoltageViewModel : DialogViewModel<object?>
     {
         private readonly TeensyDeviceManager _teensyDeviceManger;
         private string _voltage;
@@ -33,7 +33,7 @@ namespace TeensyBatExplorer.WPF.Views.Device
         {
             _teensyDeviceManger = teensyDeviceManger;
             SetVoltageCommand = new AsyncCommand(SetVoltage);
-            Voltage = (_teensyDeviceManger?.TeensyBatDevice?.InputVoltage ?? 0).ToString("0.0");
+            _voltage = (_teensyDeviceManger.TeensyBatDevice.InputVoltage ?? 0).ToString("0.0");
         }
 
         public AsyncCommand SetVoltageCommand { get; }

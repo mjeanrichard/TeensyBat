@@ -16,10 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -39,12 +39,11 @@ namespace TeensyBatExplorer.WPF.Controls
         public int Id { get; set; }
     }
 
-
-    [TemplatePart(Name = "PART_Image", Type = typeof(Image))]
-    [TemplatePart(Name = "PART_Tooltip", Type = typeof(Popup))]
-    [TemplatePart(Name = "PART_TooltipText", Type = typeof(TextBlock))]
     public class BarControl : Control
     {
+        public static readonly DependencyProperty StartTimeProperty = DependencyProperty.Register(
+            "StartTime", typeof(DateTime), typeof(BarControl), new PropertyMetadata(default(DateTime)));
+
         public static readonly DependencyProperty ShowDetailsProperty = DependencyProperty.Register(
             "ShowDetails", typeof(bool), typeof(BarControl), new PropertyMetadata(default(bool), OnLayoutChanged));
 
@@ -53,8 +52,8 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public int BarPadding
         {
-            get { return (int)GetValue(BarPaddingProperty); }
-            set { SetValue(BarPaddingProperty, value); }
+            get => (int)GetValue(BarPaddingProperty);
+            set => SetValue(BarPaddingProperty, value);
         }
 
         public static readonly DependencyProperty CurrentDetailBarDurationProperty = DependencyProperty.Register(
@@ -62,8 +61,8 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public long CurrentDetailBarDuration
         {
-            get { return (long)GetValue(CurrentDetailBarDurationProperty); }
-            set { SetValue(CurrentDetailBarDurationProperty, value); }
+            get => (long)GetValue(CurrentDetailBarDurationProperty);
+            set => SetValue(CurrentDetailBarDurationProperty, value);
         }
 
         public static readonly DependencyProperty CurrentPositionProperty = DependencyProperty.Register(
@@ -71,13 +70,13 @@ namespace TeensyBatExplorer.WPF.Controls
 
         private static void OnPositionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BarControl)d).Invalidate(false);
+            ((BarControl)d).OnPositionChanged((long)e.NewValue);
         }
 
         public long CurrentPosition
         {
-            get { return (long)GetValue(CurrentPositionProperty); }
-            set { SetValue(CurrentPositionProperty, Math.Max(0, value)); }
+            get => (long)GetValue(CurrentPositionProperty);
+            set => SetValue(CurrentPositionProperty, Math.Max(0, value));
         }
 
         public static readonly DependencyProperty DetailBarPaddingProperty = DependencyProperty.Register(
@@ -85,8 +84,8 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public int DetailBarPadding
         {
-            get { return (int)GetValue(DetailBarPaddingProperty); }
-            set { SetValue(DetailBarPaddingProperty, value); }
+            get => (int)GetValue(DetailBarPaddingProperty);
+            set => SetValue(DetailBarPaddingProperty, value);
         }
 
         public static readonly DependencyProperty ItemsProperty = DependencyProperty.Register(
@@ -94,13 +93,13 @@ namespace TeensyBatExplorer.WPF.Controls
 
         private static void OnItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BarControl)d).Invalidate(true);
+            ((BarControl)d).SetDirty();
         }
 
         public IEnumerable<BarItemModel> Items
         {
-            get { return (IEnumerable<BarItemModel>)GetValue(ItemsProperty); }
-            set { SetValue(ItemsProperty, value); }
+            get => (IEnumerable<BarItemModel>)GetValue(ItemsProperty);
+            set => SetValue(ItemsProperty, value);
         }
 
         public static readonly DependencyProperty MinBarWidthProperty = DependencyProperty.Register(
@@ -108,8 +107,8 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public int MinBarWidth
         {
-            get { return (int)GetValue(MinBarWidthProperty); }
-            set { SetValue(MinBarWidthProperty, value); }
+            get => (int)GetValue(MinBarWidthProperty);
+            set => SetValue(MinBarWidthProperty, value);
         }
 
         public static readonly DependencyProperty MinDetailBarWidthProperty = DependencyProperty.Register(
@@ -117,22 +116,34 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public int MinDetailBarWidth
         {
-            get { return (int)GetValue(MinDetailBarWidthProperty); }
-            set { SetValue(MinDetailBarWidthProperty, value); }
+            get => (int)GetValue(MinDetailBarWidthProperty);
+            set => SetValue(MinDetailBarWidthProperty, value);
         }
+
 
 
 
         private static void OnLayoutChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BarControl)d).Invalidate(true);
+            ((BarControl)d).InvalidateVisual();
         }
 
         public bool ShowDetails
         {
-            get { return (bool)GetValue(ShowDetailsProperty); }
-            set { SetValue(ShowDetailsProperty, value); }
+            get => (bool)GetValue(ShowDetailsProperty);
+            set => SetValue(ShowDetailsProperty, value);
         }
+
+
+        public DateTime StartTime
+        {
+            get => (DateTime)GetValue(StartTimeProperty);
+            set => SetValue(StartTimeProperty, value);
+        }
+
+        private const int LegendHeight = 12;
+        private const int LegendPadding = 2;
+        private const int BottomLinePadding = 2;
 
         private static readonly long[] BarDurations =
         {
@@ -140,27 +151,62 @@ namespace TeensyBatExplorer.WPF.Controls
             60, 2 * 60, 5 * 60, 10 * 60, 20 * 60, 30 * 60
         };
 
+        private readonly Image _imageControl;
+        private readonly VisualCollection _visualChildren;
+        private readonly DrawingVisual _startTimeDrawingVisual;
 
-        private WriteableBitmap _canvas;
-        private Image _imageControl;
-        private ScrollBar _scrollBar;
-        private Popup _tooltip;
-        private TextBlock _tooltipText;
+
         private bool _isDirty;
-        private BarModel _barModel;
-        private BarModel _detailModel;
-
-        static BarControl()
-        {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(BarControl), new FrameworkPropertyMetadata(typeof(BarControl)));
-        }
+        private WriteableBitmap? _canvas;
+        private BarModel? _barModel;
+        private BarModel? _detailModel;
 
         public BarControl()
         {
-            IsTabStop = false;
+            Focusable = true;
+            _imageControl = new Image();
+            _imageControl.SnapsToDevicePixels = true;
+            _imageControl.Focusable = false;
+            RenderOptions.SetBitmapScalingMode(_imageControl, BitmapScalingMode.NearestNeighbor);
+
+            _startTimeDrawingVisual = new DrawingVisual();
+
+            _visualChildren = new VisualCollection(this)
+            {
+                _imageControl,
+                _startTimeDrawingVisual
+            };
         }
 
-        public event EventHandler<PositionEventArgs> PositionChanged;
+        protected override int VisualChildrenCount => _visualChildren.Count;
+
+        private void UpdateLegendVisuals()
+        {
+            if (_canvas == null)
+            {
+                return;
+            }
+
+            using (DrawingContext drawingContext = _startTimeDrawingVisual.RenderOpen())
+            {
+                if (_barModel != null && _barModel.Bars.Length > 0)
+                {
+                    FormattedText formattedText = new(StartTime.ToString("dd.MM. HH:mm:ss"), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Verdana"), LegendHeight, Brushes.Black, 1);
+                    drawingContext.DrawText(formattedText, new Point(0, _canvas.PixelHeight - LegendHeight));
+
+                    int width = _canvas.PixelWidth / _barModel.Bars.Length * _barModel.Bars.Length;
+                    DateTime endTime = StartTime.AddMilliseconds(_barModel.TotalDuration);
+                    formattedText = new FormattedText(endTime.ToString("dd.MM. HH:mm:ss"), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Verdana"), LegendHeight, Brushes.Black, 1);
+                    drawingContext.DrawText(formattedText, new Point(width - formattedText.Width, _canvas.PixelHeight - LegendHeight));
+
+                    DateTime currentTime = StartTime.AddMilliseconds(CurrentPosition);
+                    formattedText = new FormattedText(currentTime.ToString("dd.MM. HH:mm:ss.ff"), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Verdana"), LegendHeight, Brushes.Black, 1);
+                    drawingContext.DrawText(formattedText, new Point((width - formattedText.Width) / 2, 0));
+                }
+            }
+        }
+
+        public event EventHandler<PositionEventArgs>? PositionChanged;
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
@@ -169,59 +215,56 @@ namespace TeensyBatExplorer.WPF.Controls
 
             if (_canvas == null || (int)_canvas.Width != width)
             {
+                _isDirty = true;
                 _canvas = BitmapFactory.New(width, height);
-                if (_imageControl != null)
-                {
-                    _imageControl.InvalidateArrange();
-                    _imageControl.Source = _canvas;
-                }
+                _imageControl.Source = _canvas;
+                _imageControl.Arrange(new Rect(0, 0, width, height));
+                UpdateLegendVisuals();
             }
 
             return base.ArrangeOverride(arrangeBounds);
         }
 
-        public override void OnApplyTemplate()
+        protected override void OnKeyDown(KeyEventArgs keyEventArgs)
         {
-            base.OnApplyTemplate();
-
-            if (Template != null)
+            if (_detailModel == null || _barModel == null)
             {
-                if (Template.FindName("PART_Image", this) is Image image)
-                {
-                    _imageControl = image;
-                    _imageControl.SnapsToDevicePixels = true;
-                    _imageControl.Source = _canvas;
-                    _imageControl.Focusable = false;
-                    RenderOptions.SetBitmapScalingMode(_imageControl, BitmapScalingMode.NearestNeighbor);
-                }
-
-                if (Template.FindName("PART_Tooltip", this) is Popup tooltip)
-                {
-                    _tooltip = tooltip;
-                }
-
-                if (Template.FindName("PART_TooltipText", this) is TextBlock tooltipText)
-                {
-                    _tooltipText = tooltipText;
-                }
-            }
-        }
-
-        private void Invalidate(bool setDirty = false)
-        {
-            if (setDirty)
-            {
-                _isDirty = true;
+                return;
             }
 
-            InvalidateVisual();
+            if (keyEventArgs.Key == Key.Left)
+            {
+                CurrentPosition -= _detailModel.BarDuration;
+                keyEventArgs.Handled = true;
+                return;
+            }
+
+            if (keyEventArgs.Key == Key.Right)
+            {
+                CurrentPosition += _detailModel.BarDuration;
+                keyEventArgs.Handled = true;
+                return;
+            }
+
+            bool isShiftDown = Keyboard.IsKeyDown(Key.RightShift) || Keyboard.IsKeyDown(Key.LeftShift);
+            if (keyEventArgs.Key == Key.PageDown || keyEventArgs.Key == Key.Right && isShiftDown)
+            {
+                CurrentPosition += _barModel.BarDuration;
+                keyEventArgs.Handled = true;
+            }
+
+            if (keyEventArgs.Key == Key.PageUp || keyEventArgs.Key == Key.Left && isShiftDown)
+            {
+                CurrentPosition -= _barModel.BarDuration;
+                keyEventArgs.Handled = true;
+            }
         }
 
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
 
-            if (_imageControl == null || Items == null)
+            if (_canvas == null)
             {
                 return;
             }
@@ -229,6 +272,12 @@ namespace TeensyBatExplorer.WPF.Controls
             if (_isDirty || _barModel == null || _detailModel == null)
             {
                 RebuildBars();
+                UpdateLegendVisuals();
+            }
+
+            if (_barModel == null || _detailModel == null)
+            {
+                return;
             }
 
             using (BitmapContext context = _canvas.GetBitmapContext())
@@ -242,13 +291,13 @@ namespace TeensyBatExplorer.WPF.Controls
 
                 if (ShowDetails && _detailModel.Bars.Any())
                 {
-                    int barHeight = _canvas.PixelHeight / 2 - 2;
+                    int barHeight = (_canvas.PixelHeight - LegendHeight - LegendPadding) / 2 - BottomLinePadding;
                     DrawBars(_barModel, barHeight + 4, barHeight, Colors.Red, Colors.Green, _canvas);
                     DrawBars(_detailModel, 0, barHeight, Colors.Green, Colors.Blue, _canvas);
                 }
                 else
                 {
-                    int barHeight = _canvas.PixelHeight - 2;
+                    int barHeight = _canvas.PixelHeight - LegendHeight - LegendPadding - BottomLinePadding;
                     DrawBars(_barModel, 4, barHeight, Colors.Red, Colors.Green, _canvas);
                 }
             }
@@ -256,6 +305,11 @@ namespace TeensyBatExplorer.WPF.Controls
 
         private void DrawBars(BarModel model, int top, int height, Color color, Color highlightColor, WriteableBitmap canvas)
         {
+            if (_canvas == null)
+            {
+                return;
+            }
+
             int totalBarWidth = _canvas.PixelWidth / model.Bars.Length;
             int barWidth = totalBarWidth - model.BarPadding;
             int barAreaHeight = height - 3;
@@ -284,8 +338,6 @@ namespace TeensyBatExplorer.WPF.Controls
                 }
                 else if (i == highlightIndex)
                 {
-                    //Rect rect = new Rect(roundedLeft, barAreaBottom - 20, totalBarWidth - model.BarPadding, 20);
-                    //canvas.DrawRectangle(rect, highlightColor);
                     canvas.DrawLine(barCenter, top, barCenter, barAreaBottom, highlightColor);
                 }
 
@@ -302,40 +354,48 @@ namespace TeensyBatExplorer.WPF.Controls
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             Point position = e.GetPosition(_imageControl);
-            if (position.Y < _imageControl.ActualHeight / 2)
+            if (ShowDetails && _detailModel?.Bars.Length > 0 && position.Y < _imageControl.ActualHeight / 2)
             {
                 // Detail Region
                 ProcessBarClick(position, _detailModel);
             }
-            else
+            else if (_barModel != null)
             {
                 // Bar Region
                 ProcessBarClick(position, _barModel);
             }
+
+            Focus();
 
             e.Handled = true;
         }
 
         private void ProcessBarClick(Point position, BarModel model)
         {
-            if (model?.Bars?.Length <= 0)
+            if (_canvas == null || model.Bars.Length <= 0)
             {
                 return;
             }
 
             int barWidth = _canvas.PixelWidth / model.Bars.Length;
             int barIndex = (int)(position.X / barWidth);
-            OnPositionChanged(model.BarDuration * barIndex + model.Start);
+            CurrentPosition = model.BarDuration * barIndex + model.Start;
         }
 
 
         private void RebuildBars()
         {
             BarItemModel[] items = Items.ToArray();
+
+            if (items.Length <= 0)
+            {
+                return;
+            }
+
             (long Start, long Stop) barData = AnalyzeBars(items);
             long duration = barData.Stop - barData.Start;
 
-            BarModel barModel = new BarModel(duration, barData.Start, MinBarWidth, BarPadding);
+            BarModel barModel = new(duration, barData.Start, MinBarWidth, BarPadding);
             SetBarDuration(barModel);
 
             int currentBarIndex = barModel.GetIndex(CurrentPosition);
@@ -413,9 +473,21 @@ namespace TeensyBatExplorer.WPF.Controls
             return (start, stop);
         }
 
+        private void SetDirty()
+        {
+            _isDirty = true;
+            InvalidateVisual();
+        }
+
         protected virtual void OnPositionChanged(long newPosition)
         {
+            SetDirty();
             PositionChanged?.Invoke(this, new PositionEventArgs(newPosition));
+        }
+
+        protected override Visual GetVisualChild(int index)
+        {
+            return _visualChildren[index];
         }
 
         private class BarModel

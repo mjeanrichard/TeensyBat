@@ -21,8 +21,8 @@ namespace TeensyBatExplorer.Core
     public class ProjectMruEntry
     {
         public int Id { get; set; }
-        public string ProjectName { get; set; }
+        public string? ProjectName { get; set; }
         public DateTime LastAccessTime { get; set; }
-        public string FullPath { get; set; }
+        public string? FullPath { get; set; }
     }
 }

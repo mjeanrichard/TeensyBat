@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -43,14 +42,14 @@ namespace TeensyBatExplorer.Core.Commands
 
         private async Task ProcessInternal(int nodeId, StackableProgress progress, CancellationToken cancellationToken)
         {
-            using (ProjectContext context = _projectManager.GetContext())
+            using (ProjectContext context = _projectManager.CreateContext())
             {
                 BatNode node = await context.Nodes.Include(n => n.DataFiles).SingleOrDefaultAsync(n => n.Id == nodeId, cancellationToken).ConfigureAwait(false);
                 await context.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM Calls WHERE NodeId = {nodeId}", cancellationToken).ConfigureAwait(false);
                 progress.Report(10, 100);
 
                 await ProcessNode(node, context, progress.Stack(90), cancellationToken).ConfigureAwait(false);
-                
+
                 progress.Report(100, 100);
             }
         }
@@ -64,7 +63,7 @@ namespace TeensyBatExplorer.Core.Commands
                 IQueryable<BatDataFileEntry> entries = context.DataFileEntries
                     .OrderBy(e => e.StartTimeMicros)
                     .Where(e => e.DataFileId == dataFile.Id);
-                
+
                 await AddDataFile(node, dataFile, entries, context).ConfigureAwait(false);
                 await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 progress.Report(i++);
@@ -81,7 +80,7 @@ namespace TeensyBatExplorer.Core.Commands
             }
 
             long previousEndTime = 0;
-            BatCall currentCall = null;
+            BatCall? currentCall = null;
             foreach (BatDataFileEntry entry in entries)
             {
                 long callDiff = entry.StartTimeMicros - previousEndTime;
@@ -96,6 +95,7 @@ namespace TeensyBatExplorer.Core.Commands
                     currentCall.StartTime = dataFile.ReferenceTime.AddMicros(entry.StartTimeMicros);
                     currentCall.StartTimeMicros = entry.StartTimeMicros;
                     currentCall.Node = node;
+                    currentCall.IsBat = true;
                     entry.PauseFromPrevEntryMicros = null;
                 }
                 else if (callDiff <= 0)
@@ -103,7 +103,7 @@ namespace TeensyBatExplorer.Core.Commands
                     entry.StartTimeMicros = previousEndTime;
                     entry.PauseFromPrevEntryMicros = 0;
                 }
-                else 
+                else
                 {
                     entry.PauseFromPrevEntryMicros = callDiff;
                 }
@@ -111,7 +111,7 @@ namespace TeensyBatExplorer.Core.Commands
                 entry.Call = currentCall;
                 currentCall.Entries.Add(entry);
 
-                previousEndTime = entry.StartTimeMicros + (entry.FftCount * 500);
+                previousEndTime = entry.StartTimeMicros + entry.FftCount * 500;
             }
 
             if (currentCall != null)
@@ -158,6 +158,7 @@ namespace TeensyBatExplorer.Core.Commands
                     maxIndex = i;
                 }
             }
+
             call.PeakFrequency = maxIndex;
         }
     }

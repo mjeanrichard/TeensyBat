@@ -24,7 +24,7 @@ namespace TeensyBatExplorer.WPF.Views.Device
     /// </summary>
     public partial class DevicePage : UserControl
     {
-        private GridLength _expandedHeight = new GridLength(400);
+        private GridLength _expandedHeight = new(400);
         private bool _autoScroll;
 
         public DevicePage()

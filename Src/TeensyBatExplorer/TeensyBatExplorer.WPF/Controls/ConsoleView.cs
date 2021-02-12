@@ -33,8 +33,8 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public bool AutoScroll
         {
-            get { return (bool)GetValue(AutoScrollProperty); }
-            set { SetValue(AutoScrollProperty, value); }
+            get => (bool)GetValue(AutoScrollProperty);
+            set => SetValue(AutoScrollProperty, value);
         }
 
         public static readonly DependencyProperty MaxLineCountProperty = DependencyProperty.Register(
@@ -42,8 +42,8 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public int MaxLineCount
         {
-            get { return (int)GetValue(MaxLineCountProperty); }
-            set { SetValue(MaxLineCountProperty, value); }
+            get => (int)GetValue(MaxLineCountProperty);
+            set => SetValue(MaxLineCountProperty, value);
         }
 
         public static readonly DependencyProperty TextProviderProperty = DependencyProperty.Register(
@@ -56,13 +56,13 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public IConsoleTextProvider TextProvider
         {
-            get { return (IConsoleTextProvider)GetValue(TextProviderProperty); }
-            set { SetValue(TextProviderProperty, value); }
+            get => (IConsoleTextProvider)GetValue(TextProviderProperty);
+            set => SetValue(TextProviderProperty, value);
         }
 
         private readonly FlowDocument _flowDocument;
-        private FlowDocumentScrollViewer _flowDocumentViewer;
-        private ScrollViewer _scrollViewer;
+        private FlowDocumentScrollViewer? _flowDocumentViewer;
+        private ScrollViewer? _scrollViewer;
         private bool _appendToLastLine;
 
         static ConsoleView()
@@ -83,7 +83,7 @@ namespace TeensyBatExplorer.WPF.Controls
             }
         }
 
-        private void UpdateTextProvider(IConsoleTextProvider oldValue, IConsoleTextProvider newValue)
+        private void UpdateTextProvider(IConsoleTextProvider? oldValue, IConsoleTextProvider? newValue)
         {
             if (oldValue != null)
             {
@@ -96,7 +96,7 @@ namespace TeensyBatExplorer.WPF.Controls
             }
         }
 
-        private void OnLineAvailable(object sender, string e)
+        private void OnLineAvailable(object? sender, string e)
         {
             string trimed = e.Trim('\0');
 
@@ -107,7 +107,7 @@ namespace TeensyBatExplorer.WPF.Controls
                 trimed = trimed.Trim('\n', '\r');
             }
 
-            Paragraph paragraph = null;
+            Paragraph? paragraph = null;
             if (_appendToLastLine)
             {
                 paragraph = _flowDocument.Blocks.LastBlock as Paragraph;
@@ -142,29 +142,27 @@ namespace TeensyBatExplorer.WPF.Controls
 
             if (Template != null)
             {
-                FlowDocumentScrollViewer flowDocumentViewer = Template.FindName("PART_FlowDocumentScrollViewer", this) as FlowDocumentScrollViewer;
-                if (flowDocumentViewer != _flowDocumentViewer)
+                FlowDocumentScrollViewer? flowDocumentViewer = Template.FindName("PART_FlowDocumentScrollViewer", this) as FlowDocumentScrollViewer;
+                if (flowDocumentViewer != null && flowDocumentViewer != _flowDocumentViewer)
                 {
                     _flowDocumentViewer = flowDocumentViewer;
-                    if (_flowDocumentViewer != null)
+                    _flowDocumentViewer.Document = _flowDocument;
+                    _flowDocumentViewer.ApplyTemplate();
+
+                    ScrollViewer? scrollViewer = _flowDocumentViewer.Template?.FindName("PART_ContentHost", _flowDocumentViewer) as ScrollViewer;
+                    if (scrollViewer != _scrollViewer)
                     {
-                        _flowDocumentViewer.Document = _flowDocument;
-                        _flowDocumentViewer.ApplyTemplate();
-                        ScrollViewer scrollViewer = _flowDocumentViewer.Template?.FindName("PART_ContentHost", _flowDocumentViewer) as ScrollViewer;
-                        if (scrollViewer != _scrollViewer)
+                        if (_scrollViewer != null)
                         {
-                            if (_scrollViewer != null)
-                            {
-                                _scrollViewer.ScrollChanged -= OnScrollChanged;
-                            }
+                            _scrollViewer.ScrollChanged -= OnScrollChanged;
+                        }
 
-                            _scrollViewer = scrollViewer;
+                        _scrollViewer = scrollViewer;
 
-                            if (_scrollViewer != null)
-                            {
-                                _scrollViewer.ScrollChanged += OnScrollChanged;
-                                _scrollViewer.VerticalAlignment = VerticalAlignment.Stretch;
-                            }
+                        if (_scrollViewer != null)
+                        {
+                            _scrollViewer.ScrollChanged += OnScrollChanged;
+                            _scrollViewer.VerticalAlignment = VerticalAlignment.Stretch;
                         }
                     }
                 }

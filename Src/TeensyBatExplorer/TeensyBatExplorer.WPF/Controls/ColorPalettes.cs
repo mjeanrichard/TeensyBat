@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ namespace TeensyBatExplorer.WPF.Controls
 {
     public static class ColorPalettes
     {
-        public static readonly Color[] HeatMap = new[]
+        public static readonly Color[] HeatMap =
         {
             Color.FromArgb(255, 0, 0, 0),
             Color.FromArgb(255, 0, 0, 10),
@@ -280,7 +280,7 @@ namespace TeensyBatExplorer.WPF.Controls
             Color.FromArgb(255, 255, 255, 255)
         };
 
-        public static readonly Color[] BlueVioletRed = new[]
+        public static readonly Color[] BlueVioletRed =
         {
             Color.FromArgb(255, (byte)(0.000000 * 255), (byte)(0.000000 * 255), (byte)(0.015686 * 255)),
             Color.FromArgb(255, (byte)(0.000000 * 255), (byte)(0.000000 * 255), (byte)(0.047059 * 255)),

@@ -24,7 +24,10 @@ using System.Threading.Tasks;
 
 using Device.Net;
 
+using Hid.Net;
 using Hid.Net.Windows;
+
+using Microsoft.Extensions.Logging;
 
 namespace TeensyBatExplorer.Core.Devices
 {
@@ -35,30 +38,31 @@ namespace TeensyBatExplorer.Core.Devices
         private const ushort TeensyBatUsagePage = 0xFFAB;
         private const ushort SerialUsagePage = 0xFFC9;
 
+        private static readonly List<FilterDeviceDefinition> DeviceDefinitions = new()
+        {
+            new FilterDeviceDefinition(VendorId, ProductId, SerialUsagePage, "Teensy Serial"),
+            new FilterDeviceDefinition(VendorId, ProductId, TeensyBatUsagePage)
+        };
 
         private readonly DeviceListener _deviceListener;
-        private IDevice _batDevice;
-        private IDevice _serialDevice;
+        private IDevice? _batDevice;
+        private IDevice? _serialDevice;
 
-        private Task _serialReaderTask;
+        private Task? _serialReaderTask;
 
         public TeensyDeviceManager()
         {
-            WindowsHidDeviceFactory.Register(null, new DebugTracer());
+            IDeviceFactory hidFactory = DeviceDefinitions.CreateWindowsHidDeviceFactory();
 
-            var deviceDefinitions = new List<FilterDeviceDefinition>
-            {
-                new FilterDeviceDefinition { DeviceType = DeviceType.Hid, VendorId = VendorId, ProductId = ProductId, UsagePage = SerialUsagePage },
-                new FilterDeviceDefinition { DeviceType = DeviceType.Hid, VendorId = VendorId, ProductId = ProductId, UsagePage = TeensyBatUsagePage },
-            };
+            ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { _ = builder.AddDebug().SetMinimumLevel(LogLevel.Trace); });
 
-            _deviceListener = new DeviceListener(deviceDefinitions, 500) { Logger = new DebugLogger() };
+            _deviceListener = new DeviceListener(hidFactory, 500, loggerFactory);
             _deviceListener.DeviceDisconnected += OnDeviceDisconnected;
             _deviceListener.DeviceInitialized += OnDeviceInitialized;
         }
 
-        public TeensyBatDevice TeensyBatDevice { get; } = new TeensyBatDevice();
-        public event EventHandler<string> SerialReceived;
+        public TeensyBatDevice TeensyBatDevice { get; } = new();
+        public event EventHandler<string>? SerialReceived;
 
         private async Task ReadSerial()
         {
@@ -66,8 +70,8 @@ namespace TeensyBatExplorer.Core.Devices
             {
                 try
                 {
-                    ReadResult readResult = await _serialDevice.ReadAsync();
-                    if (readResult.BytesRead > 0)
+                    TransferResult readResult = await _serialDevice.ReadAsync();
+                    if (readResult.BytesTransferred > 0)
                     {
                         string data = Encoding.ASCII.GetString(readResult.Data);
                         OnSerialReceived(data);
@@ -84,7 +88,7 @@ namespace TeensyBatExplorer.Core.Devices
             }
         }
 
-        private async void OnDeviceInitialized(object sender, DeviceEventArgs e)
+        private async void OnDeviceInitialized(object? sender, DeviceEventArgs e)
         {
             ushort? usagePage = e.Device?.ConnectedDeviceDefinition?.UsagePage;
             if (usagePage.HasValue)
@@ -92,7 +96,7 @@ namespace TeensyBatExplorer.Core.Devices
                 if (usagePage.Value == TeensyBatUsagePage)
                 {
                     _batDevice = e.Device;
-                    await TeensyBatDevice.Connect(_batDevice, CancellationToken.None);
+                    await TeensyBatDevice.Connect((IHidDevice)_batDevice!, CancellationToken.None);
                 }
                 else if (usagePage.Value == SerialUsagePage)
                 {
@@ -102,7 +106,7 @@ namespace TeensyBatExplorer.Core.Devices
             }
         }
 
-        private async void OnDeviceDisconnected(object sender, DeviceEventArgs e)
+        private void OnDeviceDisconnected(object? sender, DeviceEventArgs e)
         {
             if (e.Device == _serialDevice)
             {
@@ -110,7 +114,7 @@ namespace TeensyBatExplorer.Core.Devices
             }
             else if (e.Device == _batDevice)
             {
-                await TeensyBatDevice.Disconnect();
+                TeensyBatDevice.Disconnect();
                 _batDevice = null;
             }
         }
@@ -122,9 +126,10 @@ namespace TeensyBatExplorer.Core.Devices
 
         public void Dispose()
         {
+            _serialReaderTask?.Dispose();
             _deviceListener.DeviceDisconnected -= OnDeviceDisconnected;
             _deviceListener.DeviceInitialized -= OnDeviceInitialized;
-            _deviceListener?.Dispose();
+            _deviceListener.Dispose();
         }
 
         protected virtual void OnSerialReceived(string e)

@@ -38,7 +38,7 @@ namespace TeensyBatExplorer.Core.Models
         public int ErrorCountDataBufferFull { get; set; }
         public int ErrorCountProcessOverlap { get; set; }
 
-        public string Filename { get; set; }
+        public string? Filename { get; set; }
 
         public DateTime OriginalReferenceTime { get; set; }
         public DateTime ReferenceTime { get; set; }
@@ -49,10 +49,10 @@ namespace TeensyBatExplorer.Core.Models
         public ICollection<BatteryData> BatteryData { get; set; } = new HashSet<BatteryData>();
 
         public ICollection<TemperatureData> TemperatureData { get; set; } = new HashSet<TemperatureData>();
-        
+
         public IList<ProjectMessage> LogMessages { get; set; } = new List<ProjectMessage>();
 
         public int NodeId { get; set; }
-        public BatNode Node { get; set; }
+        public BatNode? Node { get; set; }
     }
 }

@@ -17,10 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-
-using MapControl;
 
 using MaterialDesignThemes.Wpf;
 
@@ -40,7 +37,7 @@ namespace TeensyBatExplorer.WPF.Views.Project
         private readonly Func<NodeViewModel> _nodeViewModelFactory;
         private readonly SaveProjectCommand _saveProjectCommand;
         private readonly AnalyzeNodeCommand _analyzeNodeCommand;
-        private IEnumerable<NodeViewModel> _nodes;
+        private IEnumerable<NodeViewModel>? _nodes;
 
         public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager, Func<NodeViewModel> nodeViewModelFactory, SaveProjectCommand saveProjectCommand, AnalyzeNodeCommand analyzeNodeCommand)
         {
@@ -57,30 +54,41 @@ namespace TeensyBatExplorer.WPF.Views.Project
             Title = "Projekt";
         }
 
-        private async Task AnalyzeAllNodes()
-        {
-            using (BusyState busyState = BeginBusy("Analysiere Geräte..."))
-            {
-                StackableProgress progress = busyState.GetProgress();
-                int i = 0;
-                foreach (NodeViewModel node in Nodes)
-                {
-                    progress.Report($"Analysiere Gerät {node.NodeNumber}...", i++, Nodes.Count() + 2);
-                    await _analyzeNodeCommand.Process(node.Node.Id, progress.Stack(1), busyState.Token);
-                }
-                await LoadNodes(busyState, progress.Stack(2));
-            }
-        }
+        public BatProject? BatProject { get; private set; }
 
-        public BatProject BatProject { get; private set; }
-
-        public IEnumerable<NodeViewModel> Nodes
+        public IEnumerable<NodeViewModel>? Nodes
         {
             get => _nodes;
             private set
             {
                 _nodes = value;
                 OnPropertyChanged();
+            }
+        }
+
+        private async Task AnalyzeAllNodes()
+        {
+            if (Nodes == null)
+            {
+                return;
+            }
+
+            using (BusyState busyState = BeginBusy("Analysiere Geräte..."))
+            {
+                StackableProgress progress = busyState.GetProgress();
+                int i = 0;
+                foreach (NodeViewModel node in Nodes)
+                {
+                    if (node.Node == null)
+                    {
+                        throw new InvalidOperationException("Node not loaded.");
+                    }
+
+                    progress.Report($"Analysiere Gerät {node.NodeNumber}...", i++, Nodes.Count() + 2);
+                    await _analyzeNodeCommand.Process(node.Node.Id, progress.Stack(1), busyState.Token);
+                }
+
+                await LoadNodes(busyState, progress.Stack(2));
             }
         }
 
@@ -91,6 +99,11 @@ namespace TeensyBatExplorer.WPF.Views.Project
 
         private async Task SaveProject()
         {
+            if (BatProject == null)
+            {
+                return;
+            }
+
             using (BusyState busyState = BeginBusy("Speichere Projekt"))
             {
                 await _saveProjectCommand.Execute(_projectManager, BatProject, busyState.Token);
@@ -102,7 +115,7 @@ namespace TeensyBatExplorer.WPF.Views.Project
             using (BusyState busyState = BeginBusy("Lade Projekt..."))
             {
                 StackableProgress progress = busyState.GetProgress();
-                Title = $"Projekt {_projectManager.Project.Name}";
+                Title = $"Projekt {_projectManager.Project?.Name}";
                 await LoadNodes(busyState, progress);
             }
         }
@@ -110,7 +123,7 @@ namespace TeensyBatExplorer.WPF.Views.Project
         private async Task LoadNodes(BusyState busyState, StackableProgress progress)
         {
             List<BatNode> nodes = await _projectManager.GetNodes(busyState.Token);
-            List<NodeViewModel> vmNodes = new List<NodeViewModel>(nodes.Count);
+            List<NodeViewModel> vmNodes = new(nodes.Count);
             int i = 0;
             foreach (BatNode node in nodes)
             {

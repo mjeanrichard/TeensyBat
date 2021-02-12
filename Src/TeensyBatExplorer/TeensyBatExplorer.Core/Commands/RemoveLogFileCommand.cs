@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,7 +22,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 using TeensyBatExplorer.Core.Infrastructure;
-using TeensyBatExplorer.Core.Models;
 
 namespace TeensyBatExplorer.Core.Commands
 {
@@ -36,7 +34,7 @@ namespace TeensyBatExplorer.Core.Commands
 
         private async Task ExecuteInternal(ProjectManager projectManager, int dataFileId, IProgress<CountProgress> progress, CancellationToken cancellationToken)
         {
-            using (ProjectContext context = projectManager.GetContext())
+            using (ProjectContext context = projectManager.CreateContext())
             {
                 IDbContextTransaction transaction = await context.Database.BeginTransactionAsync(cancellationToken);
                 await context.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM BatteryData WHERE DataFileId = {dataFileId}", cancellationToken).ConfigureAwait(false);
@@ -52,6 +50,5 @@ namespace TeensyBatExplorer.Core.Commands
                 await transaction.CommitAsync(cancellationToken);
             }
         }
-
     }
 }

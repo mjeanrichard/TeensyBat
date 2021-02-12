@@ -27,11 +27,11 @@ namespace TeensyBatExplorer.Core
 {
     public class LogReader
     {
-        private static Regex FilenamePattern = new Regex(@"TB(?<nn>[0-9]{3})-(?<d>[0-9]{12})-(?<i>[0-9]+)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex FilenamePattern = new(@"TB(?<nn>[0-9]{3})-(?<d>[0-9]{12})-(?<i>[0-9]+)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private void AddMessage(BatDataFile dataFile, BatLogMessageLevel level, string message, BinaryReader reader)
+        private void AddMessage(BatDataFile dataFile, BatLogMessageLevel level, string message, BinaryReader? reader)
         {
-            dataFile.LogMessages.Add(new ProjectMessage (level, MessageTypes.LogFile, message) { Position = reader?.BaseStream.Position });
+            dataFile.LogMessages.Add(new ProjectMessage(level, MessageTypes.LogFile, message) { Position = reader?.BaseStream.Position });
         }
 
         public async Task Load(string filename, BatDataFile dataFile)
@@ -43,7 +43,7 @@ namespace TeensyBatExplorer.Core
         {
             using (Stream logStream = File.OpenRead(filename))
             {
-                using (BinaryReader reader = new BinaryReader(logStream))
+                using (BinaryReader reader = new(logStream))
                 {
                     ReadData(reader, dataFile);
 
@@ -119,7 +119,7 @@ namespace TeensyBatExplorer.Core
             }
             else
             {
-                dataFile.ReferenceTime = reader.ReadDateTimeWithMicroseconds();
+                dataFile.ReferenceTime = reader.ReadDateTimeWithMicrosecondOffset();
                 dataFile.OriginalReferenceTime = dataFile.ReferenceTime;
                 dataFile.FileCreateTime = reader.ReadDateTime();
             }
@@ -148,7 +148,7 @@ namespace TeensyBatExplorer.Core
                     return;
                 }
 
-                BatDataFileEntry dataFileEntry = new BatDataFileEntry();
+                BatDataFileEntry dataFileEntry = new();
                 ReadCall(dataFileEntry, reader, dataFile);
                 ProcessCall(dataFileEntry, dataFile);
                 dataFile.Entries.Add(dataFileEntry);
@@ -190,6 +190,8 @@ namespace TeensyBatExplorer.Core
             dataFileEntry.HighFreqSampleCount = reader.ReadByte();
             dataFileEntry.HighPowerSampleCount = reader.ReadByte();
             dataFileEntry.MaxLevel = reader.ReadByte();
+            dataFileEntry.IsBat = true;
+
             reader.ReadByte();
 
             ReadAdditionalData(reader, batDataFile);
@@ -213,10 +215,10 @@ namespace TeensyBatExplorer.Core
                     ReadAdditionalData(reader, batDataFile);
                 }
 
-                FftBlock fftData = ReadFftData(reader, batDataFile);
+                FftBlock? fftData = ReadFftData(reader, batDataFile);
                 if (fftData == null || fftData.Index != i)
                 {
-                    AddMessage(batDataFile, BatLogMessageLevel.Warning, $"FFT index stimmt nicht mit den daten überein.", reader);
+                    AddMessage(batDataFile, BatLogMessageLevel.Warning, "FFT index stimmt nicht mit den daten überein.", reader);
                 }
                 else
                 {
@@ -235,7 +237,7 @@ namespace TeensyBatExplorer.Core
                     reader.SkipBytes(3);
                     break;
                 case AdditionalDataType.Temperature:
-                    TemperatureData tData = new TemperatureData();
+                    TemperatureData tData = new();
                     tData.Timestamp = timestamp;
                     tData.DateTime = dataFile.ReferenceTime.AddMilliseconds(timestamp);
                     tData.Temperature = reader.ReadUInt16();
@@ -243,7 +245,7 @@ namespace TeensyBatExplorer.Core
                     reader.SkipBytes(1);
                     break;
                 case AdditionalDataType.Voltage:
-                    BatteryData vData = new BatteryData();
+                    BatteryData vData = new();
                     vData.Timestamp = timestamp;
                     vData.DateTime = dataFile.ReferenceTime.AddMilliseconds(timestamp);
                     vData.Voltage = reader.ReadUInt16();
@@ -413,7 +415,7 @@ namespace TeensyBatExplorer.Core
         ///    |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8-64 |
         ///    | 255 | 253 |   Index   | Loudness  |  0  |  0  |  FFT  |
         /// </summary>
-        private FftBlock ReadFftData(BinaryReader reader, BatDataFile batDataFile)
+        private FftBlock? ReadFftData(BinaryReader reader, BatDataFile batDataFile)
         {
             if (reader.ReadByte() != 0xFF)
             {
@@ -425,7 +427,7 @@ namespace TeensyBatExplorer.Core
                 return null;
             }
 
-            FftBlock fft = new FftBlock();
+            FftBlock fft = new();
             fft.Index = reader.ReadUInt16();
 
             ReadAdditionalData(reader, batDataFile);

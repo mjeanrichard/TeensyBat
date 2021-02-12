@@ -24,9 +24,10 @@ namespace TeensyBatExplorer.Core.Devices
 
         public BatDeviceCommand(byte command)
         {
-            Buffer = new byte[64];
-            Buffer[0] = command;
-            _index = 1;
+            // First Byte is the HID ReportId.
+            Buffer = new byte[65];
+            Buffer[1] = command;
+            _index = 2;
         }
 
         public byte[] Buffer { get; }

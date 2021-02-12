@@ -24,6 +24,6 @@ namespace TeensyBatExplorer.Core.Models
         public long Timestamp { get; set; }
         public DateTime DateTime { get; set; }
 
-        public BatDataFile DataFile { get; set; }
+        public BatDataFile? DataFile { get; set; }
     }
 }

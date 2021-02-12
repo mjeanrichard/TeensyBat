@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -49,13 +48,13 @@ namespace TeensyBatExplorer.Core.Commands
                 cancellationToken.ThrowIfCancellationRequested();
                 addProgress.Report($"Importiere '{batLog.Filename}'...", i++, batLogs.Length);
 
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
                     using (IDbContextTransaction transaction = await db.Database.BeginTransactionAsync(cancellationToken))
                     {
                         await AddBatLog(db, batLog, addProgress.Stack(1), cancellationToken);
                         await db.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync();
+                        await transaction.CommitAsync(cancellationToken);
                     }
                 }
             }
@@ -92,14 +91,12 @@ namespace TeensyBatExplorer.Core.Commands
             batDataFile.Node = batNode;
             db.DataFiles.Add(batDataFile);
 
-            progress.Report(10);
+            progress.Report(20);
 
             foreach (BatDataFileEntry call in batDataFile.Entries)
             {
                 call.DataFile = batDataFile;
             }
-
-            progress.Report(20);
 
             await db.SaveChangesAsync(cancellationToken);
 
@@ -109,6 +106,7 @@ namespace TeensyBatExplorer.Core.Commands
             {
                 bat.DataFile = batDataFile;
             }
+
             await db.SaveChangesAsync(cancellationToken);
 
             progress.Report(90);
@@ -117,6 +115,7 @@ namespace TeensyBatExplorer.Core.Commands
             {
                 temp.DataFile = batDataFile;
             }
+
             await db.SaveChangesAsync(cancellationToken);
 
             progress.Report(100);

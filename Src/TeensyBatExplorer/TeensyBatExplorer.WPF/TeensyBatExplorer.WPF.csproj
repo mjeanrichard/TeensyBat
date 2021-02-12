@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,15 +19,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dragablz" Version="0.0.3.203" />
-    <PackageReference Include="MaterialDesignThemes" Version="3.1.0" />
-    <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
+    <PackageReference Include="Dragablz" Version="0.0.3.223" />
+    <PackageReference Include="MahApps.Metro" Version="2.4.3" />
+    <PackageReference Include="MaterialDesignThemes" Version="3.2.0" />
+    <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.1.5" />
+    <PackageReference Include="Nito.AsyncEx" Version="5.1.0" />
     <PackageReference Include="Nito.Mvvm.Async" Version="1.0.0-pre-03" />
-    <PackageReference Include="Nito.Mvvm.Core" Version="1.2.2" />
+    <PackageReference Include="Nito.Mvvm.Core" Version="1.3.0" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.0.0" />
-    <PackageReference Include="Unity" Version="5.11.5" />
-    <PackageReference Include="WriteableBitmapEx" Version="1.6.5" />
-    <PackageReference Include="XAML.MapControl" Version="5.0.1" />
+    <PackageReference Include="Unity" Version="5.11.10" />
+    <PackageReference Include="WriteableBitmapEx" Version="1.6.7" />
+    <PackageReference Include="XAML.MapControl" Version="5.5.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,9 +37,26 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Update="Themes\ConsoleView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\CallDataView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Map\MapPage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\NodeDetail\NodeDetailPageResources.xaml">
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\Map\MapPage.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
 </Project>

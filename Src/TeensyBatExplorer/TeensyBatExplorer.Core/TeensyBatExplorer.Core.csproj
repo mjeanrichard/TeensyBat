@@ -1,19 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Device\**" />
-    <EmbeddedResource Remove="Device\**" />
-    <None Remove="Device\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Scripts\Project.01.00.sql" />
-    <None Remove="Scripts\Project.01.01.sql" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Scripts\Project.01.01.sql" />
@@ -21,10 +11,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="dbup-sqlite" Version="4.3.0" />
-    <PackageReference Include="Hid.Net" Version="3.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.3" />
+    <PackageReference Include="dbup-sqlite" Version="4.5.0" />
+    <PackageReference Include="Hid.Net" Version="4.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="swisstopo.data">
+      <HintPath>..\lib\swisstopo.data.dll</HintPath>
+    </Reference>
+    <Reference Include="swisstopo.reframelib">
+      <HintPath>..\lib\swisstopo.reframelib.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

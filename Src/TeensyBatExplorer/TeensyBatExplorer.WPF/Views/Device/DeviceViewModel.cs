@@ -30,15 +30,15 @@ namespace TeensyBatExplorer.WPF.Views.Device
     public class DeviceViewModel : BaseViewModel, IConsoleTextProvider
     {
         private readonly Func<TeensyDeviceManager> _deviceMangerFactory;
-        private TeensyDeviceManager _teensyDeviceManger;
-        private StrongCanExecuteChanged _canExecuteChangedRefresh;
+        private TeensyDeviceManager? _teensyDeviceManger;
+        private StrongCanExecuteChanged? _canExecuteChangedRefresh;
 
 
         public DeviceViewModel(Func<TeensyDeviceManager> deviceMangerFactory)
         {
             _deviceMangerFactory = deviceMangerFactory;
 
-            IAsyncCommand cmd = new CustomAsyncCommand(RefreshDevice, () => _teensyDeviceManger?.TeensyBatDevice?.IsConnected ?? false, s =>
+            IAsyncCommand cmd = new CustomAsyncCommand(RefreshDevice, () => _teensyDeviceManger?.TeensyBatDevice.IsConnected ?? false, s =>
             {
                 _canExecuteChangedRefresh = new StrongCanExecuteChanged(s);
                 return _canExecuteChangedRefresh;
@@ -57,21 +57,21 @@ namespace TeensyBatExplorer.WPF.Views.Device
         public AsyncCommand OpenSetVoltageCommand { get; set; }
         public AsyncCommand UpdateTimeCommand { get; }
 
-        public bool IsConnected => _teensyDeviceManger?.TeensyBatDevice?.IsConnected ?? false;
-        public string NodeNumber => _teensyDeviceManger?.TeensyBatDevice?.NodeId?.ToString();
-        public string CpuTemp => $"{_teensyDeviceManger?.TeensyBatDevice?.CpuTemp:0.00} °C";
-        public string FirmwareVersion => _teensyDeviceManger?.TeensyBatDevice?.FirmwareVersion?.ToString();
-        public string HardwareVersion => _teensyDeviceManger?.TeensyBatDevice?.HardwareVersion?.ToString();
-        public string InputVoltage => $"{_teensyDeviceManger?.TeensyBatDevice?.InputVoltage} V";
-        public string DeviceTime => $"{_teensyDeviceManger?.TeensyBatDevice?.UpdateTime:dd.MM.yyyy HH:mm:ss}";
-        public string TimeErrorPpm => $"{_teensyDeviceManger?.TeensyBatDevice?.TimeErrorPpm:0.0} ppm";
+        public bool IsConnected => _teensyDeviceManger?.TeensyBatDevice.IsConnected ?? false;
+        public string? NodeNumber => _teensyDeviceManger?.TeensyBatDevice.NodeId?.ToString();
+        public string CpuTemp => $"{_teensyDeviceManger?.TeensyBatDevice.CpuTemp:0.00} °C";
+        public string? FirmwareVersion => _teensyDeviceManger?.TeensyBatDevice.FirmwareVersion?.ToString();
+        public string? HardwareVersion => _teensyDeviceManger?.TeensyBatDevice.HardwareVersion?.ToString();
+        public string InputVoltage => $"{_teensyDeviceManger?.TeensyBatDevice.InputVoltage} V";
+        public string DeviceTime => $"{_teensyDeviceManger?.TeensyBatDevice.NodeTime:dd.MM.yyyy HH:mm:ss}";
+        public string TimeErrorPpm => $"{_teensyDeviceManger?.TeensyBatDevice.TimeErrorPpm:0.0} ppm";
 
         public string TimeDiff
         {
             get
             {
-                TeensyBatDevice device = _teensyDeviceManger?.TeensyBatDevice;
-                if (device != null && device.UpdateTime.HasValue && device.NodeTime.HasValue)
+                TeensyBatDevice? device = _teensyDeviceManger?.TeensyBatDevice;
+                if (device?.UpdateTime != null && device.NodeTime.HasValue)
                 {
                     return (device.NodeTime.Value - device.UpdateTime.Value).ToString("hh\\:mm\\:ss\\.fff");
                 }
@@ -82,19 +82,34 @@ namespace TeensyBatExplorer.WPF.Views.Device
 
         private async Task OpenSetVoltage()
         {
-            SetVoltageViewModel vm = new SetVoltageViewModel(_teensyDeviceManger, this);
+            if (_teensyDeviceManger == null)
+            {
+                return;
+            }
+
+            SetVoltageViewModel vm = new(_teensyDeviceManger, this);
             await vm.Open();
         }
 
         private async Task OpenSetNodeNumber()
         {
-            SetNodeIdViewModel vm = new SetNodeIdViewModel(_teensyDeviceManger, this);
+            if (_teensyDeviceManger == null)
+            {
+                return;
+            }
+
+            SetNodeIdViewModel vm = new(_teensyDeviceManger, this);
             await vm.Open();
         }
 
 
         private async Task RefreshDevice()
         {
+            if (_teensyDeviceManger == null)
+            {
+                return;
+            }
+
             if (_teensyDeviceManger.TeensyBatDevice.IsConnected)
             {
                 using (BusyState busy = BeginBusy("Lade Daten vom Gerät..."))
@@ -106,6 +121,11 @@ namespace TeensyBatExplorer.WPF.Views.Device
 
         private async Task SetTime()
         {
+            if (_teensyDeviceManger == null)
+            {
+                return;
+            }
+
             if (_teensyDeviceManger.TeensyBatDevice.IsConnected)
             {
                 using (BusyState busy = BeginBusy("Aktualisiere die Zeit auf dem Gerät..."))
@@ -141,7 +161,7 @@ namespace TeensyBatExplorer.WPF.Views.Device
             });
         }
 
-        public event EventHandler<string> LineAvailable;
+        public event EventHandler<string>? LineAvailable;
 
         protected void OnLineAvailable(object? sender, string e)
         {

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -36,8 +37,7 @@ namespace TeensyBatExplorer.WPF.Views.Project
     {
         private readonly NavigationService _navigationService;
         private readonly ProjectManager _projectManager;
-        public BatNode Node { get; private set; }
-        private ProjectPageViewModel _parentViewModel;
+        private ProjectPageViewModel? _parentViewModel;
 
         public NodeViewModel(NavigationService navigationService, ProjectManager projectManager)
         {
@@ -47,34 +47,46 @@ namespace TeensyBatExplorer.WPF.Views.Project
             DeleteNodeCommand = new AsyncCommand(DeleteNode);
         }
 
+        public BatNode? Node { get; private set; }
+
         public AsyncCommand DeleteNodeCommand { get; set; }
 
         public AsyncCommand OpenNodeCommand { get; set; }
 
-        private async Task DeleteNode()
-        {
-                YesNoDialogViewModel dialog = new YesNoDialogViewModel($"Soll das Gerät {Node.NodeNumber} wirklich entfernt werden?", _parentViewModel);
-                DialogResult result = await dialog.Open();
-                if (result == DialogResult.Yes)
-                {
-                    using (BusyState beginBusy = _parentViewModel.BeginBusy("Gerät entfernen..."))
-                    {
-                        DeleteNodeCommand cmd = new DeleteNodeCommand();
-                        await cmd.ExecuteAsync(_projectManager, Node.Id, beginBusy.GetProgress(), beginBusy.Token);
-                    }
-
-                    await _parentViewModel.Load();
-                }
-        }
-
-        public int NodeNumber => Node.NodeNumber;
-        public string StartDatum => Node.StartTime.ToFormattedString();
+        public int? NodeNumber => Node?.NodeNumber;
+        public string? StartDatum => Node?.StartTime.ToFormattedString();
         public int CallCount { get; private set; }
 
         public int FileCount { get; private set; }
 
+        private async Task DeleteNode()
+        {
+            if (Node == null || _parentViewModel == null)
+            {
+                return;
+            }
+
+            YesNoDialogViewModel dialog = new($"Soll das Gerät {NodeNumber} wirklich entfernt werden?", _parentViewModel);
+            DialogResult result = await dialog.Open();
+            if (result == DialogResult.Yes)
+            {
+                using (BusyState beginBusy = _parentViewModel.BeginBusy("Gerät entfernen..."))
+                {
+                    DeleteNodeCommand cmd = new();
+                    await cmd.ExecuteAsync(_projectManager, Node.Id, beginBusy.GetProgress(), beginBusy.Token);
+                }
+
+                await _parentViewModel.Load();
+            }
+        }
+
         private async Task OpenNode()
         {
+            if (Node == null)
+            {
+                throw new InvalidOperationException("Please call load first,");
+            }
+
             await _navigationService.NavigateToNodeDetailPage(Node.NodeNumber);
         }
 
@@ -91,10 +103,10 @@ namespace TeensyBatExplorer.WPF.Views.Project
             OnPropertyChanged(nameof(FileCount));
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

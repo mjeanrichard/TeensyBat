@@ -22,14 +22,14 @@ namespace TeensyBatExplorer.WPF.Controls
     {
     }
 
-    class AutoScrollListView : ListView
+    internal class AutoScrollListView : ListView
     {
-        public AutoScrollListView() : base()
+        public AutoScrollListView()
         {
             SelectionChanged += ListBoxScroll_SelectionChanged;
         }
 
-        void ListBoxScroll_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListBoxScroll_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ScrollIntoView(SelectedItem);
         }

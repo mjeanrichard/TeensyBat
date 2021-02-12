@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -40,7 +38,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
         private readonly ProjectManager _projectManager;
         private readonly AddLogsCommand _addLogsCommand;
         private readonly ISnackbarMessageQueue _snackbarMessageQueue;
-        private BatLogViewModel _selectedLog;
+        private BatLogViewModel? _selectedLog;
 
         public AddLogsViewModel(NavigationService navigationService, LogReader logReader, ProjectManager projectManager, AddLogsCommand addLogsCommand, ISnackbarMessageQueue snackbarMessageQueue)
         {
@@ -56,7 +54,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
             AddToolbarButton(new ToolBarButton(SaveLogs, PackIconKind.ContentSave, "Save"));
         }
 
-        public BatLogViewModel SelectedLog
+        public BatLogViewModel? SelectedLog
         {
             get => _selectedLog;
             set
@@ -75,10 +73,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
         {
             using (BusyState busyState = BeginBusy("Füge Logs zum Projekt hinzu..."))
             {
-                await Task.Run(async () =>
-                {
-                    await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Where(b => b.Selected).Select(v => v.DataFile), busyState.GetProgress(), CancellationToken.None);
-                });
+                await Task.Run(async () => { await _addLogsCommand.ExecuteAsync(_projectManager, BatLogs.Where(b => b.Selected).Select(v => v.DataFile), busyState.GetProgress(), CancellationToken.None); });
                 await _navigationService.NavigateToProjectPage();
             }
         }
@@ -87,7 +82,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
         {
             using (BusyState busyState = BeginBusy("Logdateien öffnen..."))
             {
-                OpenFileDialog openPicker = new OpenFileDialog();
+                OpenFileDialog openPicker = new();
                 openPicker.Multiselect = true;
                 openPicker.DefaultExt = ".dat";
                 openPicker.Filter = "Logfiles (*.dat)|*.dat|Alle Dateien|*.*";
@@ -97,7 +92,7 @@ namespace TeensyBatExplorer.WPF.Views.AddLogs
                     int i = 0;
                     foreach (string file in openPicker.FileNames)
                     {
-                        BatDataFile batDataFile = new BatDataFile();
+                        BatDataFile batDataFile = new();
                         batDataFile.Filename = Path.GetFileName(file);
                         await busyState.Update($"Lade '{batDataFile.Filename}'...", i, openPicker.FileNames.Length);
 

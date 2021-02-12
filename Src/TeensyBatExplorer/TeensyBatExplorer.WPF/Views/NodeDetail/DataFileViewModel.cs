@@ -17,8 +17,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-using Nito.Mvvm;
-
 using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.WPF.Annotations;
@@ -27,14 +25,12 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 {
     public class DataFileViewModel : INotifyPropertyChanged
     {
-        public BatDataFile DataFile { get; private set; }
+        public BatDataFile? DataFile { get; private set; }
 
-        public string Filename => DataFile.Filename;
-        public string FileCreateTime => DataFile.FileCreateTime.ToFormattedString();
-        public string ReferenceTime => DataFile.ReferenceTime.ToFormattedString();
-        public string Version => $"FW:{DataFile.FirmwareVersion}, HW: {DataFile.HardwareVersion}";
-
-        public AsyncCommand DeleteFileCommand { get; private set; }
+        public string? Filename => DataFile?.Filename;
+        public string? FileCreateTime => DataFile?.FileCreateTime.ToFormattedString();
+        public string? ReferenceTime => DataFile?.ReferenceTime.ToFormattedString();
+        public string? Version => DataFile == null ? null : $"FW:{DataFile.FirmwareVersion}, HW: {DataFile.HardwareVersion}";
 
         public int EntryCount { get; private set; }
 
@@ -50,10 +46,10 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             OnPropertyChanged(nameof(EntryCount));
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

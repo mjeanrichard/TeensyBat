@@ -16,17 +16,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 using MapControl;
 
 using MaterialDesignThemes.Wpf;
-
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 using Nito.Mvvm;
 
@@ -39,7 +36,6 @@ using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
-using TeensyBatExplorer.WPF.Annotations;
 using TeensyBatExplorer.WPF.Controls;
 using TeensyBatExplorer.WPF.Infrastructure;
 
@@ -50,21 +46,27 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         private readonly ProjectManager _projectManager;
         private readonly AnalyzeNodeCommand _analyzeNodeCommand;
         private readonly RemoveLogFileCommand _removeLogFileCommand;
-        private BatNode _node;
-        private PlotModel _batteryPlot;
-        private CallViewModel _selectedCall;
-        private PlotModel _temperaturePlot;
-        private List<CallViewModel> _calls;
 
-        private Location _currentMapCenter = new Location(47.3925, 8.0616);
+        private readonly Func<UpdateCallCommand> _updateCallCommandFactory;
+
+        private BatNode? _node;
+        private PlotModel? _batteryPlot;
+        private CallViewModel? _selectedCall;
+        private PlotModel? _temperaturePlot;
+        private List<CallViewModel>? _calls;
+
+        private Location _currentMapCenter = new(47.3925, 8.0616);
         private int _nodeNumber;
-        private NotifyTask<CallViewModel> _selectedCallLoading;
+        private NotifyTask<CallViewModel>? _selectedCallLoading;
+        private long _currentPosition;
 
-        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, AnalyzeNodeCommand analyzeNodeCommand, RemoveLogFileCommand removeLogFileCommand)
+        public NodeDetailViewModel(NavigationArgument<int> navigationArgument, ProjectManager projectManager, AnalyzeNodeCommand analyzeNodeCommand,
+            RemoveLogFileCommand removeLogFileCommand, Func<UpdateCallCommand> updateCallCommandFactory)
         {
             _projectManager = projectManager;
             _analyzeNodeCommand = analyzeNodeCommand;
             _removeLogFileCommand = removeLogFileCommand;
+            _updateCallCommandFactory = updateCallCommandFactory;
             _nodeNumber = navigationArgument.Data;
 
             Title = $"Daten zu Gerät Nr. {_nodeNumber}";
@@ -76,18 +78,21 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         public AsyncCommand RemoveFileCommand { get; set; }
 
-
-        private async Task RemoveFile(int dataFileId)
+        public long CurrentPosition
         {
-            using (BusyState busyState = BeginBusy("Entferne Log Datei..."))
+            get => _currentPosition;
+            set
             {
-                StackableProgress progress = busyState.GetProgress();
-                await _removeLogFileCommand.Execute(_projectManager, dataFileId, progress, busyState.Token);
-                await LoadNode(progress.Stack(50), busyState.Token);
+                if (value != _currentPosition)
+                {
+                    _currentPosition = value;
+                    OnPropertyChanged();
+                    PositionChanged(value);
+                }
             }
         }
 
-        public CallViewModel SelectedCall
+        public CallViewModel? SelectedCall
         {
             get => _selectedCall;
             set
@@ -96,38 +101,33 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
                 {
                     _selectedCall = value;
                     OnPropertyChanged();
-                    if (value != null)
+                    if (_selectedCall != null)
                     {
-                        SelectedCallLoading = NotifyTask.Create(LoadCallData(_selectedCall));
+                        CurrentPosition = (int)Math.Round(_selectedCall.Call.StartTimeMicros / 1000d);
+                        SelectedCallLoading = NotifyTask.Create<CallViewModel>(LoadCallData(_selectedCall));
                     }
                     else
                     {
+                        CurrentPosition = 0;
                         SelectedCallLoading = null;
                     }
                 }
             }
         }
 
-        public NotifyTask<CallViewModel> SelectedCallLoading
+        public NotifyTask<CallViewModel>? SelectedCallLoading
         {
             get => _selectedCallLoading;
             set
             {
-                if (Equals(value, _selectedCallLoading)) return;
+                if (Equals(value, _selectedCallLoading))
+                {
+                    return;
+                }
+
                 _selectedCallLoading = value;
                 OnPropertyChanged();
             }
-        }
-
-        private async Task<CallViewModel> LoadCallData(CallViewModel callViewModel)
-        {
-            if (!callViewModel.Call.Entries.Any())
-            {
-                List<BatDataFileEntry> entries = await _projectManager.GetCall(callViewModel.Call.Id, null, CancellationToken.None);
-                callViewModel.SetEntries(entries);
-            }
-
-            return callViewModel;
         }
 
         public string NodeNumber
@@ -147,7 +147,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public BatNode Node
+        public BatNode? Node
         {
             get => _node;
             set
@@ -163,8 +163,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public List<DataFileViewModel> DataFiles { get; set; }
-
+        public List<DataFileViewModel>? DataFiles { get; set; }
 
         public Location CurrentMapCenter
         {
@@ -181,12 +180,9 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public string MapPushpinText
-        {
-            get => $"Gerät {NodeNumber}";
-        }
+        public string MapPushpinText => $"Gerät {NodeNumber}";
 
-        public Location NodeLocation
+        public Location? NodeLocation
         {
             get
             {
@@ -199,13 +195,18 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
             set
             {
-                Node.Longitude = value.Longitude;
-                Node.Latitude = value.Latitude;
+                if (Node == null)
+                {
+                    return;
+                }
+
+                Node.Longitude = value?.Longitude;
+                Node.Latitude = value?.Latitude;
                 OnPropertyChanged();
             }
         }
 
-        public PlotModel BatteryPlot
+        public PlotModel? BatteryPlot
         {
             get => _batteryPlot;
             set
@@ -218,7 +219,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public PlotModel TemperaturePlot
+        public PlotModel? TemperaturePlot
         {
             get => _temperaturePlot;
             set
@@ -231,7 +232,7 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public List<CallViewModel> Calls
+        public List<CallViewModel>? Calls
         {
             get => _calls;
             set
@@ -246,13 +247,83 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             }
         }
 
-        public List<BarItemModel> BarItems { get; private set; } = new List<BarItemModel>();
+        public string? Time
+        {
+            get => Node?.StartTime.ToString("HH:mm:ss");
+            set
+            {
+                TryParseTime(value);
+                OnPropertyChanged();
+            }
+        }
+
+        public DateTime? Date
+        {
+            get => Node?.StartTime.Date;
+            set
+            {
+                if (Node != null && value.HasValue && value != Node.StartTime.Date)
+                {
+                    Node.StartTime = new DateTime(value.Value.Year, value.Value.Month, value.Value.Day, Node.StartTime.Hour, Node.StartTime.Minute, Node.StartTime.Second, Node.StartTime.Millisecond);
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public List<BarItemModel> BarItems { get; private set; } = new();
+
+
+        private async Task RemoveFile(int dataFileId)
+        {
+            using (BusyState busyState = BeginBusy("Entferne Log Datei..."))
+            {
+                StackableProgress progress = busyState.GetProgress();
+                await _removeLogFileCommand.Execute(_projectManager, dataFileId, progress, busyState.Token);
+                await LoadNode(progress.Stack(50), busyState.Token);
+            }
+        }
+
+        private async Task<CallViewModel> LoadCallData(CallViewModel callViewModel)
+        {
+            if (!callViewModel.Call.Entries.Any())
+            {
+                List<BatDataFileEntry> entries = await _projectManager.GetCall(callViewModel.Call.Id, StackableProgress.NoProgress, CancellationToken.None);
+                callViewModel.SetEntries(entries);
+            }
+
+            return callViewModel;
+        }
+
+
+        private void TryParseTime(string? timeString)
+        {
+            if (string.IsNullOrWhiteSpace(timeString) || Node == null)
+            {
+                return;
+            }
+
+            Match match = TimeValidationRule.TimePattern.Match(timeString.Trim());
+            if (match.Success)
+            {
+                int h = int.Parse(match.Groups["h"].Value);
+                int m = int.Parse(match.Groups["m"].Value);
+                int s = int.Parse(match.Groups["s"].Value);
+
+                Node.StartTime = new DateTime(Node.StartTime.Year, Node.StartTime.Month, Node.StartTime.Day, h, m, s);
+                OnPropertyChanged(nameof(Node));
+            }
+        }
 
         private async Task SaveNode()
         {
+            if (Node == null)
+            {
+                return;
+            }
+
             using (BusyState busyState = BeginBusy("Speichere Gerät..."))
             {
-                UpdateNodeCommand cmd = new UpdateNodeCommand();
+                UpdateNodeCommand cmd = new();
                 await cmd.ExecuteAsync(_projectManager, Node, busyState.GetProgress(), busyState.Token);
                 _nodeNumber = Node.NodeNumber;
             }
@@ -260,6 +331,11 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         private async Task ProcessNode()
         {
+            if (_node == null)
+            {
+                return;
+            }
+
             using (BusyState busyState = BeginBusy("Analysiere Gerätedaten..."))
             {
                 StackableProgress progress = busyState.GetProgress();
@@ -279,6 +355,8 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
         private async Task LoadNode(StackableProgress progress, CancellationToken cancellationToken)
         {
             Node = await _projectManager.GetBatNodeWithFiles(_nodeNumber, cancellationToken);
+            OnPropertyChanged(nameof(Time));
+            OnPropertyChanged(nameof(Date));
             progress.Report(10);
 
             if (Node.Longitude.HasValue && Node.Latitude.HasValue)
@@ -287,17 +365,18 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
                 CurrentMapCenter = NodeLocation;
             }
 
-            List<BatCall> calls = await _projectManager.GetCalls(Node.Id, progress.Stack(80), cancellationToken);
-            Calls = calls.Select(c => new CallViewModel(c)).ToList();
-            BarItems = calls.Select(c => new BarItemModel(c.StartTimeMicros, 1)).ToList();
+            CallFilter filter = new();
+            List<BatCall> calls = filter.Apply(await _projectManager.GetCalls(Node.Id, false, progress.Stack(80), cancellationToken)).ToList();
+            Calls = calls.Select(c => new CallViewModel(c, _updateCallCommandFactory, filter)).ToList();
+            BarItems = calls.Select(c => new BarItemModel((int)Math.Round(c.StartTimeMicros / 1000d), 1)).ToList();
             SelectedCall = Calls.FirstOrDefault();
             OnPropertyChanged(nameof(BarItems));
             progress.Report(90);
 
-            List<DataFileViewModel> files = new List<DataFileViewModel>(Node.DataFiles.Count);
+            List<DataFileViewModel> files = new(Node.DataFiles.Count);
             foreach (BatDataFile file in Node.DataFiles.OrderBy(d => d.FileCreateTime))
             {
-                DataFileViewModel vm = new DataFileViewModel();
+                DataFileViewModel vm = new();
                 files.Add(vm);
                 int count = await _projectManager.CountDataFileEntries(file.Id, cancellationToken);
                 vm.Load(file, count);
@@ -313,13 +392,13 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         private void UpdateBatteryPlot(List<BatteryData> batteryData)
         {
-            if (!batteryData.Any())
+            if (!batteryData.Any() || Node == null)
             {
                 return;
             }
 
-            PlotModel pm = new PlotModel();
-            LineSeries lineSeries = new LineSeries();
+            PlotModel pm = new();
+            LineSeries lineSeries = new();
             pm.Series.Add(lineSeries);
 
             pm.Axes.Add(new LinearAxis { Minimum = 0, Maximum = 6, Position = AxisPosition.Left, Title = "Spannung [V]" });
@@ -336,13 +415,13 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         private void UpdateTemperaturePlot(List<TemperatureData> temperatureData)
         {
-            if (!temperatureData.Any())
+            if (!temperatureData.Any() || Node == null)
             {
                 return;
             }
 
-            PlotModel pm = new PlotModel();
-            LineSeries lineSeries = new LineSeries();
+            PlotModel pm = new();
+            LineSeries lineSeries = new();
             pm.Series.Add(lineSeries);
 
             double minTemp = temperatureData.Min(t => t.Temperature / 10d);
@@ -365,41 +444,19 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
 
         public void PositionChanged(in long newPosition)
         {
+            if (Calls == null)
+            {
+                return;
+            }
+
             foreach (CallViewModel call in Calls)
             {
-                if (call.Call.StartTimeMicros >= newPosition)
+                if (call.Call.StartTimeMicros >= newPosition * 1000)
                 {
                     SelectedCall = call;
                     break;
                 }
             }
-        }
-    }
-
-    public class CallViewModel : INotifyPropertyChanged
-    {
-        public CallViewModel(BatCall call)
-        {
-            Call = call;
-        }
-
-        public BatCall Call { get; private set; }
-
-        public int Duration => (int)(Call.DurationMicros / 1000);
-        public string Time => Call.StartTime.ToString("HH:mm:ss");
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public void SetEntries(List<BatDataFileEntry> entries)
-        {
-            Call.Entries = entries;
-            OnPropertyChanged(nameof(Call));
         }
     }
 }

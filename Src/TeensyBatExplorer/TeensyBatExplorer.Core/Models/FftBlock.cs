@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
+
 namespace TeensyBatExplorer.Core.Models
 {
     public class FftBlock
@@ -22,9 +24,9 @@ namespace TeensyBatExplorer.Core.Models
         public int Index { get; set; }
         public int Loudness { get; set; }
         public int SampleNr { get; set; }
-        public byte[] Data { get; set; }
+        public byte[] Data { get; set; } = Array.Empty<byte>();
 
         public int DataFileEntryId { get; set; }
-        public BatDataFileEntry DataFileEntry { get; set; }
+        public BatDataFileEntry? DataFileEntry { get; set; }
     }
 }

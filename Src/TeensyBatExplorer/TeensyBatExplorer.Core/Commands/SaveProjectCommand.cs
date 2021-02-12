@@ -1,5 +1,5 @@
 ﻿// 
-// Teensy Bat Explorer - Copyright(C)  Meinrad Jean-Richard
+// Teensy Bat Explorer - Copyright(C) 2020 Meinrad Jean-Richard
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,7 +35,12 @@ namespace TeensyBatExplorer.Core.Commands
 
         public async Task Execute(ProjectManager projectManager, BatProject project, CancellationToken cancellationToken)
         {
-            using (ProjectContext db = projectManager.GetContext())
+            if (!projectManager.IsProjectOpen || projectManager.Filename == null)
+            {
+                throw new InvalidOperationException("Es ist kein Projekt offen!");
+            }
+
+            using (ProjectContext db = projectManager.CreateContext())
             {
                 BatProject dbProject = await db.Projects.SingleAsync(cancellationToken);
                 dbProject.Name = project.Name;

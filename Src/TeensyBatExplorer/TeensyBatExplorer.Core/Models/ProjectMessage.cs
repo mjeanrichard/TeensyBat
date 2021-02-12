@@ -32,16 +32,16 @@ namespace TeensyBatExplorer.Core.Models
         }
 
         public int Id { get; set; }
-        public DateTime Timestamp { get; private set; }
-        public string Message { get; set; }
+        public DateTime? Timestamp { get; private set; }
+        public string? Message { get; set; }
         public long? Position { get; set; }
         public BatLogMessageLevel Level { get; set; }
         public MessageTypes MessageType { get; set; }
 
         public int? DataFileId { get; set; }
-        public BatDataFile DataFile { get; set; }
+        public BatDataFile? DataFile { get; set; }
 
         public int? NodeId { get; set; }
-        public BatNode Node { get; set; }
+        public BatNode? Node { get; set; }
     }
 }

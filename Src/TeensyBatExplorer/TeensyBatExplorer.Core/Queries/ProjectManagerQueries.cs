@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
-using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 
@@ -33,7 +32,7 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
                     return await db.DataFileEntries.CountAsync(e => e.DataFileId == dataFileId, cancellationToken).ConfigureAwait(false);
                 }
@@ -44,7 +43,7 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
                     return await db.Nodes
                         .Include(n => n.DataFiles)
@@ -53,20 +52,26 @@ namespace TeensyBatExplorer.Core.Queries
             }, cancellationToken);
         }
 
-        public static async Task<List<BatCall>> GetCalls(this ProjectManager projectManager, int nodeId, StackableProgress progress, CancellationToken cancellationToken)
+        public static async Task<List<BatCall>> GetCalls(this ProjectManager projectManager, int nodeId, bool batsOnly, StackableProgress progress, CancellationToken cancellationToken)
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
-                    int count = await db.Calls.Where(c => c.NodeId == nodeId).CountAsync(cancellationToken);
-                    List<BatCall> calls = new List<BatCall>(count);
+                    IQueryable<BatCall> callQuery = db.Calls.Where(c => c.NodeId == nodeId);
+                    if (batsOnly)
+                    {
+                        callQuery = callQuery.Where(c => c.IsBat);
+                    }
+
+                    int count = await callQuery.CountAsync(cancellationToken);
+                    List<BatCall> calls = new(count);
                     progress.Report(0, count);
 
                     bool hasMoreData = true;
                     while (hasMoreData)
                     {
-                        IQueryable<BatCall> batCalls = db.Calls.AsNoTracking().Where(c => c.NodeId == nodeId)
+                        IQueryable<BatCall> batCalls = callQuery.AsNoTracking()
                             .OrderBy(c => c.StartTime)
                             .Skip(calls.Count).Take(200);
                         List<BatCall> list = await batCalls.ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -81,9 +86,9 @@ namespace TeensyBatExplorer.Core.Queries
                             hasMoreData = false;
                         }
                     }
+
                     return calls;
                 }
-
             }, cancellationToken);
         }
 
@@ -92,7 +97,7 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
                     List<BatDataFileEntry> entries = await db.DataFileEntries
                         .Include(e => e.FftData)
@@ -102,7 +107,6 @@ namespace TeensyBatExplorer.Core.Queries
                         .ConfigureAwait(false);
                     return entries;
                 }
-
             }, cancellationToken);
         }
 
@@ -110,9 +114,9 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
-                    return await db.BatteryData.Where(b => b.DataFile.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+                    return await db.BatteryData.Where(b => b.DataFile!.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -121,9 +125,9 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
-                    return await db.TemperatureData.Where(b => b.DataFile.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+                    return await db.TemperatureData.Where(b => b.DataFile!.NodeId == nodeId).OrderBy(b => b.DateTime).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
                 }
             }, cancellationToken);
         }
@@ -132,7 +136,7 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
                     return await db.Nodes.OrderBy(n => n.NodeNumber).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
                 }
@@ -143,7 +147,7 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
                     return await db.Calls.CountAsync(c => c.NodeId == nodeId, cancellationToken).ConfigureAwait(false);
                 }
@@ -154,7 +158,7 @@ namespace TeensyBatExplorer.Core.Queries
         {
             return await Task.Run(async () =>
             {
-                using (ProjectContext db = projectManager.GetContext())
+                using (ProjectContext db = projectManager.CreateContext())
                 {
                     return await db.DataFiles.CountAsync(c => c.NodeId == nodeId, cancellationToken).ConfigureAwait(false);
                 }

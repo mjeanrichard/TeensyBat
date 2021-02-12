@@ -26,7 +26,7 @@ namespace TeensyBatExplorer.Core
     public class ProjectContext : DbContext
     {
         public static readonly LoggerFactory MyLoggerFactory =
-            new LoggerFactory(new[]
+            new(new[]
             {
                 new DebugLoggerProvider()
             });
@@ -38,15 +38,15 @@ namespace TeensyBatExplorer.Core
             _filename = filename;
         }
 
-        public DbSet<TemperatureData> TemperatureData { get; set; }
-        public DbSet<BatteryData> BatteryData { get; set; }
-        public DbSet<BatDataFileEntry> DataFileEntries { get; set; }
-        public DbSet<BatNode> Nodes { get; set; }
-        public DbSet<BatCall> Calls { get; set; }
-        public DbSet<BatProject> Projects { get; set; }
-        public DbSet<BatDataFile> DataFiles { get; set; }
-        public DbSet<ProjectMessage> ProjectMessages { get; set; }
-        public DbSet<FftBlock> FftBlocks { get; set; }
+        public DbSet<TemperatureData> TemperatureData { get; set; } = null!;
+        public DbSet<BatteryData> BatteryData { get; set; } = null!;
+        public DbSet<BatDataFileEntry> DataFileEntries { get; set; } = null!;
+        public DbSet<BatNode> Nodes { get; set; } = null!;
+        public DbSet<BatCall> Calls { get; set; } = null!;
+        public DbSet<BatProject> Projects { get; set; } = null!;
+        public DbSet<BatDataFile> DataFiles { get; set; } = null!;
+        public DbSet<ProjectMessage> ProjectMessages { get; set; } = null!;
+        public DbSet<FftBlock> FftBlocks { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {

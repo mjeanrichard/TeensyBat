@@ -30,7 +30,7 @@ namespace TeensyBatExplorer.WPF.Themes
     public abstract class DialogViewModel<TResult> : INotifyPropertyChanged
     {
         private readonly BaseViewModel _ownerViewModel;
-        private DialogSession _session;
+        private DialogSession? _session;
 
         protected DialogViewModel(BaseViewModel ownerViewModel)
         {
@@ -50,7 +50,7 @@ namespace TeensyBatExplorer.WPF.Themes
 
         public void Close(TResult value)
         {
-            _session.Close(value);
+            _session?.Close(value);
         }
 
         private void OnDialogOpened(object sender, DialogOpenedEventArgs eventargs)
@@ -75,10 +75,10 @@ namespace TeensyBatExplorer.WPF.Themes
         }
 
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 using TeensyBatExplorer.WPF.Views.AddLogs;
 using TeensyBatExplorer.WPF.Views.Device;
+using TeensyBatExplorer.WPF.Views.Map;
 using TeensyBatExplorer.WPF.Views.NodeDetail;
 using TeensyBatExplorer.WPF.Views.Project;
 using TeensyBatExplorer.WPF.Views.Start;
@@ -37,7 +38,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             _container = container;
         }
 
-        public BaseViewModel CurrentViewModel { get; private set; }
+        public BaseViewModel? CurrentViewModel { get; private set; }
 
         public async Task NavigateToProjectPage()
         {
@@ -47,15 +48,15 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         private async Task<T> Navigate<T>() where T : BaseViewModel
         {
             T currentViewModel = _container.Resolve<T>();
-            await Navigate<T>(currentViewModel);
+            await Navigate(currentViewModel);
             return currentViewModel;
         }
 
         private async Task<T> Navigate<T, TParam>(TParam param) where T : BaseViewModel
         {
-            NavigationArgument<TParam> parameter = new NavigationArgument<TParam>(param);
+            NavigationArgument<TParam> parameter = new(param);
             T currentViewModel = _container.Resolve<T>(new ParameterOverride(typeof(NavigationArgument<TParam>), parameter));
-            await Navigate<T>(currentViewModel);
+            await Navigate(currentViewModel);
             return currentViewModel;
         }
 
@@ -67,7 +68,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
             await viewModel.Load();
         }
 
-        public event EventHandler<EventArgs> OnViewModelChanged;
+        public event EventHandler<EventArgs>? OnViewModelChanged;
 
         public async Task NavigateToStartPage()
         {
@@ -87,6 +88,11 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         public async Task NavigateToNodeDetailPage(int nodeNumber)
         {
             await Navigate<NodeDetailViewModel, int>(nodeNumber);
+        }
+
+        public async Task NavigateToMapPage()
+        {
+            await Navigate<MapViewModel>();
         }
     }
 

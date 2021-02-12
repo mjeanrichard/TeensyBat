@@ -20,6 +20,6 @@ namespace TeensyBatExplorer.Core.Infrastructure
     {
         public int Total { get; set; }
         public int Current { get; set; }
-        public string Text { get; set; }
+        public string? Text { get; set; }
     }
 }

@@ -22,7 +22,7 @@ namespace TeensyBatExplorer.Core.Models
     {
         public int Id { get; set; }
         public int FftCount { get; set; }
-        
+
         /// <summary>
         /// This Value is read from the LogFile and never changed
         /// </summary>
@@ -46,9 +46,9 @@ namespace TeensyBatExplorer.Core.Models
         public IList<FftBlock> FftData { get; set; } = new AutoSortingList<FftBlock, int>(b => b.Index);
 
         public int DataFileId { get; set; }
-        public BatDataFile DataFile { get; set; }
+        public BatDataFile? DataFile { get; set; }
 
         public int? CallId { get; set; }
-        public BatCall Call { get; set; }
+        public BatCall? Call { get; set; }
     }
 }

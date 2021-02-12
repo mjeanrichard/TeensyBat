@@ -28,19 +28,16 @@ namespace TeensyBatExplorer.WPF.Infrastructure
 {
     public abstract class BaseViewModel : INotifyPropertyChanged
     {
-        private readonly List<BusyState> _busyStates = new List<BusyState>();
-        private string _title;
+        private readonly List<BusyState> _busyStates = new();
+        private string? _title;
 
-        public bool IsBusy
-        {
-            get => _busyStates.Any();
-        }
+        public bool IsBusy => _busyStates.Any();
 
-        public BusyState BusyState => _busyStates.LastOrDefault();
+        public BusyState? BusyState => _busyStates.LastOrDefault();
 
-        public List<ToolBarButton> ToolBarButtons { get; } = new List<ToolBarButton>();
+        public List<ToolBarButton> ToolBarButtons { get; } = new();
 
-        public string Title
+        public string? Title
         {
             get => _title;
             set
@@ -60,11 +57,13 @@ namespace TeensyBatExplorer.WPF.Infrastructure
 
         public BusyState BeginBusy(string title)
         {
-            BusyState busyState = new BusyState(this);
+            BusyState busyState = new(this);
             busyState.Text = title;
             _busyStates.Add(busyState);
+
             OnPropertyChanged(nameof(IsBusy));
             OnPropertyChanged(nameof(BusyState));
+
             return busyState;
         }
 
@@ -113,10 +112,10 @@ namespace TeensyBatExplorer.WPF.Infrastructure
         }
 
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

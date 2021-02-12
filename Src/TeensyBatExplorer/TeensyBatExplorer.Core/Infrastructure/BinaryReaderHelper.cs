@@ -32,13 +32,13 @@ namespace TeensyBatExplorer.Core.Infrastructure
             }
         }
 
-        public static DateTime ReadDateTimeWithMicroseconds(this BinaryReader reader)
+        public static DateTime ReadDateTimeWithMicrosecondOffset(this BinaryReader reader)
         {
             long unixTimestamp = reader.ReadUInt32();
             long microsOffset = reader.ReadUInt32();
 
             DateTimeOffset dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
-            return dateTime.AddTicks(microsOffset * 10).DateTime;
+            return dateTime.AddTicks(-microsOffset * 10).DateTime;
         }
 
         public static DateTime ReadDateTime(this BinaryReader reader)

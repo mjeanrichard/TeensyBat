@@ -57,15 +57,23 @@
                         <DatePicker Width="100"
                                     Margin="0 10 20 10"
                                     md:HintAssist.Hint="Referenzdatum"
-                                    SelectedDate="{Binding Node.StartTime}"
+                                    SelectedDate="{Binding Date}"
                                     Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
-                        <md:TimePicker md:HintAssist.Hint="Zeit"
-                                       Width="100"
-                                       Margin="0 10 20 10"
-                                       Is24Hours="true"
-                                       SelectedTime="{Binding Node.StartTime}"
-                                       WithSeconds="True"
-                                       Style="{StaticResource MaterialDesignFloatingHintTimePicker}" />
+                        <TextBox md:HintAssist.Hint="Zeit"
+                                 Width="100"
+                                 Margin="0 10 20 10"
+                                 HorizontalContentAlignment="Left"
+                                 VerticalContentAlignment="Top"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}">
+                            <TextBox.Text>
+                                <Binding
+                                    Path="Time">
+                                    <Binding.ValidationRules>
+                                        <controls:TimeValidationRule ValidatesOnTargetUpdated="True" />
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
                     </StackPanel>
 
                     <GroupBox Header="Logdateien" Grid.Row="2" Margin="0 16">
@@ -175,6 +183,15 @@
                         </ListView.ItemContainerStyle>
                         <ListView.View>
                             <GridView>
+                                <GridViewColumn Header="">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="local:CallViewModel">
+                                            <CheckBox IsChecked="{Binding Call.IsBat, Mode=OneWay}"
+                                                      Command="{Binding UpdateIsBatCommand, Mode=OneWay}"
+                                                      CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
                                 <GridViewColumn
                                     DisplayMemberBinding="{Binding Time, Mode=OneWay}"
                                     Header="Zeit" />
@@ -229,10 +246,10 @@
                                          Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
                             </StackPanel>
 
-                            <controls:CallDataView Grid.Row="1" 
+                            <controls:CallDataView Grid.Row="1"
                                                    SnapsToDevicePixels="True"
                                                    Visibility="{Binding SelectedCallLoading.IsCompleted, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                   BatCall="{Binding SelectedCallLoading.Result.Call, Mode=OneWay}" 
+                                                   BatCall="{Binding SelectedCallLoading.Result.Call, Mode=OneWay}"
                                                    BatNode="{Binding Node, Mode=OneWay}" />
                         </Grid>
                     </GroupBox>
@@ -241,7 +258,8 @@
                               Header="Verteilung">
 
                         <controls:BarControl Items="{Binding BarItems, Mode=OneWay}"
-                                             CurrentPosition="{Binding SelectedCall.Call.StartTimeMicros, Mode=OneWay}"
+                                             CurrentPosition="{Binding CurrentPosition, Mode=TwoWay}"
+                                             StartTime="{Binding Node.StartTime, Mode=OneWay}"
                                              PositionChanged="BarControl_OnPositionChanged" />
                     </GroupBox>
                 </Grid>
