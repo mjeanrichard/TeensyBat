@@ -57,8 +57,7 @@ namespace TeensyBatExplorer.WPF.Infrastructure
 
         public BusyState BeginBusy(string title)
         {
-            BusyState busyState = new(this);
-            busyState.Text = title;
+            BusyState busyState = new(this, title);
             _busyStates.Add(busyState);
 
             OnPropertyChanged(nameof(IsBusy));

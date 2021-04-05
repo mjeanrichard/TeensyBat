@@ -6,6 +6,8 @@
              xmlns:project="clr-namespace:TeensyBatExplorer.WPF.Views.Project"
              xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:start="clr-namespace:TeensyBatExplorer.WPF.Views.Start"
+             xmlns:oxy="http://oxyplot.org/wpf"
+             xmlns:controls="clr-namespace:TeensyBatExplorer.WPF.Controls"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=project:ProjectPageViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -63,6 +65,23 @@
                             <GridViewColumn
                                 DisplayMemberBinding="{Binding CallCount, Mode=OneWay}"
                                 Header="# Calls" />
+                            <GridViewColumn Header="# Calls" Width="200">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="project:NodeViewModel">
+                                        <controls:BarControl Start="0" 
+                                                             AllowInteraction="False" 
+                                                             Stop="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}, Path=DataContext.EndTime, Mode=OneWay}" 
+                                                             Height="30" 
+                                                             Padding="0" 
+                                                             ShowLegend="False" 
+                                                             ShowTicks="True" 
+                                                             ShowDetails="False" 
+                                                             MinBarWidth="2"
+                                                             MaxValue="50"
+                                                             Items="{Binding Sparkline, Mode=OneWay}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                             <GridViewColumn Header="">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate DataType="project:NodeViewModel">

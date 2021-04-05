@@ -16,7 +16,6 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <controls:LocationToVisibilityConverter x:Key="LocationToVisibilityConverter" />
-            <controls:OffsetConverter x:Key="OffsetConverter" Offset="25" Factor="2" />
 
             <Style x:Key="NodeItemStyle" TargetType="mapControl:MapItem">
                 <Setter Property="mapControl:MapPanel.Location" Value="{Binding Location}" />
@@ -42,10 +41,22 @@
                     </Setter.Value>
                 </Setter>-->
             </Style>
+
+            <Storyboard x:Key="testStory"
+                        Storyboard.TargetName="{Binding }"
+                        TargetProperty="CurrentPosition"
+                        Duration="0:0:50">
+                <DoubleAnimation By="10000"/>
+            </Storyboard>
         </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
         <dragablz:TabablzControl Margin="0"
                                  FixedHeaderCount="5"
                                  BorderThickness="0">
@@ -67,14 +78,13 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <StackPanel Orientation="Vertical" />
-
                     <mapControl:Map x:Name="Map"
                                     Grid.Column="0"
                                     Grid.Row="1"
                                     Center="{Binding MapCenter}"
                                     MouseRightButtonDown="Map_OnMouseRightButtonDown"
                                     ZoomLevel="14">
+
                         <mapControl:Map.MapLayer>
                             <mapControl:MapTileLayer>
                                 <mapControl:MapTileLayer.TileSource>
@@ -82,6 +92,7 @@
                                 </mapControl:MapTileLayer.TileSource>
                             </mapControl:MapTileLayer>
                         </mapControl:Map.MapLayer>
+
 
                         <mapControl:MapItemsControl ItemsSource="{Binding MapNodes}"
                                                     ItemContainerStyle="{StaticResource NodeItemStyle}">
@@ -131,6 +142,33 @@
                         </mapControl:Map.ContextMenu>
 
                     </mapControl:Map>
+                    <Border
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Grid.Column="0"
+                        Grid.Row="1"
+                        Background="White"
+                        Margin="8">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Command="{Binding PlayCommand}"
+                                    Visibility="{Binding IsPlaying, Converter={StaticResource InverseBoolToVisConverter}}"
+                                    Width="30"
+                                    Height="30"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    ToolTip="Play" >
+                                <md:PackIcon Kind="Play" Width="20" Height="20" Margin="0"/>
+                            </Button>
+                            <Button Command="{Binding PauseCommand}"
+                                    Visibility="{Binding IsPlaying, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    Width="30"
+                                    Height="30"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    ToolTip="Pause" >
+                                <md:PackIcon Kind="Pause" Width="20" Height="20" Margin="0"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
                     <Expander
                         Grid.Row="0"
                         Grid.Column="1"
@@ -220,50 +258,77 @@
                             </GroupBox>
                         </Grid>
                     </Expander>
-
-                    <controls:BarControl Grid.Row="2"
-                                         Grid.ColumnSpan="2"
-                                         Grid.Column="0"
-                                         Height="200"
-                                         Focusable="True"
-                                         Items="{Binding BarItems, Mode=OneWay}"
-                                         StartTime="{Binding ReferenceTime, Mode=OneWay}"
-                                         ShowDetails="True"
-                                         CurrentPosition="{Binding CurrentPosition, Mode=TwoWay}"
-                                         CurrentDetailBarDuration="{Binding DetailBarDuration, Mode=OneWayToSource}" />
                 </Grid>
             </TabItem>
             <TabItem Header="Filter">
-                <Grid>
-                    <mah:RangeSlider Maximum="100" Minimum="0" AutoToolTipPlacement="TopLeft">
-                        <mah:RangeSlider.AutoToolTipRangeValuesTemplate>
-                            <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
-                                <UniformGrid Columns="2" Rows="2">
-                                    <TextBlock HorizontalAlignment="Right" Text="From:" />
-                                    <TextBlock HorizontalAlignment="Right" Text="{Binding LowerValue, StringFormat='{}{0:N2}'}" />
-                                    <TextBlock HorizontalAlignment="Right" Text="To:" />
-                                    <TextBlock HorizontalAlignment="Right" Text="{Binding UpperValue, StringFormat='{}{0:N2}'}" />
-                                </UniformGrid>
-                            </DataTemplate>
-                        </mah:RangeSlider.AutoToolTipRangeValuesTemplate>
-                    </mah:RangeSlider>
-                    <!--<TextBox Margin="0 8 0 10"
-                             md:HintAssist.Hint="Geräte Nr"
-                             HorizontalContentAlignment="Right"
-                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                             HorizontalAlignment="Stretch">
-                        <TextBox.Text>
-                            <Binding
-                                Path="Filter.MinFrequency"
-                                UpdateSourceTrigger="PropertyChanged">
-                                <Binding.ValidationRules>
-                                    <controls:IntegerValidationRule MaxValue="150" MinValue="0" ValidatesOnTargetUpdated="True" />
-                                </Binding.ValidationRules>
-                            </Binding>
-                        </TextBox.Text>
-                    </TextBox>-->
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Vertical">
+                        <GroupBox Margin="0" Header="{Binding Filter.FrequencyFilterTitle}">
+                            <StackPanel Orientation="Vertical">
+                                <mah:RangeSlider Maximum="100"
+                                                 Minimum="0"
+                                                 TickPlacement="BottomRight"
+                                                 LowerValue="{Binding Filter.MinFrequency}"
+                                                 UpperValue="{Binding Filter.MaxFrequency}" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBox Grid.Column="0"
+                                             Margin="0 8 8 10"
+                                             HorizontalContentAlignment="Left"
+                                             HorizontalAlignment="Stretch"
+                                             md:TextFieldAssist.SuffixText=" kHz">
+                                        <TextBox.Text>
+                                            <Binding
+                                                Path="Filter.MinFrequency"
+                                                UpdateSourceTrigger="PropertyChanged">
+                                                <Binding.ValidationRules>
+                                                    <controls:IntegerValidationRule MaxValue="100" MinValue="0" ValidatesOnTargetUpdated="True" />
+                                                </Binding.ValidationRules>
+                                            </Binding>
+                                        </TextBox.Text>
+                                    </TextBox>
+                                    <TextBox Grid.Column="1"
+                                             Margin="8 8 0 10"
+                                             HorizontalContentAlignment="Right"
+                                             HorizontalAlignment="Stretch"
+                                             md:TextFieldAssist.SuffixText=" kHz">
+                                        <TextBox.Text>
+                                            <Binding
+                                                Path="Filter.MaxFrequency"
+                                                UpdateSourceTrigger="PropertyChanged">
+                                                <Binding.ValidationRules>
+                                                    <controls:IntegerValidationRule MaxValue="100" MinValue="0" ValidatesOnTargetUpdated="True" />
+                                                </Binding.ValidationRules>
+                                            </Binding>
+                                        </TextBox.Text>
+                                    </TextBox>
+                                </Grid>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
                 </Grid>
             </TabItem>
         </dragablz:TabablzControl>
+
+        <controls:BarControl Grid.Row="1"
+                             x:Name="bars"
+                             Height="200"
+                             Focusable="True"
+                             Animate="{Binding IsPlaying}"
+                             Items="{Binding BarItems, Mode=OneWay}"
+                             StartTime="{Binding ReferenceTime, Mode=OneWay}"
+                             ShowDetails="True"
+                             CurrentPosition="{Binding CurrentPosition, Mode=TwoWay}"
+                             CurrentDetailBarDuration="{Binding DetailBarDuration, Mode=OneWayToSource}" />
     </Grid>
 </UserControl>

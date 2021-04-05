@@ -88,7 +88,7 @@ namespace TeensyBatExplorer.Core.Commands
                 {
                     if (currentCall != null)
                     {
-                        await AnalyzeCall(currentCall, context).ConfigureAwait(false);
+                        await Task.Run(() => AnalyzeCall(currentCall, context)).ConfigureAwait(false);
                     }
 
                     currentCall = new BatCall();
@@ -117,7 +117,7 @@ namespace TeensyBatExplorer.Core.Commands
             if (currentCall != null)
             {
                 // analyze the last Call...
-                await AnalyzeCall(currentCall, context).ConfigureAwait(false);
+                await Task.Run(() => AnalyzeCall(currentCall, context)).ConfigureAwait(false);
             }
         }
 
@@ -126,7 +126,7 @@ namespace TeensyBatExplorer.Core.Commands
             context.ProjectMessages.Add(new ProjectMessage(level, MessageTypes.NodeAnalysis, message, args) { Node = node });
         }
 
-        private async Task AnalyzeCall(BatCall call, ProjectContext context)
+        private void AnalyzeCall(BatCall call, ProjectContext context)
         {
             long lastEntryEndTime = 0;
             int[] freqs = new int[128];

@@ -49,6 +49,8 @@ namespace TeensyBatExplorer.WPF.Views.Map
         private DateTime _referenceTime;
         private long _currentPosition;
         private long _detailBarDuration;
+        private bool _isPlaying;
+
 
         public MapViewModel(ProjectManager projectManager, UpdateNodeCommand updateNodeCommand)
         {
@@ -63,6 +65,30 @@ namespace TeensyBatExplorer.WPF.Views.Map
             Filter.PropertyChanged += FilterChanged;
 
             AddToolbarButton(new ToolBarButton(SaveAll, PackIconKind.ContentSave, "Speichern"));
+            PlayCommand = new ActionCommand(() =>
+            {
+                IsPlaying = true;
+            });
+            PauseCommand = new ActionCommand(() =>
+            {
+                IsPlaying = false;
+            });
+        }
+
+        public ActionCommand PlayCommand { get; }
+        public ActionCommand PauseCommand { get; }
+
+        public bool IsPlaying
+        {
+            get => _isPlaying;
+            set
+            {
+                if (value != _isPlaying)
+                {
+                    _isPlaying = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public ICommand SelectNodeCommand { get; }

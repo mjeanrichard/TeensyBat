@@ -442,16 +442,16 @@ namespace TeensyBatExplorer.WPF.Views.NodeDetail
             TemperaturePlot = pm;
         }
 
-        public void PositionChanged(in long newPosition)
+        public void PositionChanged(in long? newPosition)
         {
-            if (Calls == null)
+            if (Calls == null || !newPosition.HasValue)
             {
                 return;
             }
 
             foreach (CallViewModel call in Calls)
             {
-                if (call.Call.StartTimeMicros >= newPosition * 1000)
+                if (call.Call.StartTimeMicros >= newPosition.Value * 1000)
                 {
                     SelectedCall = call;
                     break;

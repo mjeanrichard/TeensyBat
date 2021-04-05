@@ -253,6 +253,8 @@ void BatAudio::sample_complete_isr()
             uint8_t * q = _preCallBuffer + ((p + i) % TB_PRE_CALL_BUFFER_COUNT) * TB_CALL_DATA_SIZE;
             copyToCallBuffer(q);
             _currentCall->length++;
+        Serial.print("_");
+        Serial.print((uint32_t)_callBufferNextByte);
         }
         _preCallBufferCount = 0;
 
@@ -260,6 +262,8 @@ void BatAudio::sample_complete_isr()
         computeFFT(_callBufferNextByte, _currentCall, envelopeValue);
         increaseCallBuffer();
         _currentCall->length++;
+        Serial.print("*");
+        Serial.print((uint32_t)_callBufferNextByte);
     }
     else if (_isCallInProgress                                     // Continue recording if there is a call already in progress
              && (envelopeValue > TB_CALL_STOP_THRESHOLD       // and sound level high enough
@@ -279,6 +283,9 @@ void BatAudio::sample_complete_isr()
         computeFFT(_callBufferNextByte, _currentCall, envelopeValue);
         increaseCallBuffer();
         _currentCall->length++;
+
+        Serial.print("-");
+        Serial.print((uint32_t)_callBufferNextByte);
     }
     else if (_isCallInProgress)
     {
@@ -292,6 +299,18 @@ void BatAudio::sample_complete_isr()
         } else {
             _errCallBufferFull++;
         }
+
+        // Serial.print(envelopeValue);
+        // Serial.print(", ");
+        // Serial.print(_afterCallSampleCount);
+        // Serial.print(", ");
+        // Serial.print(_currentCall->length);
+        // Serial.print(", ");
+        // Serial.print(_callBufferEntries);
+        // Serial.print(", ");
+        // Serial.println();
+        Serial.print("/");
+        Serial.print((uint32_t)_callBufferNextByte);
 
         _callPointerIndexHead = (_callPointerIndexHead + 1) % TB_CALL_POINTER_COUNT;
         _isCallInProgress = false;
@@ -540,8 +559,6 @@ bool BatAudio::writeToCard(uint16_t *blocksWritten, SdFat *sd, uint16_t blockCou
         ||  0  |  1  |  2  |  3  ||  4  |  5  |  6  |  7  || 8-31 | 32-159 ||
         || xFF | xFD |   Index   || Loudness  | SampleNr. ||   0  |   FFT  ||
     */
-
-    Serial.println(_callBufferEntries);
 
     if (_callPointerIndexHead == _callPointerIndexTail)
     {

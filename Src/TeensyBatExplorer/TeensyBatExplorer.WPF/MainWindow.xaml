@@ -20,6 +20,7 @@
                  FontFamily="{md:MaterialDesignFont}"
 
                  UseLayoutRounding="True"
+                 SnapsToDevicePixels="True"
 
                  d:DataContext="{d:DesignInstance Type=wpf:MainViewModel, IsDesignTimeCreatable=False}"
 

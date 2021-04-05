@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Scripts\Project.01.02.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\Project.01.02.sql" />
     <EmbeddedResource Include="Scripts\Project.01.01.sql" />
     <EmbeddedResource Include="Scripts\Project.01.00.sql" />
   </ItemGroup>

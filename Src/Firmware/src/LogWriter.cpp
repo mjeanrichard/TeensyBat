@@ -22,7 +22,6 @@ void LogWriter::Process()
             if (!lastResult){
                 break;
             }
-            DEBUG_F(". %u\n", _blocksWritten)
         }
         EndBlock();
 

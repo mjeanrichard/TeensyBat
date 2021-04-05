@@ -26,7 +26,10 @@ namespace TeensyBatExplorer.WPF.Controls
 {
     public class CallFilter : INotifyPropertyChanged
     {
+
         private int _minFrequency;
+
+        private int _maxFrequency = 100;
 
         public int MinFrequency
         {
@@ -37,9 +40,26 @@ namespace TeensyBatExplorer.WPF.Controls
                 {
                     _minFrequency = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(FrequencyFilterTitle));
                 }
             }
         }
+
+        public int MaxFrequency
+        {
+            get => _maxFrequency;
+            set
+            {
+                if (value != _maxFrequency)
+                {
+                    _maxFrequency = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(FrequencyFilterTitle));
+                }
+            }
+        }
+
+        public string FrequencyFilterTitle => $"Frequenz ({MinFrequency} kHz - {MaxFrequency} kHz)";
 
         public IEnumerable<BatCall> Apply(IEnumerable<BatCall> calls)
         {
@@ -48,7 +68,7 @@ namespace TeensyBatExplorer.WPF.Controls
 
         public bool Pass(BatCall call)
         {
-            return call.PeakFrequency > MinFrequency;
+            return call.PeakFrequency > MinFrequency && call.PeakFrequency < MaxFrequency;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

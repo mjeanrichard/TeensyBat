@@ -33,7 +33,6 @@ namespace TeensyBatExplorer.WPF.Views.Device
         private TeensyDeviceManager? _teensyDeviceManger;
         private StrongCanExecuteChanged? _canExecuteChangedRefresh;
 
-
         public DeviceViewModel(Func<TeensyDeviceManager> deviceMangerFactory)
         {
             _deviceMangerFactory = deviceMangerFactory;

@@ -13,6 +13,9 @@
 			"array": "cpp",
 			"type_traits": "cpp",
 			"string": "cpp"
+		},
+		"search.exclude": {
+			"**/.pio": true
 		}
 	}
 }

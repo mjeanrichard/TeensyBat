@@ -37,11 +37,11 @@ void setup() {
 
   pinMode(VBAT, INPUT);
 
-  adc->setReference(ADC_REFERENCE::REF_3V3, ADC_1);
-  adc->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED, ADC_1);
-  adc->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED, ADC_1);
-  adc->setAveraging(16, ADC_1);
-  adc->setResolution(12, ADC_1);
+  adc->adc1->setReference(ADC_REFERENCE::REF_3V3);
+  adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED);
+  adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED);
+  adc->adc1->setAveraging(16);
+  adc->adc1->setResolution(12);
 
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);

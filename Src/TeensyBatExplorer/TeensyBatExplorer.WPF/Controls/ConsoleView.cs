@@ -47,16 +47,16 @@ namespace TeensyBatExplorer.WPF.Controls
         }
 
         public static readonly DependencyProperty TextProviderProperty = DependencyProperty.Register(
-            "TextProvider", typeof(IConsoleTextProvider), typeof(ConsoleView), new PropertyMetadata(default(IConsoleTextProvider), ConsoleTextProviderChanged));
+            "TextProvider", typeof(IConsoleTextProvider), typeof(ConsoleView), new PropertyMetadata(null, ConsoleTextProviderChanged));
 
         private static void ConsoleTextProviderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((ConsoleView)d).UpdateTextProvider((IConsoleTextProvider)e.OldValue, (IConsoleTextProvider)e.NewValue);
         }
 
-        public IConsoleTextProvider TextProvider
+        public IConsoleTextProvider? TextProvider
         {
-            get => (IConsoleTextProvider)GetValue(TextProviderProperty);
+            get => (IConsoleTextProvider?)GetValue(TextProviderProperty);
             set => SetValue(TextProviderProperty, value);
         }
 

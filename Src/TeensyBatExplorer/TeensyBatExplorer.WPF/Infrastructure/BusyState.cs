@@ -29,50 +29,71 @@ namespace TeensyBatExplorer.WPF.Infrastructure
     {
         private readonly BaseViewModel _baseViewModel;
         private readonly CancellationTokenSource _cancellationToken;
-        private int? _total;
-        private int? _current;
-        private string? _text;
+        private int _total;
+        private int _current;
+        private string _text;
+        private bool _isIndeterminate;
 
-        public BusyState(BaseViewModel baseViewModel)
+        public BusyState(BaseViewModel baseViewModel, string text)
         {
             _baseViewModel = baseViewModel;
             _cancellationToken = new CancellationTokenSource();
+            _text = text;
         }
 
         public bool IsCancellationRequested => _cancellationToken.IsCancellationRequested;
 
         public CancellationToken Token => _cancellationToken.Token;
 
-        public bool IsIndeterminate => !_total.HasValue;
+        public bool IsIndeterminate
+        {
+            get => _isIndeterminate;
+            private set
+            {
+                if (value != _isIndeterminate)
+                {
+                    _isIndeterminate = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
-        public int? Total
+        public int Total
         {
             get => _total;
-            set
+            private set
             {
-                _total = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsIndeterminate));
+                if (_total != value)
+                {
+                    _total = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
-        public int? Current
+        public int Current
         {
             get => _current;
-            set
+            private set
             {
-                _current = value;
-                OnPropertyChanged();
+                if (_current != value)
+                {
+                    _current = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
-        public string? Text
+        public string Text
         {
             get => _text;
-            set
+            private set
             {
-                _text = value;
-                OnPropertyChanged();
+                if (_text != value)
+                {
+                    _text = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
@@ -102,8 +123,16 @@ namespace TeensyBatExplorer.WPF.Infrastructure
                     Text = text;
                 }
 
-                Total = total;
-                Current = current;
+                if (total == null || current == null)
+                {
+                    IsIndeterminate = true;
+                }
+                else
+                {
+                    Total = total.Value;
+                    Current = current.Value;
+                    IsIndeterminate = false;
+                }
             });
         }
 

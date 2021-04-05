@@ -7,17 +7,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:CallDataView}">
-                    <Grid SnapsToDevicePixels="True">
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <Image x:Name="PART_Image"
-                               Grid.Row="0"
-                               SnapsToDevicePixels="True"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Top"
-                               Stretch="None" />
                         <ScrollBar x:Name="PART_Scroll"
                                    Grid.Row="1"
                                    Orientation="Horizontal" />

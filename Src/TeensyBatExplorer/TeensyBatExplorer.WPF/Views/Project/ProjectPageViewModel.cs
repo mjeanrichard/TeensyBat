@@ -26,6 +26,7 @@ using TeensyBatExplorer.Core.Commands;
 using TeensyBatExplorer.Core.Infrastructure;
 using TeensyBatExplorer.Core.Models;
 using TeensyBatExplorer.Core.Queries;
+using TeensyBatExplorer.WPF.Controls;
 using TeensyBatExplorer.WPF.Infrastructure;
 
 namespace TeensyBatExplorer.WPF.Views.Project
@@ -38,6 +39,8 @@ namespace TeensyBatExplorer.WPF.Views.Project
         private readonly SaveProjectCommand _saveProjectCommand;
         private readonly AnalyzeNodeCommand _analyzeNodeCommand;
         private IEnumerable<NodeViewModel>? _nodes;
+        private List<BarItemModel> _barItems;
+        private long _endTime;
 
         public ProjectPageViewModel(NavigationService navigationService, ProjectManager projectManager, Func<NodeViewModel> nodeViewModelFactory, SaveProjectCommand saveProjectCommand, AnalyzeNodeCommand analyzeNodeCommand)
         {
@@ -63,6 +66,32 @@ namespace TeensyBatExplorer.WPF.Views.Project
             {
                 _nodes = value;
                 OnPropertyChanged();
+            }
+        }
+
+        public long EndTime
+        {
+            get => _endTime;
+            set
+            {
+                if (value != _endTime)
+                {
+                    _endTime = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public List<BarItemModel> BarItems
+        {
+            get => _barItems;
+            set
+            {
+                if (!Equals(value, _barItems))
+                {
+                    _barItems = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
@@ -124,16 +153,25 @@ namespace TeensyBatExplorer.WPF.Views.Project
         {
             List<BatNode> nodes = await _projectManager.GetNodes(busyState.Token);
             List<NodeViewModel> vmNodes = new(nodes.Count);
-            int i = 0;
-            foreach (BatNode node in nodes)
+            List<BarItemModel> barItems = new();
+
+            if (nodes.Any())
             {
-                progress.Report(i, nodes.Count);
-                NodeViewModel vm = _nodeViewModelFactory();
-                await vm.Load(node, this);
-                vmNodes.Add(vm);
-                i++;
+                int i = 0;
+                DateTime earliestStartTime = nodes.Min(n => n.StartTime);
+
+                foreach (BatNode node in nodes)
+                {
+                    progress.Report(i, nodes.Count);
+                    NodeViewModel vm = _nodeViewModelFactory();
+                    await vm.Load(node, earliestStartTime, this);
+                    vmNodes.Add(vm);
+                    i++;
+                }
+                EndTime = vmNodes.Max(n => n.EndTime);
             }
 
+            BarItems = barItems;
             Nodes = vmNodes;
         }
 
